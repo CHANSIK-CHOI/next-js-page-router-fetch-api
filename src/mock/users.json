@@ -1,21 +1,21 @@
 [
   {
     "id": 1,
-    "avatar": null,
+    "avatar": "",
     "first_name": "first name 1",
     "last_name": "last name 1",
     "email": "email@gmail.com 1"
   },
   {
     "id": 2,
-    "avatar": null,
+    "avatar": "",
     "first_name": "first name 2",
     "last_name": "last name 2",
     "email": "email@gmail.com 2"
   },
   {
     "id": 3,
-    "avatar": null,
+    "avatar": "",
     "first_name": "first name 3",
     "last_name": "last name 3",
     "email": "email@gmail.com 3"
