@@ -59,3 +59,68 @@ select {
 main {
   display: block;
 }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-size: 1.3rem;
+  line-height: 1;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: 0 10px 16px rgba(9, 21, 30, 0.06);
+}
+
+.btn:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn--solid {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #ffffff;
+}
+
+.btn--line {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.btn--warm {
+  background: linear-gradient(135deg, #f7b04c, var(--accent-warm));
+  color: #1f1608;
+}
+
+.btn--danger {
+  background: linear-gradient(135deg, #f3574f, #d6403a);
+  color: #ffffff;
+}
+
+.btn--line.btn--danger {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: #d6403a;
+  color: #b0312c;
+}
+
+.btn--solid.btn--danger {
+  box-shadow: 0 12px 20px rgba(214, 64, 58, 0.3);
+}

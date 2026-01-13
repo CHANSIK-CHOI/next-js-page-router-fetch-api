@@ -17,20 +17,29 @@ type UserBoxProps = {
 export default function UserBox({ avatar, first_name, last_name, email, id }: UserBoxProps) {
   return (
     <div className={cx("userBox")}>
+      <div className={cx("userBox__checkbox")}>
+        <input type="checkbox" name={`checkbox_${id}`} id={`checkbox_${id}`} />
+      </div>
       <Link href={`/users/${id}`} className={cx("userBox__link")}>
         <div className={cx("userBox__box")}>
           <div className={cx("userBox__info")}>
-            <div className="userBox__profile">
-              <div className="userBox__profileView">
-                <Image src={avatar || PLACEHOLDER_SRC} alt="" width={120} height={120} />
+            <div className={cx("userBox__profile")}>
+              <div className={cx("userBox__profileView")}>
+                <Image
+                  src={avatar || PLACEHOLDER_SRC}
+                  alt=""
+                  width={120}
+                  height={120}
+                  unoptimized={!avatar}
+                />
               </div>
             </div>
 
-            <div className="userBox__texts">
-              <span className="userBox__name">
+            <div className={cx("userBox__texts")}>
+              <span className={cx("userBox__name")}>
                 {first_name} {last_name}
               </span>
-              <span className="userBox__email">{email}</span>
+              <span className={cx("userBox__email")}>{email}</span>
             </div>
           </div>
         </div>
