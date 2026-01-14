@@ -3,9 +3,21 @@ import styles from "./index.module.scss";
 import UserBox from "@/components/UserBox";
 import users from "@/mock/users.json";
 import Link from "next/link";
+import { getUserApi } from "@/lib/users.api";
+import { InferGetStaticPropsType } from "next";
+import { User } from "@/types";
 const cx = classNames.bind(styles);
 
-export default function UserList() {
+export const getStaticProps = async () => {
+  const { data: allUsers } = await getUserApi<User[]>();
+  return {
+    props: { allUsers },
+  };
+};
+
+export default function UserList({ allUsers }: InferGetStaticPropsType<typeof getStaticProps>) {
+  if (!allUsers) return <div>Loading ...</div>;
+
   return (
     <div className={cx("userList")}>
       <div className={cx("userList__head")}>
@@ -43,7 +55,7 @@ export default function UserList() {
 
       <div className={cx("userList__body")}>
         <ul className={cx("userList__list")}>
-          {users?.map((user) => (
+          {allUsers?.map((user) => (
             <li key={user.id} className={cx("userList__item")}>
               <UserBox {...user} />
             </li>

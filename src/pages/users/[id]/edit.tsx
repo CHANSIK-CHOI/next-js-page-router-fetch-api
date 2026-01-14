@@ -4,18 +4,38 @@ import styles from "./edit-page.module.scss";
 import Link from "next/link";
 import Image from "next/image";
 import { PLACEHOLDER_SRC } from "@/constants";
-import users from "@/mock/users.json";
+import { getUserApi } from "@/lib/users.api";
+import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import { useRouter } from "next/router";
+import { User } from "@/types";
 const cx = classNames.bind(styles);
 
-export default function EditPage() {
+export const getStaticPaths = async () => {
+  const { data } = await getUserApi<User[]>();
+
+  return {
+    paths: data.map((user) => ({
+      params: { id: String(user.id) },
+    })),
+    fallback: true,
+  };
+};
+
+export const getStaticProps = async (context: GetStaticPropsContext) => {
+  const id = context.params!.id;
+  const { data: user } = await getUserApi<User>(Number(id));
+  return {
+    props: { user },
+  };
+};
+export default function EditPage({ user }: InferGetStaticPropsType<typeof getStaticProps>) {
   const router = useRouter();
-  const { id } = router.query;
-  const target = users.find((u) => u.id === Number(id));
+  if (router.isFallback) {
+    return <div>Loading ...</div>;
+  }
+  if (!user) return "문제가 발생했습니다. 다시 시도하세요.";
 
-  if (!target) return <div>Loading ...</div>;
-
-  const { avatar } = target;
+  const { avatar, id } = user;
 
   return (
     <div className={cx("edit")}>
