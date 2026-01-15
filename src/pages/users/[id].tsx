@@ -8,7 +8,6 @@ import Link from "next/link";
 import { getUserApi } from "@/lib/users.api";
 import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import { User } from "@/types";
-import users from "@/mock/users.json";
 const cx = classNames.bind(styles);
 
 export const getStaticPaths = async () => {

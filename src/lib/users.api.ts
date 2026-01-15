@@ -8,8 +8,8 @@ import type {
   User,
 } from "@/types";
 
-const BASE_URL = process.env.USER_PUBLIC_API_URL;
-const API_KEY = process.env.USER_PUBLIC_API_KEY;
+const BASE_URL = process.env.USER_SECRET_API_URL;
+const API_KEY = process.env.USER_SECRET_API_KEY;
 const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
 
 export const getUserApi = async <T extends User | User[]>(
