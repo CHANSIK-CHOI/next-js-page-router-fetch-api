@@ -15,7 +15,8 @@ const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
 export const getUserApi = async <T extends User | User[]>(
   id?: User["id"]
 ): Promise<{ data: T }> => {
-  const url = id ? `${BASE_URL}/users?id=${id}` : `${BASE_URL}/users?page=1&per_page=12`;
+  // const url = id ? `${BASE_URL}/users?id=${id}` : `${BASE_URL}/users?page=1&per_page=12`;
+  const url = id ? `${BASE_URL}/users?id=${id}` : `${BASE_URL}/users`;
 
   const response = await fetch(url, {
     headers: authHeaders,
