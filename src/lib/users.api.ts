@@ -12,10 +12,18 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
 
+const getBaseUrl = () => {
+  if (!BASE_URL) {
+    throw new Error("NEXT_PUBLIC_API_URL is not set. Check your env configuration.");
+  }
+  return BASE_URL;
+};
+
 export const getUserApi = async <T extends User | User[]>(
   id?: User["id"]
 ): Promise<{ data: T }> => {
-  const url = id ? `${BASE_URL}/users?id=${id}` : `${BASE_URL}/users?page=1&per_page=12`;
+  const baseUrl = getBaseUrl();
+  const url = id ? `${baseUrl}/users?id=${id}` : `${baseUrl}/users?page=1&per_page=12`;
 
   const response = await fetch(url, {
     headers: authHeaders,
@@ -27,7 +35,7 @@ export const getUserApi = async <T extends User | User[]>(
 };
 
 export const postUserApi = async (payload: PayloadNewUser) => {
-  const response = await fetch(`${BASE_URL}/users`, {
+  const response = await fetch(`${getBaseUrl()}/users`, {
     method: "POST",
     headers: {
       ...authHeaders,
@@ -42,7 +50,7 @@ export const postUserApi = async (payload: PayloadNewUser) => {
 };
 
 export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser) => {
-  const response = await fetch(`${BASE_URL}/users/${id}`, {
+  const response = await fetch(`${getBaseUrl()}/users/${id}`, {
     method: "PATCH",
     headers: {
       ...authHeaders,
@@ -59,7 +67,7 @@ export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser)
 export const patchAllUsersApi = async (data: PayloadAllModifiedUsers) => {
   const responses = await Promise.all(
     data.map(({ id, payload }) =>
-      fetch(`${BASE_URL}/users/${id}`, {
+      fetch(`${getBaseUrl()}/users/${id}`, {
         method: "PATCH",
         headers: {
           ...authHeaders,
@@ -81,7 +89,7 @@ export const patchAllUsersApi = async (data: PayloadAllModifiedUsers) => {
 };
 
 export const deleteUserApi = async (id: User["id"]) => {
-  const response = await fetch(`${BASE_URL}/users/${id}`, {
+  const response = await fetch(`${getBaseUrl()}/users/${id}`, {
     method: "DELETE",
     headers: authHeaders,
   });
@@ -94,7 +102,7 @@ export const deleteUserApi = async (id: User["id"]) => {
 export const deleteSelectedUsersApi = async (ids: User["id"][]) => {
   const responses = await Promise.all(
     ids.map((id) =>
-      fetch(`${BASE_URL}/users/${id}`, {
+      fetch(`${getBaseUrl()}/users/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       })
