@@ -12,15 +12,6 @@ import users from "@/mock/users.json";
 const cx = classNames.bind(styles);
 
 export const getStaticPaths = async () => {
-  if (!process.env.NEXT_PUBLIC_API_URL) {
-    return {
-      paths: users.map((user) => ({
-        params: { id: String(user.id) },
-      })),
-      fallback: false,
-    };
-  }
-
   const { data } = await getUserApi<User[]>();
 
   return {
@@ -33,17 +24,11 @@ export const getStaticPaths = async () => {
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const id = context.params!.id;
-  if (!process.env.NEXT_PUBLIC_API_URL) {
-    const user = (users as User[]).find((item) => item.id === Number(id));
-    if (!user) {
-      return { notFound: true };
-    }
-    return {
-      props: { user },
-    };
-  }
 
   const { data: user } = await getUserApi<User>(Number(id));
+  if (!user) {
+    return { notFound: true };
+  }
   return {
     props: { user },
   };
