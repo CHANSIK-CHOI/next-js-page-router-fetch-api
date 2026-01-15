@@ -9,6 +9,12 @@ import { User } from "@/types";
 const cx = classNames.bind(styles);
 
 export const getStaticProps = async () => {
+  if (!process.env.NEXT_PUBLIC_API_URL) {
+    return {
+      props: { allUsers: users as User[] },
+    };
+  }
+
   const { data: allUsers } = await getUserApi<User[]>();
   return {
     props: { allUsers },
