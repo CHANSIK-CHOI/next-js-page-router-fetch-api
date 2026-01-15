@@ -20,7 +20,7 @@ export default function NewPage() {
     handleSubmit,
     setValue,
     control,
-    reset,
+    // reset,
     formState: { errors, isSubmitting },
   } = useForm<PayloadNewUser>({
     mode: "onSubmit",
