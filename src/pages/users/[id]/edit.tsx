@@ -4,10 +4,10 @@ import styles from "./edit-page.module.scss";
 import Link from "next/link";
 import Image from "next/image";
 import { PLACEHOLDER_SRC } from "@/constants";
-import { getUserApi } from "@/lib/users.api";
 import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import { useRouter } from "next/router";
 import { User } from "@/types";
+import { getUserApi } from "@/lib/users.server";
 const cx = classNames.bind(styles);
 
 export const getStaticPaths = async () => {

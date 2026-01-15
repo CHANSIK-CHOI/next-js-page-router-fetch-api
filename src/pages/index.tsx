@@ -3,7 +3,7 @@ import styles from "./index.module.scss";
 import UserBox from "@/components/UserBox";
 import users from "@/mock/users.json";
 import Link from "next/link";
-import { getUserApi } from "@/lib/users.api";
+import { getUserApi } from "@/lib/users.server";
 import { InferGetStaticPropsType } from "next";
 import { User } from "@/types";
 const cx = classNames.bind(styles);

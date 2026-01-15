@@ -5,9 +5,9 @@ import Image from "next/image";
 import { PLACEHOLDER_SRC } from "@/constants";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { getUserApi } from "@/lib/users.api";
 import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import { User } from "@/types";
+import { getUserApi } from "@/lib/users.server";
 const cx = classNames.bind(styles);
 
 export const getStaticPaths = async () => {

@@ -1,37 +1,30 @@
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useEffect, useState } from "react";
 import classNames from "classnames/bind";
 import styles from "./new-page.module.scss";
 import Link from "next/link";
 import Image from "next/image";
 import { INIT_NEW_USER_VALUE, PLACEHOLDER_SRC } from "@/constants";
-import { useForm, useWatch, type FieldErrors } from "react-hook-form";
-import { postUserApi } from "@/lib/users.api";
+import { useForm, type FieldErrors } from "react-hook-form";
+import { postUserApiMultipart } from "@/lib/users.api";
 import { PayloadNewUser } from "@/types";
 import { useRouter } from "next/router";
-import { readFileAsDataURL } from "@/util";
-import { INIT_NEW_USER_STATE, newUserReducer } from "@/reducer";
+import { compressImageFile } from "@/util";
 
 const cx = classNames.bind(styles);
 
 export default function NewPage() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
   const router = useRouter();
   const {
     register,
     handleSubmit,
-    setValue,
-    control,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<PayloadNewUser>({
     mode: "onSubmit",
     defaultValues: INIT_NEW_USER_VALUE,
-  });
-  const [newUserState, newUserDispatch] = useReducer(newUserReducer, INIT_NEW_USER_STATE);
-
-  const avatarValue = useWatch({
-    control,
-    name: "avatar",
   });
 
   useEffect(() => {
@@ -46,44 +39,50 @@ export default function NewPage() {
     const file = e.target.files?.[0] || null;
     if (!file) return;
 
+    const optimized = await compressImageFile(file, {
+      maxWidth: 1024,
+      maxHeight: 1024,
+      mimeType: "image/jpeg",
+      quality: 0.8,
+    });
+
+    setAvatarFile(optimized);
+
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
-
-    const base64 = await readFileAsDataURL(file);
-    setValue("avatar", base64, { shouldValidate: true });
 
     e.target.value = "";
   };
 
   const handleRemoveImage = () => {
-    if (previewUrl == "") return;
+    setAvatarFile(null);
     setPreviewUrl("");
-    setValue("avatar", "");
   };
 
   const onSubmit = async (payload: PayloadNewUser) => {
-    if (newUserState.isCreating) return;
+    if (isSubmitting) return;
 
     const confirmMsg = `${payload.first_name} ${payload.last_name}님의 데이터를 추가하시겠습니까?`;
     if (!confirm(confirmMsg)) return;
 
-    newUserDispatch({ type: "RESET" });
-
     try {
-      newUserDispatch({ type: "SUBMIT_START" });
-      await postUserApi(payload);
-      newUserDispatch({ type: "SUBMIT_SUCCESS", payload });
-      alert("추가를 완료하였습니다.");
+      const fd = new FormData();
+      fd.append("first_name", payload.first_name);
+      fd.append("last_name", payload.last_name);
+      fd.append("email", payload.email);
+      if (avatarFile) fd.append("avatar", avatarFile);
 
+      await postUserApiMultipart(fd);
+      await fetch("/api/revalidate");
+
+      // await postUserApi(payload);
+      alert("추가를 완료하였습니다.");
       reset();
+      setAvatarFile(null);
       setPreviewUrl("");
       router.push("/");
     } catch (err) {
       console.error(err);
-      newUserDispatch({
-        type: "SUBMIT_ERROR",
-        payload: "유저 생성에 실패했습니다. 다시 시도해주세요.",
-      });
       alert("유저 생성에 실패했습니다. 다시 시도해주세요.");
     }
   };
@@ -93,9 +92,6 @@ export default function NewPage() {
     alert("입력값을 확인해주세요.");
   };
 
-  const displaySrc = previewUrl || (avatarValue ? String(avatarValue) : PLACEHOLDER_SRC);
-  const isHasContent = Boolean(avatarValue);
-
   return (
     <form className={cx("new")} onSubmit={handleSubmit(onSubmit, onError)}>
       <div className={cx("new__head")}>
@@ -104,17 +100,23 @@ export default function NewPage() {
             뒤로가기
           </Link>
           <button type="submit" className="btn btn--solid btn--warm" disabled={isSubmitting}>
-            추가하기
+            {isSubmitting ? "추가 중..." : "추가하기"}
           </button>
         </div>
       </div>
       <div className={cx("new__body")}>
         <div className={cx("new__box")}>
           <div className={cx("new__profile")}>
-            <Image src={displaySrc} alt="" width={120} height={120} unoptimized />
+            <Image
+              src={previewUrl || PLACEHOLDER_SRC}
+              alt=""
+              width={120}
+              height={120}
+              unoptimized
+            />
 
             <div className={cx("new__profileBtn")}>
-              <label htmlFor={`new_avatar`}>{isHasContent ? "프로필 변경" : "프로필 추가"}</label>
+              <label htmlFor={`new_avatar`}>{previewUrl ? "프로필 변경" : "프로필 추가"}</label>
               <button type="button" onClick={handleRemoveImage}>
                 프로필 삭제
               </button>

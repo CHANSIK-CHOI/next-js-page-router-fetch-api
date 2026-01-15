@@ -1,58 +1,42 @@
 import type {
   PayloadModifiedUser,
   PayloadAllModifiedUsers,
-  PayloadNewUser,
   ApiResultModifiedUser,
   ApiResultAllModifiedUsers,
   ApiResultNewUser,
   User,
 } from "@/types";
+import { assertOk } from "@/util";
 
-const getAuthHeaders = (key: string | undefined): HeadersInit => (key ? { "x-api-key": key } : {});
+const BASE_URL = process.env.USER_SECRET_API_URL;
+const API_KEY = process.env.USER_SECRET_API_KEY;
+const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
 
-export const getUserApi = async <T extends User | User[]>(
-  id?: User["id"]
-): Promise<{ data: T }> => {
-  const BASE_URL = process.env.USER_SECRET_API_URL;
-  const API_KEY = process.env.USER_SECRET_API_KEY;
-
-  const url = id ? `${BASE_URL}/users?id=${id}` : `${BASE_URL}/users?page=1&per_page=12`;
-
-  const response = await fetch(url, {
-    headers: getAuthHeaders(API_KEY),
-  });
-
-  if (!response.ok) throw Error("유저 데이터를 받아올 수 없습니다.");
-  const result = await response.json();
-  return result;
-};
-
-export const postUserApi = async (payload: PayloadNewUser) => {
-  const BASE_URL = process.env.USER_SECRET_API_URL;
-  const API_KEY = process.env.USER_SECRET_API_KEY;
-
-  const response = await fetch(`${BASE_URL}/users`, {
+export const postUserApiMultipart = async (formData: FormData) => {
+  const res = await fetch(`/api/users`, {
     method: "POST",
-    headers: {
-      ...getAuthHeaders(API_KEY),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+    body: formData,
   });
 
-  if (!response.ok) throw Error("유저 데이터를 추가할 수 없습니다.");
-  const result: ApiResultNewUser = await response.json();
-  return result;
+  await assertOk(res, "유저 데이터를 추가할 수 없습니다.");
+  return (await res.json()) as ApiResultNewUser;
 };
+
+// export const postUserApi = async (payload: PayloadNewUser) => {
+//   const res = await fetch(`/api/users`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(payload),
+//   });
+//   await assertOk(res, "유저 데이터를 추가할 수 없습니다.");
+//   return (await res.json()) as ApiResultNewUser;
+// };
 
 export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser) => {
-  const BASE_URL = process.env.USER_SECRET_API_URL;
-  const API_KEY = process.env.USER_SECRET_API_KEY;
-
   const response = await fetch(`${BASE_URL}/users/${id}`, {
     method: "PATCH",
     headers: {
-      ...getAuthHeaders(API_KEY),
+      ...authHeaders,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
@@ -64,15 +48,12 @@ export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser)
 };
 
 export const patchAllUsersApi = async (data: PayloadAllModifiedUsers) => {
-  const BASE_URL = process.env.USER_SECRET_API_URL;
-  const API_KEY = process.env.USER_SECRET_API_KEY;
-
   const responses = await Promise.all(
     data.map(({ id, payload }) =>
       fetch(`${BASE_URL}/users/${id}`, {
         method: "PATCH",
         headers: {
-          ...getAuthHeaders(API_KEY),
+          ...authHeaders,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
@@ -91,12 +72,9 @@ export const patchAllUsersApi = async (data: PayloadAllModifiedUsers) => {
 };
 
 export const deleteUserApi = async (id: User["id"]) => {
-  const BASE_URL = process.env.USER_SECRET_API_URL;
-  const API_KEY = process.env.USER_SECRET_API_KEY;
-
   const response = await fetch(`${BASE_URL}/users/${id}`, {
     method: "DELETE",
-    headers: getAuthHeaders(API_KEY),
+    headers: authHeaders,
   });
 
   if (!response.ok) throw Error("유저 데이터를 삭제할 수 없습니다.");
@@ -105,14 +83,11 @@ export const deleteUserApi = async (id: User["id"]) => {
 };
 
 export const deleteSelectedUsersApi = async (ids: User["id"][]) => {
-  const BASE_URL = process.env.USER_SECRET_API_URL;
-  const API_KEY = process.env.USER_SECRET_API_KEY;
-
   const responses = await Promise.all(
     ids.map((id) =>
       fetch(`${BASE_URL}/users/${id}`, {
         method: "DELETE",
-        headers: getAuthHeaders(API_KEY),
+        headers: authHeaders,
       })
     )
   );
