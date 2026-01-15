@@ -8,17 +8,18 @@ import type {
   User,
 } from "@/types";
 
-const BASE_URL = process.env.USER_SECRET_API_URL;
-const API_KEY = process.env.USER_SECRET_API_KEY;
-const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
+const getAuthHeaders = (key: string | undefined): HeadersInit => (key ? { "x-api-key": key } : {});
 
 export const getUserApi = async <T extends User | User[]>(
   id?: User["id"]
 ): Promise<{ data: T }> => {
+  const BASE_URL = process.env.USER_SECRET_API_URL;
+  const API_KEY = process.env.USER_SECRET_API_KEY;
+
   const url = id ? `${BASE_URL}/users?id=${id}` : `${BASE_URL}/users?page=1&per_page=12`;
 
   const response = await fetch(url, {
-    headers: authHeaders,
+    headers: getAuthHeaders(API_KEY),
   });
 
   if (!response.ok) throw Error("유저 데이터를 받아올 수 없습니다.");
@@ -27,10 +28,13 @@ export const getUserApi = async <T extends User | User[]>(
 };
 
 export const postUserApi = async (payload: PayloadNewUser) => {
+  const BASE_URL = process.env.USER_SECRET_API_URL;
+  const API_KEY = process.env.USER_SECRET_API_KEY;
+
   const response = await fetch(`${BASE_URL}/users`, {
     method: "POST",
     headers: {
-      ...authHeaders,
+      ...getAuthHeaders(API_KEY),
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
@@ -42,10 +46,13 @@ export const postUserApi = async (payload: PayloadNewUser) => {
 };
 
 export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser) => {
+  const BASE_URL = process.env.USER_SECRET_API_URL;
+  const API_KEY = process.env.USER_SECRET_API_KEY;
+
   const response = await fetch(`${BASE_URL}/users/${id}`, {
     method: "PATCH",
     headers: {
-      ...authHeaders,
+      ...getAuthHeaders(API_KEY),
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
@@ -57,12 +64,15 @@ export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser)
 };
 
 export const patchAllUsersApi = async (data: PayloadAllModifiedUsers) => {
+  const BASE_URL = process.env.USER_SECRET_API_URL;
+  const API_KEY = process.env.USER_SECRET_API_KEY;
+
   const responses = await Promise.all(
     data.map(({ id, payload }) =>
       fetch(`${BASE_URL}/users/${id}`, {
         method: "PATCH",
         headers: {
-          ...authHeaders,
+          ...getAuthHeaders(API_KEY),
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
@@ -81,9 +91,12 @@ export const patchAllUsersApi = async (data: PayloadAllModifiedUsers) => {
 };
 
 export const deleteUserApi = async (id: User["id"]) => {
+  const BASE_URL = process.env.USER_SECRET_API_URL;
+  const API_KEY = process.env.USER_SECRET_API_KEY;
+
   const response = await fetch(`${BASE_URL}/users/${id}`, {
     method: "DELETE",
-    headers: authHeaders,
+    headers: getAuthHeaders(API_KEY),
   });
 
   if (!response.ok) throw Error("유저 데이터를 삭제할 수 없습니다.");
@@ -92,11 +105,14 @@ export const deleteUserApi = async (id: User["id"]) => {
 };
 
 export const deleteSelectedUsersApi = async (ids: User["id"][]) => {
+  const BASE_URL = process.env.USER_SECRET_API_URL;
+  const API_KEY = process.env.USER_SECRET_API_KEY;
+
   const responses = await Promise.all(
     ids.map((id) =>
       fetch(`${BASE_URL}/users/${id}`, {
         method: "DELETE",
-        headers: authHeaders,
+        headers: getAuthHeaders(API_KEY),
       })
     )
   );

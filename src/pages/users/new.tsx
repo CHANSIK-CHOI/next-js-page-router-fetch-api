@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import classNames from "classnames/bind";
 import styles from "./new-page.module.scss";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { postUserApi } from "@/lib/users.api";
 import { PayloadNewUser } from "@/types";
 import { useRouter } from "next/router";
 import { readFileAsDataURL } from "@/util";
+import { INIT_NEW_USER_STATE, newUserReducer } from "@/reducer";
 
 const cx = classNames.bind(styles);
 
@@ -20,12 +21,13 @@ export default function NewPage() {
     handleSubmit,
     setValue,
     control,
-    // reset,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<PayloadNewUser>({
     mode: "onSubmit",
     defaultValues: INIT_NEW_USER_VALUE,
   });
+  const [newUserState, newUserDispatch] = useReducer(newUserReducer, INIT_NEW_USER_STATE);
 
   const avatarValue = useWatch({
     control,
@@ -60,8 +62,30 @@ export default function NewPage() {
   };
 
   const onSubmit = async (payload: PayloadNewUser) => {
-    await postUserApi(payload);
-    router.push("/");
+    if (newUserState.isCreating) return;
+
+    const confirmMsg = `${payload.first_name} ${payload.last_name}님의 데이터를 추가하시겠습니까?`;
+    if (!confirm(confirmMsg)) return;
+
+    newUserDispatch({ type: "RESET" });
+
+    try {
+      newUserDispatch({ type: "SUBMIT_START" });
+      await postUserApi(payload);
+      newUserDispatch({ type: "SUBMIT_SUCCESS", payload });
+      alert("추가를 완료하였습니다.");
+
+      reset();
+      setPreviewUrl("");
+      router.push("/");
+    } catch (err) {
+      console.error(err);
+      newUserDispatch({
+        type: "SUBMIT_ERROR",
+        payload: "유저 생성에 실패했습니다. 다시 시도해주세요.",
+      });
+      alert("유저 생성에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   const onError = (errors: FieldErrors<PayloadNewUser>) => {
@@ -87,7 +111,7 @@ export default function NewPage() {
       <div className={cx("new__body")}>
         <div className={cx("new__box")}>
           <div className={cx("new__profile")}>
-            <Image src={displaySrc} alt="" width={120} height={120} unoptimized={!displaySrc} />
+            <Image src={displaySrc} alt="" width={120} height={120} unoptimized />
 
             <div className={cx("new__profileBtn")}>
               <label htmlFor={`new_avatar`}>{isHasContent ? "프로필 변경" : "프로필 추가"}</label>
