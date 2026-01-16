@@ -5,12 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { INIT_NEW_USER_VALUE, PLACEHOLDER_SRC } from "@/constants";
 import { useForm, type FieldErrors } from "react-hook-form";
-import { postUserApiMultipart } from "@/lib/users.api";
+import { postUserApi } from "@/lib/users.api";
 import { PayloadNewUser } from "@/types";
 import { useRouter } from "next/router";
 import { compressImageFile } from "@/util";
+import { uploadAvatarToSupabase } from "@/lib/avatarUpload";
 
 const cx = classNames.bind(styles);
+
+// const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export default function NewPage() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
@@ -39,6 +42,9 @@ export default function NewPage() {
     const file = e.target.files?.[0] || null;
     if (!file) return;
 
+    // 이전 previewUrl 정리
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+
     const optimized = await compressImageFile(file, {
       maxWidth: 1024,
       maxHeight: 1024,
@@ -48,13 +54,16 @@ export default function NewPage() {
 
     setAvatarFile(optimized);
 
-    const objectUrl = URL.createObjectURL(file);
+    // ✅ 업로드될 파일(optimized)과 동일한 걸로 미리보기
+    const objectUrl = URL.createObjectURL(optimized);
     setPreviewUrl(objectUrl);
 
+    // 같은 파일 재선택 가능하도록
     e.target.value = "";
   };
 
   const handleRemoveImage = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setAvatarFile(null);
     setPreviewUrl("");
   };
@@ -66,16 +75,12 @@ export default function NewPage() {
     if (!confirm(confirmMsg)) return;
 
     try {
-      const fd = new FormData();
-      fd.append("first_name", payload.first_name);
-      fd.append("last_name", payload.last_name);
-      fd.append("email", payload.email);
-      if (avatarFile) fd.append("avatar", avatarFile);
-
-      await postUserApiMultipart(fd);
-      await fetch("/api/revalidate");
-
-      // await postUserApi(payload);
+      const avatarResult = avatarFile ? await uploadAvatarToSupabase(avatarFile) : null;
+      const payloadWithAvatar: PayloadNewUser = {
+        ...payload,
+        avatar: avatarResult?.avatarUrl ?? "",
+      };
+      await postUserApi(payloadWithAvatar);
       alert("추가를 완료하였습니다.");
       reset();
       setAvatarFile(null);

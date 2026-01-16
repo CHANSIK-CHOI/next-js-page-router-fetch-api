@@ -5,6 +5,7 @@ import type {
   ApiResultAllModifiedUsers,
   ApiResultNewUser,
   User,
+  PayloadNewUser,
 } from "@/types";
 import { assertOk } from "@/util";
 
@@ -12,25 +13,25 @@ const BASE_URL = process.env.USER_SECRET_API_URL;
 const API_KEY = process.env.USER_SECRET_API_KEY;
 const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
 
-export const postUserApiMultipart = async (formData: FormData) => {
-  const res = await fetch(`/api/users`, {
-    method: "POST",
-    body: formData,
-  });
-
-  await assertOk(res, "유저 데이터를 추가할 수 없습니다.");
-  return (await res.json()) as ApiResultNewUser;
-};
-
-// export const postUserApi = async (payload: PayloadNewUser) => {
+// export const postUserApiMultipart = async (formData: FormData) => {
 //   const res = await fetch(`/api/users`, {
 //     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify(payload),
+//     body: formData,
 //   });
+
 //   await assertOk(res, "유저 데이터를 추가할 수 없습니다.");
 //   return (await res.json()) as ApiResultNewUser;
 // };
+
+export const postUserApi = async (payload: PayloadNewUser) => {
+  const res = await fetch(`/api/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  await assertOk(res, "유저 데이터를 추가할 수 없습니다.");
+  return (await res.json()) as ApiResultNewUser;
+};
 
 export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser) => {
   const response = await fetch(`${BASE_URL}/users/${id}`, {
