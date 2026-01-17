@@ -5,15 +5,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { INIT_NEW_USER_VALUE, PLACEHOLDER_SRC } from "@/constants";
 import { useForm, type FieldErrors } from "react-hook-form";
-import { postUserApi } from "@/lib/users.api";
+import { postUserApi } from "@/lib/users.client";
 import { PayloadNewUser } from "@/types";
 import { useRouter } from "next/router";
 import { compressImageFile } from "@/util";
 import { uploadAvatarToSupabase } from "@/lib/avatarUpload";
 
 const cx = classNames.bind(styles);
-
-// const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export default function NewPage() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
@@ -42,7 +40,6 @@ export default function NewPage() {
     const file = e.target.files?.[0] || null;
     if (!file) return;
 
-    // 이전 previewUrl 정리
     if (previewUrl) URL.revokeObjectURL(previewUrl);
 
     const optimized = await compressImageFile(file, {
@@ -54,11 +51,9 @@ export default function NewPage() {
 
     setAvatarFile(optimized);
 
-    // ✅ 업로드될 파일(optimized)과 동일한 걸로 미리보기
     const objectUrl = URL.createObjectURL(optimized);
     setPreviewUrl(objectUrl);
 
-    // 같은 파일 재선택 가능하도록
     e.target.value = "";
   };
 
