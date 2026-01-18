@@ -55,11 +55,13 @@ async function main() {
   const dataPath = resolve(process.cwd(), "src/mock/users.json");
   const users = readUsersFromFile(dataPath);
 
-  const rows = users.map((u) => ({
+  const baseTime = Date.now();
+  const rows = users.map((u, index) => ({
     email: u.email,
     first_name: u.first_name,
     last_name: u.last_name,
-    avartar_path: u.avatar,
+    avatar: u.avatar,
+    created_at: new Date(baseTime - (users.length - index) * 1000).toISOString(),
   }));
 
   const { error: deleteError } = await supabase.from("users").delete().not("id", "is", null);

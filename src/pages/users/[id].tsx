@@ -24,7 +24,7 @@ export const getStaticPaths = async () => {
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const id = context.params!.id;
 
-  const { data: user } = await getUserApi<User>(Number(id));
+  const { data: user } = await getUserApi<User>(String(id));
   if (!user) {
     return { notFound: true };
   }

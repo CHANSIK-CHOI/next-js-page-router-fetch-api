@@ -1,10 +1,41 @@
-import type { User } from "@/types";
-import { assertOk } from "@/util";
+import type { PayloadNewUser, User } from "@/types";
+import { getSupabaseServer } from "@/lib/supabase.server";
 
-const BASE_URL = process.env.USER_SECRET_API_URL;
-const API_KEY = process.env.USER_SECRET_API_KEY;
-const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
+export const getUserApi = async <T extends User | User[]>(
+  id?: User["id"]
+): Promise<{ data: T }> => {
+  const supabaseServer = getSupabaseServer();
+  if (!supabaseServer) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
 
+  if (id) {
+    const { data, error } = await supabaseServer.from("users").select().eq("id", id).maybeSingle();
+    if (error) {
+      throw new Error("유저 데이터를 받아올 수 없습니다.");
+    }
+    return { data: data as T };
+  }
+
+  const { data, error } = await supabaseServer.from("users").select().order("created_at", {
+    ascending: false,
+  });
+  if (error || !data) {
+    throw new Error("전체 유저 데이터를 받아올 수 없습니다.");
+  }
+
+  return { data: data as T };
+};
+
+export const postUserApi = async (payload: PayloadNewUser) => {
+  await fetch("/api/post-new-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+};
+
+/*
 export const getUserApi = async <T extends User | User[]>(
   id?: User["id"]
 ): Promise<{ data: T }> => {
@@ -18,3 +49,4 @@ export const getUserApi = async <T extends User | User[]>(
   const result = await response.json();
   return result as { data: T };
 };
+*/

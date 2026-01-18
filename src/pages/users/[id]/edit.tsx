@@ -23,11 +23,12 @@ export const getStaticPaths = async () => {
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const id = context.params!.id;
-  const { data: user } = await getUserApi<User>(Number(id));
+  const { data: user } = await getUserApi<User>(String(id));
   return {
     props: { user },
   };
 };
+
 export default function EditPage({ user }: InferGetStaticPropsType<typeof getStaticProps>) {
   const router = useRouter();
   if (router.isFallback) {

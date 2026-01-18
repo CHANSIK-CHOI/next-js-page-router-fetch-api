@@ -1,16 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import crypto from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
 import { User } from "@/types";
+import { getSupabaseServer } from "@/lib/supabase.server";
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const BUCKET = process.env.SUPABASE_AVATAR_BUCKET ?? "avartarStorage";
-
-function requireEnv(v: string | undefined, name: string) {
-  if (!v) throw new Error(`Missing env: ${name}`);
-  return v;
-}
 
 function safeExtFromMime(mime: string) {
   if (mime === "image/jpeg") return "jpg";
@@ -33,9 +26,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // createClient로 서비스 롤 키를 사용하는 서버용 Supabase 클라이언트를 생성
-    const supabaseUrl = requireEnv(SUPABASE_URL, "SUPABASE_URL");
-    const serviceKey = requireEnv(SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY");
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabaseServer = getSupabaseServer();
+    if (!supabaseServer) {
+      throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    }
 
     const { mime, userId } = req.body as { mime?: string; userId?: User["id"] };
 
@@ -55,14 +49,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const path = userId ? `users/${userId}/${filename}` : `users/new/${filename}`;
 
     // createSignedUploadUrl(path) : 서명 업로드 URL 생성
-    const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(path);
+    const { data, error } = await supabaseServer.storage.from(BUCKET).createSignedUploadUrl(path);
 
     if (error || !data) {
       res.status(500).json({ error: error?.message ?? "Failed to create signed upload url" });
       return;
     }
 
-    console.log("data : ", data);
     const signedUpload = {
       bucket: BUCKET,
       uploadPath: data.path,

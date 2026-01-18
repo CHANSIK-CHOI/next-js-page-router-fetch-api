@@ -57,6 +57,10 @@ export async function assertOk(res: Response, msg: string) {
   if (!res.ok) throw new Error(msg);
 }
 
+export async function assertOkSupabase(res: Response, msg: string) {
+  if (res.statusText !== "OK") throw new Error(msg);
+}
+
 export async function compressImageFile(
   file: File,
   opts?: {

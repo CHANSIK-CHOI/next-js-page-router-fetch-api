@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { INIT_NEW_USER_VALUE, PLACEHOLDER_SRC } from "@/constants";
 import { useForm, type FieldErrors } from "react-hook-form";
-import { postUserApi } from "@/lib/users.client";
+import { postUserApi } from "@/lib/users.server";
 import { PayloadNewUser } from "@/types";
 import { useRouter } from "next/router";
 import { compressImageFile } from "@/util";
@@ -81,6 +81,7 @@ export default function NewPage() {
       setAvatarFile(null);
       setPreviewUrl("");
       router.push("/");
+      await fetch("/api/revalidate-list");
     } catch (err) {
       console.error(err);
       alert("유저 생성에 실패했습니다. 다시 시도해주세요.");
@@ -88,7 +89,7 @@ export default function NewPage() {
   };
 
   const onError = (errors: FieldErrors<PayloadNewUser>) => {
-    console.log("Validation Errors:", errors);
+    console.error("Validation Errors:", errors);
     alert("입력값을 확인해주세요.");
   };
 
