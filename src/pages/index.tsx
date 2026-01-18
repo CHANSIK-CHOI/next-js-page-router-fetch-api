@@ -22,7 +22,7 @@ export default function UserList({ allUsers }: InferGetStaticPropsType<typeof ge
     <div className={cx("userList")}>
       <div className={cx("userList__head")}>
         <div className={cx("userList__title")}>
-          <span className={cx("userList__result")}>검색 결과 : {users.length}건</span>
+          <span className={cx("userList__result")}>검색 결과 : {allUsers.length}건</span>
         </div>
 
         <div className={cx("userList__actions")}>
