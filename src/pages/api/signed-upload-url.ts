@@ -66,8 +66,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const signedUpload = {
       bucket: BUCKET,
       uploadPath: data.path,
+      // uploadPath : Storage 안에서의 파일 경로, 버킷 내부 위치를 가리키는 식별자
+      // ex) uploadToSignedUrl(path, token, file)
       uploadToken: data.token,
       signedUploadUrl: data.signedUrl,
+      // 그 경로에 업로드할 수 있도록 서명된 실제 URL
+      // signedUploadUrl : Supabase SDK를 쓰지 않고 직접 HTTP 요청으로 업로드할 때 사용
+      // ex) fetch(signedUploadUrl, { method: "PUT", body: file, headers: ... })
     };
 
     res.status(200).json(signedUpload);

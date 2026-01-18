@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "seed:reqres": "node src/scripts/seed-reqres.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.90.1",
