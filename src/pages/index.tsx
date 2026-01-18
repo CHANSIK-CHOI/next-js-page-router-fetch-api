@@ -1,7 +1,6 @@
 import classNames from "classnames/bind";
 import styles from "./index.module.scss";
 import UserBox from "@/components/UserBox";
-import users from "@/mock/users.json";
 import Link from "next/link";
 import { getUserApi } from "@/lib/users.server";
 import { InferGetStaticPropsType } from "next";
