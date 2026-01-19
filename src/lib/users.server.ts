@@ -1,7 +1,6 @@
-import type { PayloadNewUser, User } from "@/types";
+import type { User } from "@/types";
 import { getSupabaseServer } from "@/lib/supabase.server";
 
-// getUserApi는 서버측에서만 실행함
 export const getUserApi = async <T extends User | User[]>(
   id?: User["id"]
 ): Promise<{ data: T }> => {

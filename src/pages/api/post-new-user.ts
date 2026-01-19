@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
     }
 
-    // react-hook-form이 이미 first_name, last_name, email은 필수 입력으로 처리함
+    // react-hook-form이 이미 first_name, last_name, email은 필수 입력으로 처리하고 있음
     const { first_name, last_name, email, avatar }: PayloadNewUser = req.body;
     if (!first_name || !last_name || !email) {
       return res.status(400).json({ msg: "first name, last name, email은 필수 입력값입니다." });

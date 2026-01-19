@@ -21,7 +21,6 @@ export default function NewPage() {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm<PayloadNewUser>({
     mode: "onSubmit",
@@ -77,9 +76,6 @@ export default function NewPage() {
       };
       await postUserApi(payloadWithAvatar);
       alert("추가를 완료하였습니다.");
-      reset();
-      setAvatarFile(null);
-      setPreviewUrl("");
       router.push("/");
       await fetch("/api/revalidate-list");
     } catch (err) {
