@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { INIT_NEW_USER_VALUE, PLACEHOLDER_SRC } from "@/constants";
 import { useForm, type FieldErrors } from "react-hook-form";
-import { postUserApi } from "@/lib/users.server";
+import { postUserApi } from "@/lib/users.client";
 import { PayloadNewUser } from "@/types";
 import { useRouter } from "next/router";
 import { compressImageFile } from "@/util";
@@ -83,8 +83,7 @@ export default function NewPage() {
       router.push("/");
       await fetch("/api/revalidate-list");
     } catch (err) {
-      console.error(err);
-      alert("유저 생성에 실패했습니다. 다시 시도해주세요.");
+      alert(err);
     }
   };
 

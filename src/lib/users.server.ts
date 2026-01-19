@@ -1,6 +1,7 @@
 import type { PayloadNewUser, User } from "@/types";
 import { getSupabaseServer } from "@/lib/supabase.server";
 
+// getUserApi는 서버측에서만 실행함
 export const getUserApi = async <T extends User | User[]>(
   id?: User["id"]
 ): Promise<{ data: T }> => {
@@ -26,27 +27,3 @@ export const getUserApi = async <T extends User | User[]>(
 
   return { data: data as T };
 };
-
-export const postUserApi = async (payload: PayloadNewUser) => {
-  await fetch("/api/post-new-user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-};
-
-/*
-export const getUserApi = async <T extends User | User[]>(
-  id?: User["id"]
-): Promise<{ data: T }> => {
-  const url = id ? `${BASE_URL}/users?id=${id}` : `${BASE_URL}/users?page=1&per_page=12`;
-
-  const response = await fetch(url, {
-    headers: authHeaders,
-  });
-
-  await assertOk(response, "유저 데이터를 받아올 수 없습니다.");
-  const result = await response.json();
-  return result as { data: T };
-};
-*/

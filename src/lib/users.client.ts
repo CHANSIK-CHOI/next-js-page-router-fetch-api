@@ -4,29 +4,27 @@ import type {
   ApiResultModifiedUser,
   ApiResultAllModifiedUsers,
   User,
+  PayloadNewUser,
 } from "@/types";
 
 const BASE_URL = process.env.USER_SECRET_API_URL;
 const API_KEY = process.env.USER_SECRET_API_KEY;
 const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
 
-// export const postUserApi = async (payload: PayloadNewUser) => {
-//   await fetch("/api/users/new", {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify(payload),
-//   });
-// };
+// postUserApi는 클라이언트 측에서 실행함
+export const postUserApi = async (payload: PayloadNewUser) => {
+  const response = await fetch("/api/post-new-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 
-// export const postUserApi = async (payload: PayloadNewUser) => {
-//   const res = await fetch(`/api/users`, {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify(payload),
-//   });
-//   await assertOk(res, "유저 데이터를 추가할 수 없습니다.");
-//   return (await res.json()) as ApiResultNewUser;
-// };
+  if (!response.ok) {
+    const { error, msg } = await response.json();
+    console.error(error);
+    throw new Error(msg);
+  }
+};
 
 export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser) => {
   const response = await fetch(`${BASE_URL}/users/${id}`, {
