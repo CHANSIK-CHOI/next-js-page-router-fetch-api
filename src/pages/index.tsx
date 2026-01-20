@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getUserApi } from "@/lib/users.server";
 import { InferGetStaticPropsType } from "next";
 import { User, isErrorAlertMsg } from "@/types";
-import { useEffect, useMemo, useReducer } from "react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
 import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
@@ -35,11 +35,13 @@ export default function UserList({
     INIT_USER_DELETE_STATE
   );
   const targetIds = useMemo(() => allUsers.map((u) => u.id), [allUsers]);
+  const hasAlertedRef = useRef(false);
 
   useEffect(() => {
-    if (userMessage) {
+    if (userMessage && !hasAlertedRef.current) {
       console.error(userMessage);
       alert(userMessage);
+      hasAlertedRef.current = true;
     }
   }, [userMessage]);
 

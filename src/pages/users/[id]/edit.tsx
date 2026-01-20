@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import classNames from "classnames/bind";
 import styles from "./edit-page.module.scss";
 import Link from "next/link";
@@ -44,10 +44,12 @@ export default function EditPage({
   user,
   userMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
+  const hasAlertedRef = useRef(false);
   useEffect(() => {
-    if (userMessage) {
+    if (userMessage && !hasAlertedRef.current) {
       console.error(userMessage);
       alert(userMessage);
+      hasAlertedRef.current = true;
     }
   }, [userMessage]);
 

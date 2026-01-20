@@ -5,12 +5,11 @@ import { getSupabaseServer } from "@/lib/supabase.server";
 
 const BUCKET = process.env.SUPABASE_AVATAR_BUCKET ?? "avartarStorage";
 
-function safeExtFromMime(mime: string) {
-  if (mime === "image/jpeg") return "jpg";
-  if (mime === "image/png") return "png";
-  if (mime === "image/webp") return "webp";
-  return "bin";
-}
+const ALLOWED_MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 // 아바타 업로드용 서명 URL을 발급해주는 API
 // 클라이언트가 파일을 직접 Supabase Storage에 업로드할 수 있게 서버에서 안전하게 서명 URL을 만들어 줌
 // 즉, 업로드 권한을 서버가 발급하고, 클라이언트가 그 URL로 직접 업로드하게 만드는 API다.
@@ -33,16 +32,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { mime, userId } = req.body as { mime?: string; userId?: User["id"] };
 
-    // mime이 없거나 image/로 시작하지 않으면 400
-    if (!mime || !mime.startsWith("image/")) {
+    // mime이 없거나 허용된 타입이 아니면 400
+    const ext = mime ? ALLOWED_MIME_TO_EXT[mime] : undefined;
+    if (!ext) {
       res
         .status(400)
         .json({ error: "Invalid mime", alertMsg: "프로필은 이미지만 등록이 가능합니다." });
       return;
     }
-
-    // mime을 안전한 확장자로 변환(jpg/png/webp, 나머지는 bin)
-    const ext = safeExtFromMime(mime);
 
     // crypto.randomUUID() : 랜덤 파일명 생성
     // crypto : Node.js 내장 암호화 모듈

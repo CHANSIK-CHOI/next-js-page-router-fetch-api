@@ -21,6 +21,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const invalidId = ids.find((id) => typeof id !== "string" || !uuidRegex.test(id));
+    if (invalidId) {
+      return res.status(400).json({
+        error: "Invalid id format",
+        alertMsg: "유효하지 않은 유저 ID가 포함되어 있습니다.",
+      });
+    }
+
     const { error } = await supabaseServer.from("users").delete().in("id", ids);
 
     if (error) {

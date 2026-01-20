@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import classNames from "classnames/bind";
 import styles from "./detail-page.module.scss";
 import Image from "next/image";
@@ -46,10 +46,12 @@ export default function DetailPage({
   user,
   userMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
+  const hasAlertedRef = useRef(false);
   useEffect(() => {
-    if (userMessage) {
+    if (userMessage && !hasAlertedRef.current) {
       console.error(userMessage);
       alert(userMessage);
+      hasAlertedRef.current = true;
     }
   }, [userMessage]);
 
