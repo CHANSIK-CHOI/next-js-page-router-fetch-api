@@ -6,7 +6,7 @@ import Image from "next/image";
 import { INIT_NEW_USER_VALUE, PLACEHOLDER_SRC } from "@/constants";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { postUserApi } from "@/lib/users.client";
-import { PayloadNewUser } from "@/types";
+import { PayloadNewUser, isErrorAlertMsg } from "@/types";
 import { useRouter } from "next/router";
 import { compressImageFile } from "@/util";
 import { uploadAvatarToSupabase } from "@/lib/avatarUpload";
@@ -79,7 +79,10 @@ export default function NewPage() {
       router.push("/");
       await fetch("/api/revalidate-list");
     } catch (err) {
-      alert(err);
+      const message = err instanceof Error ? err.message : "Unknown error";
+      const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;
+      console.error(err);
+      alert(userMessage);
     }
   };
 

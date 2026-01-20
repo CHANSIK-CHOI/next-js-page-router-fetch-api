@@ -12,9 +12,13 @@ export const postUserApi = async (payload: PayloadNewUser) => {
   });
 
   if (!response.ok) {
-    const { error, msg } = await response.json();
+    const { error, alertMsg } = await response.json();
     console.error(error);
-    throw new Error(msg);
+    const err = new Error(error ?? alertMsg ?? "Request failed") as Error & {
+      alertMsg?: string;
+    };
+    if (alertMsg) err.alertMsg = alertMsg;
+    throw err;
   }
 };
 

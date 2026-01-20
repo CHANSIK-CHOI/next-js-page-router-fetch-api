@@ -32,3 +32,8 @@ export type ApiResultAllModifiedUsers = {
 export type UsersFormValues = {
   users: User[];
 };
+
+export type ErrorAlertMsg = Error & { alertMsg?: string };
+
+export const isErrorAlertMsg = (err: unknown): err is ErrorAlertMsg =>
+  err instanceof Error && "alertMsg" in err;

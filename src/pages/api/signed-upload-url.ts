@@ -35,7 +35,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // mime이 없거나 image/로 시작하지 않으면 400
     if (!mime || !mime.startsWith("image/")) {
-      res.status(400).json({ error: "Invalid mime" });
+      res
+        .status(400)
+        .json({ error: "Invalid mime", alertMsg: "프로필은 이미지만 등록이 가능합니다." });
       return;
     }
 
@@ -52,7 +54,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { data, error } = await supabaseServer.storage.from(BUCKET).createSignedUploadUrl(path);
 
     if (error || !data) {
-      res.status(500).json({ error: error?.message ?? "Failed to create signed upload url" });
+      res.status(500).json({
+        error: error?.message ?? "Failed to create signed upload url",
+        alertMsg: "이미지 경로를 생성할 수 없습니다. 관리자에게 문의 부탁드립니다.",
+      });
       return;
     }
 
@@ -71,6 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json(signedUpload);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
-    res.status(500).json({ error: msg });
+    res
+      .status(500)
+      .json({ error: msg, alertMsg: "이미지를 등록할 수 없습니다. 관리자에게 문의 부탁드립니다." });
   }
 }

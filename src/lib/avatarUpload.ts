@@ -1,10 +1,11 @@
 import { getSupabaseClient } from "@/lib/supabase.client";
+import { ErrorAlertMsg } from "@/types";
 
 // 아바타 파일을 Supabase Storage에 올리고, 공개 URL을 만들어 반환”하는 함수
 // getSupabaseClient()는 브라우저에서 쓰는 public(anon) 키 기반 클라이언트
 type IssueUploadUrlResponse =
   | { bucket: string; uploadPath: string; uploadToken: string; signedUploadUrl: string }
-  | { error: string };
+  | { error: string; alertMsg?: string };
 
 export async function uploadAvatarToSupabase(file: File, userId?: string) {
   const signedUpload = await fetch("/api/signed-upload-url", {
@@ -13,7 +14,11 @@ export async function uploadAvatarToSupabase(file: File, userId?: string) {
     body: JSON.stringify({ mime: file.type, userId }),
   }).then((r) => r.json() as Promise<IssueUploadUrlResponse>);
 
-  if ("error" in signedUpload) throw new Error(signedUpload.error);
+  if ("error" in signedUpload) {
+    const error: ErrorAlertMsg = new Error(signedUpload.error);
+    if (signedUpload.alertMsg) error.alertMsg = signedUpload.alertMsg;
+    throw error;
+  }
 
   const supabaseClient = getSupabaseClient();
   if (!supabaseClient) {
@@ -27,7 +32,11 @@ export async function uploadAvatarToSupabase(file: File, userId?: string) {
       contentType: file.type,
     });
 
-  if (uploadError) throw new Error(uploadError.message);
+  if (uploadError) {
+    const error: ErrorAlertMsg = new Error(uploadError.message);
+    error.alertMsg = "이미지를 등록할 수 없습니다. 관리자에게 문의 부탁드립니다.";
+    throw error;
+  }
 
   // getPublicUrl(issue.path)로 공개 URL을 얻음
   const { data: publicData } = supabaseClient.storage
@@ -35,7 +44,8 @@ export async function uploadAvatarToSupabase(file: File, userId?: string) {
     .getPublicUrl(signedUpload.uploadPath);
   const avatarUrl = publicData.publicUrl;
 
-  if (!avatarUrl) throw new Error("Failed to create public avatar url");
+  if (!avatarUrl)
+    throw new Error("이미지의 경로를 받아올 수 없습니다. 관리자에게 문의 부탁드립니다.");
 
   const avatarResult = {
     avatarUrl,

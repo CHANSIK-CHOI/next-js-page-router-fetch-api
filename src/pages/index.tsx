@@ -4,17 +4,35 @@ import UserBox from "@/components/UserBox";
 import Link from "next/link";
 import { getUserApi } from "@/lib/users.server";
 import { InferGetStaticPropsType } from "next";
-import { User } from "@/types";
+import { User, isErrorAlertMsg } from "@/types";
+import { useEffect } from "react";
 const cx = classNames.bind(styles);
 
 export const getStaticProps = async () => {
-  const { data: allUsers } = await getUserApi<User[]>();
-  return {
-    props: { allUsers },
-  };
+  try {
+    const { data: allUsers } = await getUserApi<User[]>();
+    return {
+      props: { allUsers },
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;
+
+    return { props: { allUsers: [], userMessage } };
+  }
 };
 
-export default function UserList({ allUsers }: InferGetStaticPropsType<typeof getStaticProps>) {
+export default function UserList({
+  allUsers,
+  userMessage,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
+  useEffect(() => {
+    if (userMessage) {
+      console.error(userMessage);
+      alert(userMessage);
+    }
+  }, [userMessage]);
+
   if (!allUsers) return <div>Loading ...</div>;
 
   return (

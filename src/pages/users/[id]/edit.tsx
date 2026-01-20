@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import classNames from "classnames/bind";
 import styles from "./edit-page.module.scss";
 import Link from "next/link";
@@ -6,30 +6,51 @@ import Image from "next/image";
 import { PLACEHOLDER_SRC } from "@/constants";
 import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import { useRouter } from "next/router";
-import { User } from "@/types";
+import { User, isErrorAlertMsg } from "@/types";
 import { getUserApi } from "@/lib/users.server";
 const cx = classNames.bind(styles);
 
 export const getStaticPaths = async () => {
-  const { data } = await getUserApi<User[]>();
-
-  return {
-    paths: data.map((user) => ({
-      params: { id: String(user.id) },
-    })),
-    fallback: true,
-  };
+  try {
+    const { data } = await getUserApi<User[]>();
+    return {
+      paths: data.map((user) => ({
+        params: { id: String(user.id) },
+      })),
+      fallback: true,
+    };
+  } catch (err) {
+    console.error(err);
+    return { paths: [], fallback: true };
+  }
 };
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const id = context.params!.id;
-  const { data: user } = await getUserApi<User>(String(id));
-  return {
-    props: { user },
-  };
+  try {
+    const id = context.params!.id;
+    const { data: user } = await getUserApi<User>(String(id));
+    return {
+      props: { user },
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;
+
+    return { props: { user: null, userMessage } };
+  }
 };
 
-export default function EditPage({ user }: InferGetStaticPropsType<typeof getStaticProps>) {
+export default function EditPage({
+  user,
+  userMessage,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
+  useEffect(() => {
+    if (userMessage) {
+      console.error(userMessage);
+      alert(userMessage);
+    }
+  }, [userMessage]);
+
   const router = useRouter();
   if (router.isFallback) {
     return <div>Loading ...</div>;

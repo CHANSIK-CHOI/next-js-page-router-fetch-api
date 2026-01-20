@@ -17,7 +17,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // react-hook-form이 이미 first_name, last_name, email은 필수 입력으로 처리하고 있음
     const { first_name, last_name, email, avatar }: PayloadNewUser = req.body;
     if (!first_name || !last_name || !email) {
-      return res.status(400).json({ msg: "first name, last name, email은 필수 입력값입니다." });
+      return res
+        .status(400)
+        .json({ alertMsg: "first name, last name, email은 필수 입력값입니다." });
     }
 
     const { data, error } = await supabaseServer
@@ -35,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (error?.code === "23505") {
       return res.status(409).json({
         error: error.message,
-        msg: `${email} 해당 이메일은 이미 사용 중인 이메일입니다.`,
+        alertMsg: `${email} 해당 이메일은 이미 사용 중인 이메일입니다.`,
       });
     }
 
@@ -43,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (error || !data) {
       return res.status(500).json({
         error: error?.message ?? "Insert failed",
-        msg: "새로운 유저를 추가할 수 없습니다. 관리자에게 문의 부탁드립니다.",
+        alertMsg: "새로운 유저를 추가할 수 없습니다. 관리자에게 문의 부탁드립니다.",
       });
     }
 
@@ -53,6 +55,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const error = e instanceof Error ? e.message : "Unknown error";
     return res
       .status(500)
-      .json({ error, msg: "새로운 유저를 추가할 수 없습니다. 관리자에게 문의 부탁드립니다." });
+      .json({
+        error,
+        alertMsg: "새로운 유저를 추가할 수 없습니다. 관리자에게 문의 부탁드립니다.",
+      });
   }
 }
