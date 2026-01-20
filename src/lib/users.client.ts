@@ -1,4 +1,4 @@
-import type { PayloadNewUser } from "@/types";
+import type { PayloadNewUser, User } from "@/types";
 
 // const BASE_URL = process.env.USER_SECRET_API_URL;
 // const API_KEY = process.env.USER_SECRET_API_KEY;
@@ -9,6 +9,24 @@ export const postUserApi = async (payload: PayloadNewUser) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const { error, alertMsg } = await response.json();
+    console.error(error);
+    const err = new Error(error ?? alertMsg ?? "Request failed") as Error & {
+      alertMsg?: string;
+    };
+    if (alertMsg) err.alertMsg = alertMsg;
+    throw err;
+  }
+};
+
+export const deleteUserApi = async (ids: User["id"][]) => {
+  const response = await fetch("/api/delete-user", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(ids),
   });
 
   if (!response.ok) {
@@ -71,16 +89,6 @@ export const postUserApi = async (payload: PayloadNewUser) => {
 //   const isSuccess = response.status === 204 ? true : false;
 //   return isSuccess;
 // };
-
-// export const deleteSelectedUsersApi = async (ids: User["id"][]) => {
-//   const responses = await Promise.all(
-//     ids.map((id) =>
-//       fetch(`${BASE_URL}/users/${id}`, {
-//         method: "DELETE",
-//         headers: authHeaders,
-//       })
-//     )
-//   );
 
 //   const isError = responses.some((res) => !res.ok);
 //   if (isError) throw Error("유저 데이터를 삭제할 수 없습니다.");

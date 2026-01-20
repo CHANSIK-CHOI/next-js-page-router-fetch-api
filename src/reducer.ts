@@ -153,8 +153,7 @@ export function userEditReducer(state: UserEditState, action: UserEditAction) {
 export type UserDeleteState = {
   isShowDeleteCheckbox: boolean;
   checkedIds: User["id"][];
-  deleteing: User["id"] | "all" | null;
-  error: string | null;
+  deleteing: boolean;
 };
 export type UserDeleteAction =
   | { type: "SHOW_CHECKBOX" }
@@ -162,17 +161,14 @@ export type UserDeleteAction =
   | { type: "ALL_CHECKED"; payload: { ids: User["id"][] } }
   | { type: "RESET_CHECKED" }
   | { type: "TOGGLE_ITEM"; payload: { id: User["id"] } }
-  | { type: "SUBMIT_START"; payload: { id: User["id"] } }
   | { type: "SUBMIT_CHECKED_ITEMS_START" }
   | { type: "SUBMIT_SUCCESS" }
-  | { type: "SUBMIT_ERROR"; payload: { msg: string } }
-  | { type: "RESET" };
+  | { type: "SUBMIT_ERROR" };
 
 export const INIT_USER_DELETE_STATE: UserDeleteState = {
   isShowDeleteCheckbox: false,
   checkedIds: [],
-  deleteing: null,
-  error: null,
+  deleteing: false,
 };
 
 export function userDeleteReducer(state: UserDeleteState, action: UserDeleteAction) {
@@ -216,22 +212,15 @@ export function userDeleteReducer(state: UserDeleteState, action: UserDeleteActi
         checkedIds: [],
       };
     }
-    case "SUBMIT_START": {
-      const { id } = action.payload;
-      return { ...state, deleteing: id };
-    }
     case "SUBMIT_CHECKED_ITEMS_START": {
-      return { ...state, deleteing: "all" as const };
+      return { ...state, deleteing: true };
     }
     case "SUBMIT_SUCCESS": {
-      return { ...state, deleteing: null, checkedIds: [], isShowDeleteCheckbox: false };
+      return { ...state, deleteing: false, checkedIds: [], isShowDeleteCheckbox: false };
     }
     case "SUBMIT_ERROR": {
-      const { msg } = action.payload;
-      return { ...state, deleteing: null, error: msg };
+      return { ...state, deleteing: false };
     }
-    case "RESET":
-      return INIT_USER_DELETE_STATE;
     default:
       return state;
   }
