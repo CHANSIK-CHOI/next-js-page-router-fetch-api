@@ -49,15 +49,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    return res.status(200).json({ data });
+    let revalidated = true;
+    try {
+      await res.revalidate("/");
+    } catch (err) {
+      console.error("revalidate failed", err);
+      revalidated = false;
+    }
+
+    return res.status(200).json({ data, revalidated });
   } catch (e) {
     // 그 외 예상 못한 예외(코드 오류, 런타임 에러 등)를 잡는 안전망
     const error = e instanceof Error ? e.message : "Unknown error";
-    return res
-      .status(500)
-      .json({
-        error,
-        alertMsg: "새로운 유저를 추가할 수 없습니다. 관리자에게 문의 부탁드립니다.",
-      });
+    return res.status(500).json({
+      error,
+      alertMsg: "새로운 유저를 추가할 수 없습니다. 관리자에게 문의 부탁드립니다.",
+    });
   }
 }

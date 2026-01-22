@@ -65,11 +65,13 @@ export default function UserList({
 
     try {
       userDeleteDispatch({ type: "SUBMIT_CHECKED_ITEMS_START" });
-      await deleteUserApi(userDeleteState.checkedIds);
+      const result = await deleteUserApi(userDeleteState.checkedIds);
+      console.log(result);
       userDeleteDispatch({ type: "SUBMIT_SUCCESS" });
       alert("삭제를 완료하였습니다.");
-      await fetch("/api/revalidate-list"); // 캐시 무효화
-      await router.replace(router.asPath); // 새 요청 트리거
+      await router.replace(router.asPath);
+      // 캐시 갱신: 서버에 저장된 정적 페이지를 “다음 요청 때 새로 만들게” 하는 것 (지금 보고 있는 화면은 그대로)
+      // UI 즉시 반영: 사용자가 보고 있는 화면의 상태를 바로 바꾸는 것 (라우터로 새 요청하거나, 로컬 상태 업데이트)
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;

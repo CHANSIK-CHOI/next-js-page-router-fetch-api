@@ -74,10 +74,10 @@ export default function NewPage() {
         ...payload,
         avatar: avatarResult?.avatarUrl ?? "",
       };
-      await postUserApi(payloadWithAvatar);
+      const result = await postUserApi(payloadWithAvatar);
+      console.log(result);
       alert("추가를 완료하였습니다.");
       router.push("/");
-      await fetch("/api/revalidate-list");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;

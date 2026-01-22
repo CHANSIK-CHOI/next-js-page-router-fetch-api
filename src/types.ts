@@ -18,6 +18,10 @@ type EditableUserFormObject = Partial<Omit<User, "id">>;
 // POST
 export type PayloadNewUser = InitUserFormObject;
 export type ApiResultNewUser = User & { createdAt: string };
+export type ApiResponseNewUser = {
+  data: User;
+  revalidated: boolean;
+};
 
 // PATCH
 export type PayloadModifiedUser = EditableUserFormObject;
@@ -27,6 +31,12 @@ export type ApiResultAllModifiedUsers = {
   id: User["id"];
   result: ApiResultModifiedUser;
 }[];
+
+// DELETE
+export type ApiResponseDeleteUser = {
+  data: User[];
+  revalidated: boolean;
+};
 
 // react form hooks
 export type UsersFormValues = {

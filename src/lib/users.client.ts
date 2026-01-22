@@ -1,10 +1,10 @@
-import type { PayloadNewUser, User } from "@/types";
+import type { ApiResponseDeleteUser, ApiResponseNewUser, PayloadNewUser, User } from "@/types";
 
 // const BASE_URL = process.env.USER_SECRET_API_URL;
 // const API_KEY = process.env.USER_SECRET_API_KEY;
 // const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
 
-export const postUserApi = async (payload: PayloadNewUser) => {
+export const postUserApi = async (payload: PayloadNewUser): Promise<ApiResponseNewUser> => {
   const response = await fetch("/api/post-new-user", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -20,9 +20,12 @@ export const postUserApi = async (payload: PayloadNewUser) => {
     if (alertMsg) err.alertMsg = alertMsg;
     throw err;
   }
+
+  const result: ApiResponseNewUser = await response.json();
+  return result;
 };
 
-export const deleteUserApi = async (ids: User["id"][]) => {
+export const deleteUserApi = async (ids: User["id"][]): Promise<ApiResponseDeleteUser> => {
   const response = await fetch("/api/delete-user", {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
@@ -38,6 +41,9 @@ export const deleteUserApi = async (ids: User["id"][]) => {
     if (alertMsg) err.alertMsg = alertMsg;
     throw err;
   }
+
+  const result: ApiResponseDeleteUser = await response.json();
+  return result;
 };
 
 // export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser) => {

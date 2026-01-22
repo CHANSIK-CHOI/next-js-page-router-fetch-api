@@ -21,8 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const invalidId = ids.find((id) => typeof id !== "string" || !uuidRegex.test(id));
     if (invalidId) {
       return res.status(400).json({
@@ -31,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const { error } = await supabaseServer.from("users").delete().in("id", ids);
+    const { error, data } = await supabaseServer.from("users").delete().in("id", ids).select();
 
     if (error) {
       return res.status(500).json({
@@ -40,7 +39,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    return res.status(200).json({ ok: true });
+    let revalidated = true;
+    try {
+      await res.revalidate("/");
+    } catch (err) {
+      console.error("revalidate failed", err);
+      revalidated = false;
+    }
+
+    return res.status(200).json({ data, revalidated });
   } catch (e) {
     // 그 외 예상 못한 예외(코드 오류, 런타임 에러 등)를 잡는 안전망
     const error = e instanceof Error ? e.message : "Unknown error";
