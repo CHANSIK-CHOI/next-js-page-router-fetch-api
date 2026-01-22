@@ -77,7 +77,7 @@ export default function NewPage() {
       const result = await postUserApi(payloadWithAvatar);
       console.log(result);
       alert("추가를 완료하였습니다.");
-      router.push("/");
+      await router.replace("/", undefined, { unstable_skipClientCache: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;

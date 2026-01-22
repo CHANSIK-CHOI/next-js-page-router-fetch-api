@@ -105,7 +105,7 @@ export default function UserList({
       console.log(result);
       userDeleteDispatch({ type: "SUBMIT_SUCCESS" });
       alert("삭제를 완료하였습니다.");
-      await router.replace(router.asPath);
+      await router.replace(router.asPath, undefined, { unstable_skipClientCache: true });
       // 캐시 갱신: 서버에 저장된 정적 페이지를 “다음 요청 때 새로 만들게” 하는 것 (지금 보고 있는 화면은 그대로)
       // UI 즉시 반영: 사용자가 보고 있는 화면의 상태를 바로 바꾸는 것 (라우터로 새 요청하거나, 로컬 상태 업데이트)
     } catch (err) {
