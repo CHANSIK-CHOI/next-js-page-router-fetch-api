@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getUserApi } from "@/lib/users.server";
 import { InferGetStaticPropsType } from "next";
 import { User, isErrorAlertMsg } from "@/types";
-import { useEffect, useMemo, useReducer, useRef } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
@@ -30,11 +30,47 @@ export default function UserList({
   userMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const router = useRouter();
+  const [sortOption, setSortOption] = useState("latest");
   const [userDeleteState, userDeleteDispatch] = useReducer(
     userDeleteReducer,
     INIT_USER_DELETE_STATE
   );
   const targetIds = useMemo(() => allUsers.map((u) => u.id), [allUsers]);
+  const sortedUsers = useMemo(() => {
+    const users = [...allUsers];
+    /*
+      sort()
+      - 음수를 리턴하면 a가 b보다 앞으로
+      - 양수를 리턴하면 a가 b보다 뒤로
+      - 0이면 순서 유지
+    */
+    if (sortOption === "nameAsc") {
+      return users.sort((leftUser, rightUser) => {
+        const leftName = `${leftUser.last_name} ${leftUser.first_name}`.trim();
+        const rightName = `${rightUser.last_name} ${rightUser.first_name}`.trim();
+        return leftName.localeCompare(rightName);
+      });
+    }
+    if (sortOption === "nameDesc") {
+      return users.sort((leftUser, rightUser) => {
+        const leftName = `${leftUser.last_name} ${leftUser.first_name}`.trim();
+        const rightName = `${rightUser.last_name} ${rightUser.first_name}`.trim();
+        return rightName.localeCompare(leftName);
+      });
+    }
+    if (sortOption === "oldest") {
+      return users.sort((leftUser, rightUser) => {
+        const leftTime = leftUser.created_at ? new Date(leftUser.created_at).getTime() : 0;
+        const rightTime = rightUser.created_at ? new Date(rightUser.created_at).getTime() : 0;
+        return leftTime - rightTime;
+      });
+    }
+    return users.sort((leftUser, rightUser) => {
+      const leftTime = leftUser.created_at ? new Date(leftUser.created_at).getTime() : 0;
+      const rightTime = rightUser.created_at ? new Date(rightUser.created_at).getTime() : 0;
+      return rightTime - leftTime;
+    });
+  }, [allUsers, sortOption]);
   const hasAlertedRef = useRef(false);
 
   useEffect(() => {
@@ -91,6 +127,19 @@ export default function UserList({
         </div>
 
         <div className={cx("userList__actions")}>
+          <label className={cx("userList__sort")}>
+            <span className={cx("userList__sortLabel")}>정렬</span>
+            <select
+              className={cx("userList__select")}
+              value={sortOption}
+              onChange={(event) => setSortOption(event.target.value)}
+            >
+              <option value="latest">최신 등록 순</option>
+              <option value="oldest">오래된 등록 순</option>
+              <option value="nameAsc">이름 오름차순</option>
+              <option value="nameDesc">이름 내림차순</option>
+            </select>
+          </label>
           {/* 삭제하기 */}
           {!userDeleteState.isShowDeleteCheckbox ? (
             <button
@@ -154,7 +203,7 @@ export default function UserList({
 
       <div className={cx("userList__body")}>
         <ul className={cx("userList__list")}>
-          {allUsers?.map((user) => (
+          {sortedUsers?.map((user) => (
             <li key={user.id} className={cx("userList__item")}>
               <UserBox
                 {...user}
