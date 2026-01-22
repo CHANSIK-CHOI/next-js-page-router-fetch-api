@@ -45,7 +45,7 @@ export const deleteUserApi = async (ids: User["id"][]): Promise<ApiResponseDelet
   const result: ApiResponseDeleteUser = await response.json();
   return result;
 };
-
+// 테스트
 // export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser) => {
 //   const response = await fetch(`${BASE_URL}/users/${id}`, {
 //     method: "PATCH",
