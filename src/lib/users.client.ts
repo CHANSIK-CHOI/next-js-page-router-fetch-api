@@ -6,8 +6,13 @@ import type { ApiResponseDeleteUser, ApiResponseNewUser, PayloadNewUser, User } 
 
 type ErrorBody = { error?: string; alertMsg?: string };
 const readErrorBody = async (response: Response): Promise<ErrorBody & { rawText?: string }> => {
+  const contentType = response.headers.get("content-type") ?? "";
+  const isJson = contentType.includes("application/json");
   const cloned = response.clone();
   try {
+    if (!isJson) {
+      throw new Error("Non-JSON response");
+    }
     const json: ErrorBody = await cloned.json();
     return json ?? {};
   } catch {
@@ -30,13 +35,11 @@ export const postUserApi = async (payload: PayloadNewUser): Promise<ApiResponseN
 
   if (!response.ok) {
     const { error, alertMsg, rawText } = await readErrorBody(response);
-    console.log(rawText);
     if (error) console.error(error);
-    const err = new Error(error ?? alertMsg ?? "Request failed") as Error & {
+    const err = new Error(error ?? alertMsg ?? rawText ?? "Request failed") as Error & {
       alertMsg?: string;
     };
     if (alertMsg) err.alertMsg = alertMsg;
-    if (!error && !alertMsg && rawText) err.message = rawText;
     throw err;
   }
 
@@ -54,11 +57,10 @@ export const deleteUserApi = async (ids: User["id"][]): Promise<ApiResponseDelet
   if (!response.ok) {
     const { error, alertMsg, rawText } = await readErrorBody(response);
     if (error) console.error(error);
-    const err = new Error(error ?? alertMsg ?? "Request failed") as Error & {
+    const err = new Error(error ?? alertMsg ?? rawText ?? "Request failed") as Error & {
       alertMsg?: string;
     };
     if (alertMsg) err.alertMsg = alertMsg;
-    if (!error && !alertMsg && rawText) err.message = rawText;
     throw err;
   }
 
