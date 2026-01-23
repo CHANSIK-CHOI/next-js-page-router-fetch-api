@@ -1,9 +1,9 @@
 import type { ErrorAlertMsg, User } from "@/types";
 import { getSupabaseServer } from "@/lib/supabase.server";
 
-export const getUserApi = async <T extends User | User[]>(
-  id?: User["id"]
-): Promise<{ data: T }> => {
+export function getUserApi(): Promise<{ data: User[] }>;
+export function getUserApi(id: User["id"]): Promise<{ data: User | null }>;
+export async function getUserApi(id?: User["id"]) {
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
@@ -20,7 +20,7 @@ export const getUserApi = async <T extends User | User[]>(
       error.alertMsg = "유저 데이터를 받아올 수 없습니다.";
       throw error;
     }
-    return { data: data as T };
+    return { data };
   }
 
   const { data, error: usersDataError } = await supabaseServer
@@ -35,5 +35,5 @@ export const getUserApi = async <T extends User | User[]>(
     throw error;
   }
 
-  return { data: data as T };
-};
+  return { data };
+}
