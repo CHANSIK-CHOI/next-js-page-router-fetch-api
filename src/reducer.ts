@@ -63,7 +63,7 @@ export type UserEditAction =
       type: "SUBMIT_MODIFIED_USERS_SUCCESS";
       payload: {
         data: {
-          id: number;
+          id: User["id"];
           payload: Partial<Omit<User, "id">>;
         }[];
       };

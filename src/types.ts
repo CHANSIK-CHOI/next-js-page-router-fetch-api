@@ -18,7 +18,7 @@ type EditableUserFormObject = Partial<Omit<User, "id">>;
 
 // POST
 export type PayloadNewUser = InitUserFormObject;
-export type ApiResultNewUser = User & { createdAt: string };
+export type ApiResultNewUser = User & { created_at: string };
 export type ApiResponseNewUser = {
   data: User;
   revalidated: boolean;
