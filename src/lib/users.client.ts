@@ -4,6 +4,23 @@ import type { ApiResponseDeleteUser, ApiResponseNewUser, PayloadNewUser, User } 
 // const API_KEY = process.env.USER_SECRET_API_KEY;
 // const authHeaders: HeadersInit = API_KEY ? { "x-api-key": API_KEY } : {};
 
+type ErrorBody = { error?: string; alertMsg?: string };
+const readErrorBody = async (response: Response): Promise<ErrorBody & { rawText?: string }> => {
+  const cloned = response.clone();
+  try {
+    const json: ErrorBody = await cloned.json();
+    return json ?? {};
+  } catch {
+    // 서버가 JSON이 아닌 방식으로 내려준 응답 본문 전체 문자열 : ex) res.status(500).send("Internal Server Error")
+    try {
+      const rawText = await response.text();
+      return rawText ? { rawText } : {};
+    } catch {
+      return {};
+    }
+  }
+};
+
 export const postUserApi = async (payload: PayloadNewUser): Promise<ApiResponseNewUser> => {
   const response = await fetch("/api/post-new-user", {
     method: "POST",
@@ -12,12 +29,14 @@ export const postUserApi = async (payload: PayloadNewUser): Promise<ApiResponseN
   });
 
   if (!response.ok) {
-    const { error, alertMsg } = await response.json();
-    console.error(error);
+    const { error, alertMsg, rawText } = await readErrorBody(response);
+    console.log(rawText);
+    if (error) console.error(error);
     const err = new Error(error ?? alertMsg ?? "Request failed") as Error & {
       alertMsg?: string;
     };
     if (alertMsg) err.alertMsg = alertMsg;
+    if (!error && !alertMsg && rawText) err.message = rawText;
     throw err;
   }
 
@@ -33,18 +52,20 @@ export const deleteUserApi = async (ids: User["id"][]): Promise<ApiResponseDelet
   });
 
   if (!response.ok) {
-    const { error, alertMsg } = await response.json();
-    console.error(error);
+    const { error, alertMsg, rawText } = await readErrorBody(response);
+    if (error) console.error(error);
     const err = new Error(error ?? alertMsg ?? "Request failed") as Error & {
       alertMsg?: string;
     };
     if (alertMsg) err.alertMsg = alertMsg;
+    if (!error && !alertMsg && rawText) err.message = rawText;
     throw err;
   }
 
   const result: ApiResponseDeleteUser = await response.json();
   return result;
 };
+
 // 테스트
 // export const patchUserApi = async (id: User["id"], payload: PayloadModifiedUser) => {
 //   const response = await fetch(`${BASE_URL}/users/${id}`, {
