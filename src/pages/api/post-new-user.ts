@@ -2,6 +2,8 @@ import { PayloadNewUser } from "@/types";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServer } from "@/lib/supabase.server";
 
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
@@ -22,12 +24,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .json({ alertMsg: "first name, last name, email은 필수 입력값입니다." });
     }
 
+    if (!EMAIL_REGEX.test(email.trim())) {
+      return res.status(400).json({ alertMsg: "유효한 이메일 형식이 아닙니다." });
+    }
+
     const { data, error } = await supabaseServer
       .from("users")
       .insert({
         first_name,
         last_name,
-        email,
+        email: email.trim(),
         avatar,
       })
       .select()
