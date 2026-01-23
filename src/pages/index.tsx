@@ -4,7 +4,7 @@ import UserBox from "@/components/UserBox";
 import Link from "next/link";
 import { getUserApi } from "@/lib/users.server";
 import { InferGetStaticPropsType } from "next";
-import { User, isErrorAlertMsg } from "@/types";
+import { isErrorAlertMsg } from "@/types";
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
@@ -13,7 +13,7 @@ const cx = classNames.bind(styles);
 
 export const getStaticProps = async () => {
   try {
-    const { data: allUsers } = await getUserApi<User[]>();
+    const { data: allUsers } = await getUserApi();
     return {
       props: { allUsers },
     };

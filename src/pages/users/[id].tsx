@@ -6,13 +6,13 @@ import { PLACEHOLDER_SRC } from "@/constants";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
-import { User, isErrorAlertMsg } from "@/types";
+import { isErrorAlertMsg } from "@/types";
 import { getUserApi } from "@/lib/users.server";
 const cx = classNames.bind(styles);
 
 export const getStaticPaths = async () => {
   try {
-    const { data } = await getUserApi<User[]>();
+    const { data } = await getUserApi();
     return {
       paths: data.map((user) => ({ params: { id: String(user.id) } })),
       fallback: true, // 또는 "blocking"
@@ -27,7 +27,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   try {
     const id = context.params!.id;
 
-    const { data: user } = await getUserApi<User>(String(id));
+    const { data: user } = await getUserApi(String(id));
     if (!user) {
       return { notFound: true };
     }
