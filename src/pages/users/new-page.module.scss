@@ -63,6 +63,11 @@
   border: 1px dashed var(--border);
   background: var(--surface-2);
   color: var(--muted);
+  box-shadow: 0 8px 14px rgba(15, 23, 42, 0.08);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .new__texts {
@@ -93,7 +98,11 @@
   border-radius: var(--radius-md);
   background: var(--surface-2);
   border: 1px solid var(--border);
-  font-size: 1.4rem;
+  font-size: 1.5rem;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .new__texts input:focus {

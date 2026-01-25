@@ -56,7 +56,6 @@ export default function AuthActions() {
   const avatarUrl =
     user?.user_metadata?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatar;
 
-  console.log({ user });
   return (
     <div className={cx("authActions")}>
       {!session ? (
