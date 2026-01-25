@@ -9,6 +9,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
+import { getSupabaseClient } from "@/lib/supabase.client";
 const cx = classNames.bind(styles);
 
 export const getStaticProps = async () => {
@@ -30,14 +31,15 @@ export default function UserList({
   userMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const router = useRouter();
+  const [users, setUsers] = useState(allUsers);
   const [sortOption, setSortOption] = useState("latest");
   const [userDeleteState, userDeleteDispatch] = useReducer(
     userDeleteReducer,
     INIT_USER_DELETE_STATE
   );
-  const targetIds = useMemo(() => allUsers.map((u) => u.id), [allUsers]);
+  const targetIds = useMemo(() => users.map((u) => u.id), [users]);
   const sortedUsers = useMemo(() => {
-    const users = [...allUsers];
+    const sorted = [...users];
     /*
       sort()
       - 음수를 리턴하면 a가 b보다 앞으로
@@ -45,32 +47,32 @@ export default function UserList({
       - 0이면 순서 유지
     */
     if (sortOption === "nameAsc") {
-      return users.sort((leftUser, rightUser) => {
+      return sorted.sort((leftUser, rightUser) => {
         const leftName = `${leftUser.last_name} ${leftUser.first_name}`.trim();
         const rightName = `${rightUser.last_name} ${rightUser.first_name}`.trim();
         return leftName.localeCompare(rightName);
       });
     }
     if (sortOption === "nameDesc") {
-      return users.sort((leftUser, rightUser) => {
+      return sorted.sort((leftUser, rightUser) => {
         const leftName = `${leftUser.last_name} ${leftUser.first_name}`.trim();
         const rightName = `${rightUser.last_name} ${rightUser.first_name}`.trim();
         return rightName.localeCompare(leftName);
       });
     }
     if (sortOption === "oldest") {
-      return users.sort((leftUser, rightUser) => {
+      return sorted.sort((leftUser, rightUser) => {
         const leftTime = leftUser.created_at ? new Date(leftUser.created_at).getTime() : 0;
         const rightTime = rightUser.created_at ? new Date(rightUser.created_at).getTime() : 0;
         return leftTime - rightTime;
       });
     }
-    return users.sort((leftUser, rightUser) => {
+    return sorted.sort((leftUser, rightUser) => {
       const leftTime = leftUser.created_at ? new Date(leftUser.created_at).getTime() : 0;
       const rightTime = rightUser.created_at ? new Date(rightUser.created_at).getTime() : 0;
       return rightTime - leftTime;
     });
-  }, [allUsers, sortOption]);
+  }, [users, sortOption]);
   const hasAlertedRef = useRef(false);
 
   useEffect(() => {
@@ -81,9 +83,45 @@ export default function UserList({
     }
   }, [userMessage]);
 
-  if (!allUsers) return <div>Loading ...</div>;
+  useEffect(() => {
+    setUsers(allUsers);
+  }, [allUsers]);
 
-  const isAllChecked = allUsers.length > 0 && userDeleteState.checkedIds.length === allUsers.length;
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel("realtime:users")
+      .on("postgres_changes", { event: "*", schema: "public", table: "users" }, (payload) => {
+        console.log("payload : ", payload);
+        setUsers((prev) => {
+          if (payload.eventType === "INSERT") {
+            return [payload.new as (typeof prev)[number], ...prev];
+          }
+          if (payload.eventType === "UPDATE") {
+            return prev.map((user) =>
+              user.id === (payload.new as (typeof prev)[number]).id
+                ? (payload.new as (typeof prev)[number])
+                : user
+            );
+          }
+          if (payload.eventType === "DELETE") {
+            return prev.filter((user) => user.id !== (payload.old as (typeof prev)[number]).id);
+          }
+          return prev;
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  if (!users) return <div>Loading ...</div>;
+
+  const isAllChecked = users.length > 0 && userDeleteState.checkedIds.length === users.length;
 
   const handleDeleteCheckedItem = async () => {
     if (userDeleteState.checkedIds.length === 0) {
@@ -93,7 +131,7 @@ export default function UserList({
 
     if (userDeleteState.deleteing) return;
 
-    const targetUsers = allUsers.filter(({ id }) => userDeleteState.checkedIds.includes(id));
+    const targetUsers = users.filter(({ id }) => userDeleteState.checkedIds.includes(id));
     const targetUsersnames = targetUsers.map((u) => `${u.first_name} ${u.last_name}`).join(", ");
 
     const confirmMsg = `${targetUsersnames} 유저들을 삭제하시겠습니까?`;
@@ -123,7 +161,7 @@ export default function UserList({
     <div className={cx("userList")}>
       <div className={cx("userList__head")}>
         <div className={cx("userList__title")}>
-          <span className={cx("userList__result")}>검색 결과 : {allUsers.length}건</span>
+          <span className={cx("userList__result")}>검색 결과 : {users.length}건</span>
         </div>
 
         <div className={cx("userList__actions")}>
