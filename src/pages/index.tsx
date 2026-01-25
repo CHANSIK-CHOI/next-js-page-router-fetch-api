@@ -9,7 +9,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
-import { getSupabaseClient } from "@/lib/supabase.client";
+// import { getSupabaseClient } from "@/lib/supabase.client";
 const cx = classNames.bind(styles);
 
 export const getStaticProps = async () => {
@@ -87,37 +87,36 @@ export default function UserList({
     setUsers(allUsers);
   }, [allUsers]);
 
-  useEffect(() => {
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
+  // useEffect(() => {
+  //   const supabase = getSupabaseClient();
+  //   if (!supabase) return;
 
-    const channel = supabase
-      .channel("realtime:users")
-      .on("postgres_changes", { event: "*", schema: "public", table: "users" }, (payload) => {
-        console.log("payload : ", payload);
-        setUsers((prev) => {
-          if (payload.eventType === "INSERT") {
-            return [payload.new as (typeof prev)[number], ...prev];
-          }
-          if (payload.eventType === "UPDATE") {
-            return prev.map((user) =>
-              user.id === (payload.new as (typeof prev)[number]).id
-                ? (payload.new as (typeof prev)[number])
-                : user
-            );
-          }
-          if (payload.eventType === "DELETE") {
-            return prev.filter((user) => user.id !== (payload.old as (typeof prev)[number]).id);
-          }
-          return prev;
-        });
-      })
-      .subscribe();
+  //   const channel = supabase
+  //     .channel("realtime:users")
+  //     .on("postgres_changes", { event: "*", schema: "public", table: "users" }, (payload) => {
+  //       setUsers((prev) => {
+  //         if (payload.eventType === "INSERT") {
+  //           return [payload.new as (typeof prev)[number], ...prev];
+  //         }
+  //         if (payload.eventType === "UPDATE") {
+  //           return prev.map((user) =>
+  //             user.id === (payload.new as (typeof prev)[number]).id
+  //               ? (payload.new as (typeof prev)[number])
+  //               : user
+  //           );
+  //         }
+  //         if (payload.eventType === "DELETE") {
+  //           return prev.filter((user) => user.id !== (payload.old as (typeof prev)[number]).id);
+  //         }
+  //         return prev;
+  //       });
+  //     })
+  //     .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  //   return () => {
+  //     supabase.removeChannel(channel);
+  //   };
+  // }, []);
 
   if (!users) return <div>Loading ...</div>;
 
