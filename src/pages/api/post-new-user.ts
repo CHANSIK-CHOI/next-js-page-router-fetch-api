@@ -5,6 +5,8 @@ import { getSupabaseServer } from "@/lib/supabase.server";
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ error: "Method Not Allowed" });

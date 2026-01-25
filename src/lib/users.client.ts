@@ -34,6 +34,7 @@ export const postUserApi = async (payload: PayloadNewUser): Promise<ApiResponseN
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    cache: "no-cache",
   });
 
   if (!response.ok) {
@@ -55,6 +56,7 @@ export const deleteUserApi = async (ids: User["id"][]): Promise<ApiResponseDelet
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(ids),
+    cache: "no-cache",
   });
 
   if (!response.ok) {

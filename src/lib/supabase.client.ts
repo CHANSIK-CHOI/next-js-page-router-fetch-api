@@ -12,6 +12,11 @@ export function getSupabaseClient() {
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
 
-  supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      // Use PKCE so OAuth returns with ?code= instead of #access_token
+      flowType: "pkce",
+    },
+  });
   return supabaseClient;
 }
