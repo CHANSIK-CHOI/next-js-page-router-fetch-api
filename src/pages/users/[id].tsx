@@ -83,7 +83,7 @@ export default function DetailPage({
           <div className={cx("detail__profile")}>
             <Image
               src={avatar || PLACEHOLDER_SRC}
-              alt=""
+              alt={`${first_name} ${last_name}의 프로필`}
               width={120}
               height={120}
               unoptimized={!avatar}
