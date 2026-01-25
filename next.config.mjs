@@ -6,6 +6,7 @@ const nextConfig = {
       { protocol: "https", hostname: "reqres.in" },
       { protocol: "https", hostname: "placehold.co" },
       { protocol: "https", hostname: "rxehhovebdxudsoaeoxd.supabase.co" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
     ],
   },
 };
