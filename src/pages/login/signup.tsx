@@ -4,7 +4,7 @@ import Link from "next/link";
 import styles from "./login.module.scss";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm, type FieldErrors } from "react-hook-form";
-import { isErrorAlertMsg, SingUpForm } from "@/types";
+import { SingUpForm } from "@/types";
 import { EMAIL_PATTERN, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { getSupabaseClient } from "@/lib/supabase.client";
 import { useRouter } from "next/router";
@@ -33,6 +33,17 @@ const getSignupErrorMessage = (message?: string) => {
   return "회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.";
 };
 
+const formatPhoneNumber = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  }
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return value.trim();
+};
+
 export default function SignupPage() {
   const supabaseClient = getSupabaseClient();
   const router = useRouter();
@@ -50,50 +61,38 @@ export default function SignupPage() {
     if (isSubmitting) return;
     if (!supabaseClient) return;
 
-    try {
-      const trimmedName = values.signup_name?.trim();
-      const trimmedPhone = values.signup_phone?.trim();
-      const userMetadata: Record<string, string> = {};
+    const trimmedName = values.signup_name?.trim();
+    const trimmedPhone = values.signup_phone?.trim();
+    const userMetadata: Record<string, string> = {};
 
-      if (trimmedName) userMetadata.name = trimmedName;
-      if (trimmedPhone) userMetadata.phone = trimmedPhone;
+    if (trimmedName) userMetadata.name = trimmedName;
+    if (trimmedPhone) userMetadata.phone = formatPhoneNumber(trimmedPhone);
 
-      const { exists } = await checkEmailDuplicate(values.signup_email);
-      if (exists) {
-        alert("이미 가입된 이메일입니다.");
-        return;
-      }
+    const { data, error } = await supabaseClient.auth.signUp({
+      email: values.signup_email,
+      password: values.signup_password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+        data: userMetadata,
+      },
+    });
 
-      const { data, error } = await supabaseClient.auth.signUp({
-        email: values.signup_email,
-        password: values.signup_password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/login`,
-          data: userMetadata,
-        },
-      });
+    console.log({ data, error });
 
-      console.log({ data, error });
-
-      if (error) {
-        alert(getSignupErrorMessage(error.message));
-        return;
-      }
-
-      if (data.session) {
-        alert("회원가입이 완료되었습니다.");
-        await router.replace("/");
-        return;
-      }
-
-      alert("이메일로 인증 링크가 전송되었습니다. 확인 후 로그인 해주세요.");
-      await router.replace("/login");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;
-      console.error(err);
-      alert(userMessage);
+    if (error) {
+      alert(getSignupErrorMessage(error.message));
+      return;
     }
+
+    if (data.session) {
+      await supabaseClient.auth.signOut();
+      alert("회원가입이 완료되었습니다. 로그인해주세요.");
+      await router.replace("/login");
+      return;
+    }
+
+    alert("이메일로 인증 링크가 전송되었습니다. 확인 후 로그인 해주세요.");
+    await router.replace("/login");
   };
 
   const onError = (errors: FieldErrors<SingUpForm>) => {
@@ -133,11 +132,18 @@ export default function SignupPage() {
             <input
               className={cx("auth__input")}
               type="tel"
-              placeholder="010-1234-5678"
+              placeholder="하이픈 없이 입력해주세요"
               {...register("signup_phone", {
                 setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
-                validate: (value) =>
-                  !value || PHONE_PATTERN.test(value) || "휴대폰 번호 형식이 올바르지 않습니다.",
+                validate: (value) => {
+                  if (!value) return true;
+                  const digits = String(value).replace(/\D/g, "");
+                  return (
+                    digits.length === 10 ||
+                    digits.length === 11 ||
+                    "휴대폰 번호 형식이 올바르지 않습니다."
+                  );
+                },
               })}
             />
             {errors.signup_phone && (
