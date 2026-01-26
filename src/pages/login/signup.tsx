@@ -5,11 +5,25 @@ import styles from "./login.module.scss";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { SingUpForm } from "@/types";
-import { EMAIL_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
+import { EMAIL_PATTERN, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { getSupabaseClient } from "@/lib/supabase.client";
 import { useRouter } from "next/router";
 
 const cx = classNames.bind(styles);
+
+const getSignupErrorMessage = (message?: string) => {
+  const normalized = (message ?? "").toLowerCase();
+  if (normalized.includes("already registered") || normalized.includes("user already registered")) {
+    return "이미 가입된 이메일입니다.";
+  }
+  if (normalized.includes("invalid email")) {
+    return "유효한 이메일 형식이 아닙니다.";
+  }
+  if (normalized.includes("password should be at least") || normalized.includes("password is too short")) {
+    return "비밀번호는 더 길게 입력해주세요.";
+  }
+  return "회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.";
+};
 
 export default function SignupPage() {
   const supabaseClient = getSupabaseClient();
@@ -28,16 +42,37 @@ export default function SignupPage() {
     if (isSubmitting) return;
     if (!supabaseClient) return;
 
+    const trimmedName = values.signup_name?.trim();
+    const trimmedPhone = values.signup_phone?.trim();
+    const userMetadata: Record<string, string> = {};
+
+    if (trimmedName) userMetadata.name = trimmedName;
+    if (trimmedPhone) userMetadata.phone = trimmedPhone;
+
     const { data, error } = await supabaseClient.auth.signUp({
       email: values.signup_email,
       password: values.signup_password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+        data: userMetadata,
+      },
     });
 
     console.log({ data, error });
-    if (!error) {
-      alert("회원가입이 완료되었습니다. 가입하신 정보로 로그인해주세요.");
-      router.push("/login");
+
+    if (error) {
+      alert(getSignupErrorMessage(error.message));
+      return;
     }
+
+    if (data.session) {
+      alert("회원가입이 완료되었습니다.");
+      await router.replace("/");
+      return;
+    }
+
+    alert("이메일로 인증 링크가 전송되었습니다. 확인 후 로그인 해주세요.");
+    await router.replace("/login");
   };
 
   const onError = (errors: FieldErrors<SingUpForm>) => {
@@ -64,7 +99,9 @@ export default function SignupPage() {
               className={cx("auth__input")}
               type="text"
               placeholder="홍길동"
-              {...register("signup_name")}
+              {...register("signup_name", {
+                setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
+              })}
             />
           </div>
 
@@ -76,8 +113,15 @@ export default function SignupPage() {
               className={cx("auth__input")}
               type="tel"
               placeholder="010-1234-5678"
-              {...register("signup_phone")}
+              {...register("signup_phone", {
+                setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
+                validate: (value) =>
+                  !value || PHONE_PATTERN.test(value) || "휴대폰 번호 형식이 올바르지 않습니다.",
+              })}
             />
+            {errors.signup_phone && (
+              <span className="error-msg">{errors.signup_phone.message}</span>
+            )}
           </div>
 
           <div className={cx("auth__field")}>
@@ -90,6 +134,7 @@ export default function SignupPage() {
               placeholder="someone@email.com"
               {...register("signup_email", {
                 required: "필수 입력값입니다.",
+                setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
                 pattern: {
                   value: EMAIL_PATTERN,
                   message: "유효한 이메일 형식이 아닙니다.",

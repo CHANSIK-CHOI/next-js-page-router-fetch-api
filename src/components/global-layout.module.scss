@@ -122,15 +122,16 @@
 }
 
 .avatarFallback {
-  font-size: 0.75rem;
   font-weight: 700;
   color: var(--accent-strong);
+  font-size: 1.8rem;
+  line-height: 1;
+  transform: translateY(-0.1rem);
 }
 
 .userName {
   font-weight: 600;
   color: var(--text);
-  // font-size: 0.9rem;
 }
 
 .authButton {

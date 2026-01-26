@@ -7,11 +7,24 @@ import { useForm, type FieldErrors } from "react-hook-form";
 import { EMAIL_PATTERN, LOGIN_EMAIL_FORM } from "@/constants";
 import { LoginForm } from "@/types";
 import { getSupabaseClient } from "@/lib/supabase.client";
+import { useRouter } from "next/router";
 
 const cx = classNames.bind(styles);
 
+const getLoginErrorMessage = (message?: string) => {
+  const normalized = (message ?? "").toLowerCase();
+  if (normalized.includes("invalid login credentials") || normalized.includes("invalid_credentials")) {
+    return "이메일 또는 비밀번호를 확인해주세요.";
+  }
+  if (normalized.includes("email not confirmed")) {
+    return "이메일 인증 후 로그인해주세요.";
+  }
+  return "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
+};
+
 export default function LoginPage() {
   const supabaseClient = getSupabaseClient();
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -26,12 +39,17 @@ export default function LoginPage() {
     if (!supabaseClient) return;
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: values.login_email,
+      email: values.login_email.trim(),
       password: values.login_password,
     });
 
     console.log({ data, error });
-    if (error) alert("이메일 또는 비밀번호를 확인해주세요");
+    if (error) {
+      alert(getLoginErrorMessage(error.message));
+      return;
+    }
+
+    await router.replace("/");
   };
 
   const onError = (errors: FieldErrors<LoginForm>) => {
@@ -59,6 +77,7 @@ export default function LoginPage() {
               placeholder="someone@email.com"
               {...register("login_email", {
                 required: "필수 입력값입니다.",
+                setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
                 pattern: {
                   value: EMAIL_PATTERN,
                   message: "유효한 이메일 형식이 아닙니다.",
