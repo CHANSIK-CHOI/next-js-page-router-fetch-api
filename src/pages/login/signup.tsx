@@ -5,10 +5,9 @@ import styles from "./login.module.scss";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { SingUpForm } from "@/types";
-import { EMAIL_PATTERN, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
+import { EMAIL_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { getSupabaseClient } from "@/lib/supabase.client";
 import { useRouter } from "next/router";
-import { checkEmailDuplicate } from "@/lib/checkEmailDuplicate";
 
 const cx = classNames.bind(styles);
 
