@@ -43,6 +43,7 @@ export default function SignupPage() {
   const onError = (errors: FieldErrors<SingUpForm>) => {
     console.error("Validation Errors:", errors);
     alert("입력값을 확인해주세요.");
+    // 테스트
   };
 
   return (
