@@ -4,6 +4,7 @@ import styles from "./global-layout.module.scss";
 import { getSupabaseClient } from "@/lib/supabase.client";
 import type { Session } from "@supabase/supabase-js";
 import Image from "next/image";
+import Link from "next/link";
 
 const cx = classNames.bind(styles);
 
@@ -11,16 +12,6 @@ export default function AuthActions() {
   const [session, setSession] = useState<Session | null>(null);
   const supabaseClient = getSupabaseClient();
 
-  const handleLogin = async () => {
-    if (!supabaseClient) return;
-    const { data, error } = await supabaseClient.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
-    });
-    console.log("Login", { data, error });
-  };
   const handleLogout = async () => {
     if (!supabaseClient) return;
     const { error } = await supabaseClient.auth.signOut();
@@ -59,9 +50,9 @@ export default function AuthActions() {
   return (
     <div className={cx("authActions")}>
       {!session ? (
-        <button type="button" className={cx("authButton")} onClick={handleLogin}>
+        <Link href={"/login"} className={cx("authButton")}>
           로그인
-        </button>
+        </Link>
       ) : (
         <>
           <div className={cx("profile")}>

@@ -48,3 +48,15 @@ export type ErrorAlertMsg = Error & { alertMsg?: string };
 
 export const isErrorAlertMsg = (err: unknown): err is ErrorAlertMsg =>
   err instanceof Error && "alertMsg" in err;
+
+export type LoginForm = {
+  login_email: string;
+  login_password: string;
+};
+
+export type SingUpForm = {
+  signup_name?: string;
+  signup_phone?: string;
+  signup_email: string;
+  signup_password: string;
+};

@@ -95,7 +95,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 6px 15px;
   border-radius: var(--radius-pill);
   background: var(--surface-glass);
   border: 1px solid var(--border);
@@ -185,6 +185,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
   gap: 24px;
+  align-items: center;
 }
 
 .heroGlow {
@@ -224,7 +225,7 @@
   color: var(--muted);
   font-size: 1.6rem;
   max-width: 720px;
-  margin-bottom: 18px;
+  line-height: 1.5;
 }
 
 .heroTags {
@@ -248,16 +249,18 @@
   z-index: 1;
   display: grid;
   gap: 12px;
+  height: fit-content;
 }
 
 .statCard {
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 14px 16px;
+  padding: 20px;
   box-shadow: var(--shadow-soft);
-  display: grid;
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .statCardAccent {
@@ -278,12 +281,6 @@
 .statMeta {
   font-size: 1.2rem;
   color: var(--muted);
-}
-
-.layoutGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
-  gap: 20px;
 }
 
 .content {
