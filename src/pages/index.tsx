@@ -9,6 +9,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
+import { Alert } from "@/components/ui";
 const cx = classNames.bind(styles);
 
 export const getStaticProps = async () => {
@@ -125,100 +126,103 @@ export default function UserList({
   };
 
   return (
-    <div className={cx("userList")}>
-      <div className={cx("userList__head")}>
-        <div className={cx("userList__title")}>
-          <span className={cx("userList__result")}>검색 결과 : {users.length}건</span>
-        </div>
+    <>
+      <div className={cx("userList")}>
+        <div className={cx("userList__head")}>
+          <div className={cx("userList__title")}>
+            <span className={cx("userList__result")}>검색 결과 : {users.length}건</span>
+          </div>
 
-        <div className={cx("userList__actions")}>
-          <label className={cx("userList__sort")}>
-            <span className={cx("userList__sortLabel")}>정렬</span>
-            <select
-              className={cx("userList__select")}
-              value={sortOption}
-              onChange={(event) => setSortOption(event.target.value)}
-            >
-              <option value="latest">최신 등록 순</option>
-              <option value="oldest">오래된 등록 순</option>
-              <option value="nameAsc">이름 오름차순</option>
-              <option value="nameDesc">이름 내림차순</option>
-            </select>
-          </label>
-          {/* 삭제하기 */}
-          {!userDeleteState.isShowDeleteCheckbox ? (
-            <button
-              type="button"
-              className="btn btn--line"
-              onClick={() => userDeleteDispatch({ type: "SHOW_CHECKBOX" })}
-            >
-              삭제할 유저 선택하기
-            </button>
-          ) : (
-            <>
+          <div className={cx("userList__actions")}>
+            <label className={cx("userList__sort")}>
+              <span className={cx("userList__sortLabel")}>정렬</span>
+              <select
+                className={cx("userList__select")}
+                value={sortOption}
+                onChange={(event) => setSortOption(event.target.value)}
+              >
+                <option value="latest">최신 등록 순</option>
+                <option value="oldest">오래된 등록 순</option>
+                <option value="nameAsc">이름 오름차순</option>
+                <option value="nameDesc">이름 내림차순</option>
+              </select>
+            </label>
+            {/* 삭제하기 */}
+            {!userDeleteState.isShowDeleteCheckbox ? (
               <button
                 type="button"
                 className="btn btn--line"
-                onClick={() => userDeleteDispatch({ type: "HIDE_CHECKBOX" })}
+                onClick={() => userDeleteDispatch({ type: "SHOW_CHECKBOX" })}
               >
-                선택취소
+                삭제할 유저 선택하기
               </button>
-              {isAllChecked ? (
+            ) : (
+              <>
                 <button
                   type="button"
                   className="btn btn--line"
-                  onClick={() => userDeleteDispatch({ type: "RESET_CHECKED" })}
+                  onClick={() => userDeleteDispatch({ type: "HIDE_CHECKBOX" })}
                 >
-                  전체취소
+                  선택취소
                 </button>
-              ) : (
+                {isAllChecked ? (
+                  <button
+                    type="button"
+                    className="btn btn--line"
+                    onClick={() => userDeleteDispatch({ type: "RESET_CHECKED" })}
+                  >
+                    전체취소
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn--solid"
+                    onClick={() =>
+                      userDeleteDispatch({ type: "ALL_CHECKED", payload: { ids: targetIds } })
+                    }
+                  >
+                    전체선택
+                  </button>
+                )}
+
                 <button
                   type="button"
-                  className="btn btn--solid"
-                  onClick={() =>
-                    userDeleteDispatch({ type: "ALL_CHECKED", payload: { ids: targetIds } })
-                  }
+                  className="btn btn--solid btn--danger"
+                  disabled={userDeleteState.deleteing}
+                  onClick={handleDeleteCheckedItem}
                 >
-                  전체선택
+                  {userDeleteState.deleteing ? "삭제중..." : "삭제하기"}
                 </button>
-              )}
+              </>
+            )}
 
-              <button
-                type="button"
-                className="btn btn--solid btn--danger"
-                disabled={userDeleteState.deleteing}
-                onClick={handleDeleteCheckedItem}
-              >
-                {userDeleteState.deleteing ? "삭제중..." : "삭제하기"}
-              </button>
-            </>
-          )}
+            {/* 추가하기 */}
+            {!userDeleteState.isShowDeleteCheckbox && (
+              <Link href={`users/new`} className="btn btn--solid btn--warm">
+                새 유저 추가
+              </Link>
+            )}
 
-          {/* 추가하기 */}
-          {!userDeleteState.isShowDeleteCheckbox && (
-            <Link href={`users/new`} className="btn btn--solid btn--warm">
-              새 유저 추가
-            </Link>
-          )}
+            {/* 전체수정 */}
+            {/* <Link href={`users/bulk-edit`} className="btn btn--line">전체 유저 정보 수정</Link> */}
+          </div>
+        </div>
 
-          {/* 전체수정 */}
-          {/* <Link href={`users/bulk-edit`} className="btn btn--line">전체 유저 정보 수정</Link> */}
+        <div className={cx("userList__body")}>
+          <ul className={cx("userList__list")}>
+            {sortedUsers?.map((user) => (
+              <li key={user.id} className={cx("userList__item")}>
+                <UserBox
+                  {...user}
+                  deleteState={userDeleteState}
+                  deleteDispatch={userDeleteDispatch}
+                />
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
-
-      <div className={cx("userList__body")}>
-        <ul className={cx("userList__list")}>
-          {sortedUsers?.map((user) => (
-            <li key={user.id} className={cx("userList__item")}>
-              <UserBox
-                {...user}
-                deleteState={userDeleteState}
-                deleteDispatch={userDeleteDispatch}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+      <Alert title="test" description="test" open />
+    </>
   );
 }
