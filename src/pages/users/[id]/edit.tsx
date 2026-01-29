@@ -71,7 +71,7 @@ export default function EditPage({
         <Button type="button">수정완료</Button>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+      <div className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
         <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
           <div className="flex flex-col gap-3">
             <Image

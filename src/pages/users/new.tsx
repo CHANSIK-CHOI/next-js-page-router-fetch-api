@@ -100,13 +100,13 @@ export default function NewPage() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-[linear-gradient(135deg,#f6b481,#f4a261)] text-slate-900 hover:opacity-90"
+          className="bg-[linear-gradient(135deg,#f5f5f5,#d4d4d4)] text-neutral-900 hover:opacity-90"
         >
           {isSubmitting ? "추가 중..." : "추가하기"}
         </Button>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+      <div className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
         <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
           <div className="flex flex-col gap-3">
             <Image

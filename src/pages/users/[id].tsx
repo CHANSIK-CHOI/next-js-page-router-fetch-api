@@ -75,7 +75,7 @@ export default function DetailPage({
         </Button>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+      <div className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
         <div className="grid gap-6 md:grid-cols-[160px_1fr] md:items-center">
           <div className="h-[140px] w-[140px] overflow-hidden rounded-2xl border border-border/60 bg-muted dark:border-white/10">
             <Image

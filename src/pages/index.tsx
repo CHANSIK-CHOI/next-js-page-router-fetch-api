@@ -125,7 +125,7 @@ export default function UserList({
   return (
     <>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-end justify-between gap-4 rounded-2xl border border-border/60 bg-background/70 p-5 shadow-sm dark:border-white/10 dark:bg-slate-900/60">
+        <div className="flex flex-wrap items-end justify-between gap-4 rounded-2xl border border-border/60 bg-background/70 p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900/60">
           <div className="flex items-center gap-3">
             <span className="rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
               검색 결과 : {users.length}건
@@ -136,7 +136,7 @@ export default function UserList({
             <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <span className="text-sm font-semibold">정렬</span>
               <select
-                className="h-9 min-w-[170px] rounded-full border border-border/60 bg-white/70 px-4 text-sm font-semibold text-foreground shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-slate-900/70"
+                className="h-9 min-w-[170px] rounded-full border border-border/60 bg-white/70 px-4 text-sm font-semibold text-foreground shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70"
                 value={sortOption}
                 onChange={(event) => setSortOption(event.target.value)}
               >
@@ -192,7 +192,7 @@ export default function UserList({
             {!userDeleteState.isShowDeleteCheckbox && (
               <Button
                 asChild
-                className="bg-[linear-gradient(135deg,#f6b481,#f4a261)] text-slate-900 hover:opacity-90"
+                className="bg-[linear-gradient(135deg,#f5f5f5,#d4d4d4)] text-neutral-900 hover:opacity-90"
               >
                 <Link href={`users/new`}>새 유저 추가</Link>
               </Button>
@@ -214,7 +214,7 @@ export default function UserList({
           </ul>
         </div>
       </div>
-      <Alert title="test" description="test" open />
+      {/* <Alert title="test" description="test" open /> */}
     </>
   );
 }

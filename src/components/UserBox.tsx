@@ -27,7 +27,7 @@ export default function UserBox({
   const isChecked = deleteState.checkedIds.includes(id);
 
   return (
-    <div className="flex h-full items-center gap-4 rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/60">
+    <div className="flex h-full items-center gap-4 rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/60">
       {deleteState.isShowDeleteCheckbox && (
         <div className="flex w-6 shrink-0 items-center justify-end sm:justify-start">
           <input
