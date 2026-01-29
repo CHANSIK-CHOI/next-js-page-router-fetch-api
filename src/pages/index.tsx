@@ -7,7 +7,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
-import { Alert, Button } from "@/components/ui";
+import { useAlert, Button } from "@/components/ui";
 
 export const getStaticProps = async () => {
   try {
@@ -72,6 +72,8 @@ export default function UserList({
   }, [users, sortOption]);
   const hasAlertedRef = useRef(false);
 
+  const { openAlert: openTestAlert } = useAlert();
+
   useEffect(() => {
     if (userMessage && !hasAlertedRef.current) {
       console.error(userMessage);
@@ -90,7 +92,11 @@ export default function UserList({
 
   const handleDeleteCheckedItem = async () => {
     if (userDeleteState.checkedIds.length === 0) {
-      alert("선택한 데이터가 없습니다.");
+      // alert("선택한 데이터가 없습니다.");
+      openTestAlert({
+        description: "선택한 데이터가 없습니다.",
+        title: "test",
+      });
       return;
     }
 

@@ -1,12 +1,13 @@
 import React, { ReactNode } from "react";
 import { AlertDialog, useDialog } from "@/components/ui";
 
-type AlertProps = {
+export type AlertProps = {
   title?: string | ReactNode;
   description: string | ReactNode;
   actionText?: string;
-  open: boolean;
+  open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onOk?: () => void;
 };
 
 export default function Alert({
@@ -15,6 +16,7 @@ export default function Alert({
   actionText = "확인",
   open = false,
   onOpenChange,
+  onOk,
 }: AlertProps) {
   const { container } = useDialog();
 
@@ -27,7 +29,7 @@ export default function Alert({
           <AlertDialog.Description>{description}</AlertDialog.Description>
         </AlertDialog.Header>
         <AlertDialog.Footer isFull>
-          <AlertDialog.Action>{actionText}</AlertDialog.Action>
+          <AlertDialog.Action onClick={onOk}>{actionText}</AlertDialog.Action>
         </AlertDialog.Footer>
       </AlertDialog.Content>
     </AlertDialog>
