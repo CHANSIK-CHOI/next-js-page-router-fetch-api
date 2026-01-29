@@ -16,52 +16,44 @@ type AlertData = AlertPayload & {
 
 export default function AlertProvider({ children }: AlertProviderProps) {
   const [alerts, setAlerts] = useState<AlertData[]>([]);
+  const [openAlerts, setOpenAlerts] = useState<string[]>([]);
 
   const openAlert = useCallback((props: AlertPayload) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setAlerts((prev) => [...prev, { id, ...props }]);
+    setOpenAlerts((prev) => [...prev, id]);
   }, []);
 
   const removeAlert = useCallback((id: string) => {
     setAlerts((prev) => prev.filter((alert) => alert.id !== id));
   }, []);
 
-  const closeAlert = useCallback(
-    (id?: string) => {
-      if (id) {
+  const closeWithAnimation = useCallback(
+    (id: string, onCloseComplete?: () => void) => {
+      setOpenAlerts((prev) => prev.filter((openId) => openId !== id));
+      window.setTimeout(() => {
+        onCloseComplete?.();
         removeAlert(id);
-        return;
-      }
-      console.error("closeAlert을 사용할 때는 id를 매개변수로 전달해주세요.");
+      }, 140);
     },
     [removeAlert]
   );
 
-  useEffect(() => {
-    console.log({ alerts });
-  }, [alerts]);
-
-  const value = useMemo(() => ({ openAlert, closeAlert }), [openAlert, closeAlert]);
+  const value = useMemo(() => ({ openAlert }), [openAlert]);
   return (
     <AlertContext.Provider value={value}>
       {children}
       {alerts.map((alert) => {
-        const { id, onCloseComplete, onOpenChange, onOk, ...rest } = alert;
+        const { id, onOk, onCloseComplete, ...rest } = alert;
+        const isOpen = openAlerts.includes(id);
         return (
           <Alert
             key={id}
             {...rest}
-            open
-            onOpenChange={(open) => {
-              onOpenChange?.(open);
-              if (!open) {
-                onCloseComplete?.();
-                removeAlert(id);
-              }
-            }}
+            open={isOpen}
             onOk={() => {
               onOk?.();
-              removeAlert(id);
+              closeWithAnimation(id, onCloseComplete);
             }}
           />
         );

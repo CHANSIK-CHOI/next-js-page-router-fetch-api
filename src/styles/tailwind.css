@@ -4,6 +4,8 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant open (&:is([data-state="open"]));
+@custom-variant closed (&:is([data-state="closed"]));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);

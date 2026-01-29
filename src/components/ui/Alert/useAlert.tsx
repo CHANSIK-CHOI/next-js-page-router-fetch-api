@@ -3,7 +3,6 @@ import { type AlertProps } from "@/components/ui";
 
 type AlertContextValue = {
   openAlert: (props: AlertProps & { onCloseComplete?: () => void }) => void;
-  closeAlert: (id?: string) => void;
 };
 
 export const AlertContext = createContext<AlertContextValue | null>(null);

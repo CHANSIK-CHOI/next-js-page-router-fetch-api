@@ -6,7 +6,6 @@ export type AlertProps = {
   description: string | ReactNode;
   actionText?: string;
   open?: boolean;
-  onOpenChange?: (open: boolean) => void;
   onOk?: () => void;
 };
 
@@ -15,13 +14,12 @@ export default function Alert({
   description,
   actionText = "확인",
   open = false,
-  onOpenChange,
   onOk,
 }: AlertProps) {
   const { container } = useDialog();
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open}>
       <AlertDialog.Content container={container} size="sm">
         <AlertDialog.Header>
           {title && <AlertDialog.Title>{title}</AlertDialog.Title>}
@@ -29,7 +27,9 @@ export default function Alert({
           <AlertDialog.Description>{description}</AlertDialog.Description>
         </AlertDialog.Header>
         <AlertDialog.Footer isFull>
-          <AlertDialog.Action onClick={onOk}>{actionText}</AlertDialog.Action>
+          <AlertDialog.Action autoFocus onClick={onOk}>
+            {actionText}
+          </AlertDialog.Action>
         </AlertDialog.Footer>
       </AlertDialog.Content>
     </AlertDialog>

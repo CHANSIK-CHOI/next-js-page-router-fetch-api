@@ -96,6 +96,8 @@ export default function UserList({
       openTestAlert({
         description: "선택한 데이터가 없습니다.",
         title: "test",
+        onOk: () => console.log("onOk"),
+        onCloseComplete: () => console.log("onCloseComplete"),
       });
       return;
     }
