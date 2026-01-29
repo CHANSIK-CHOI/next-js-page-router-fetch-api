@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { AlertDialog, useDialog } from "@/components/ui";
+import classNames from "classnames";
 
 export type AlertProps = {
   title?: string | ReactNode;
@@ -30,7 +31,13 @@ export default function Alert({
     <AlertDialog open={open}>
       <AlertDialog.Content container={container} size="sm" onAnimationEnd={handleAnimationEnd}>
         <AlertDialog.Header>
-          {title && <AlertDialog.Title>{title}</AlertDialog.Title>}
+          <AlertDialog.Title
+            className={classNames({
+              "sr-only": !title,
+            })}
+          >
+            {title}
+          </AlertDialog.Title>
 
           <AlertDialog.Description>{description}</AlertDialog.Description>
         </AlertDialog.Header>
