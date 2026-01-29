@@ -1,6 +1,4 @@
 import React, { useEffect, useRef } from "react";
-import classNames from "classnames/bind";
-import styles from "./edit-page.module.scss";
 import Link from "next/link";
 import Image from "next/image";
 import { PLACEHOLDER_SRC } from "@/constants";
@@ -8,7 +6,7 @@ import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import { useRouter } from "next/router";
 import { isErrorAlertMsg } from "@/types";
 import { getUserApi } from "@/lib/users.server";
-const cx = classNames.bind(styles);
+import { Button } from "@/components/ui";
 
 export const getStaticPaths = async () => {
   try {
@@ -61,47 +59,54 @@ export default function EditPage({
 
   const { avatar, id } = user;
 
+  const inputBase =
+    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10";
+
   return (
-    <div className={cx("edit")}>
-      <div className={cx("edit__head")}>
-        <div className={cx("edit__actions")}>
-          <Link href={`/users/${id}`} className="btn btn--line">
-            수정취소
-          </Link>
-          <button type="button" className="btn btn--solid">
-            수정완료
-          </button>
-        </div>
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center justify-end gap-2">
+        <Button asChild variant="outline">
+          <Link href={`/users/${id}`}>수정취소</Link>
+        </Button>
+        <Button type="button">수정완료</Button>
       </div>
-      <div className={cx("edit__body")}>
-        <div className={cx("edit__box")}>
-          <div className={cx("edit__profile")}>
+
+      <div className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+        <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
+          <div className="flex flex-col gap-3">
             <Image
               src={avatar || PLACEHOLDER_SRC}
               alt=""
-              width={120}
-              height={120}
+              width={140}
+              height={140}
               unoptimized={!avatar}
+              className="h-[140px] w-[140px] rounded-2xl border border-border/60 bg-muted object-cover dark:border-white/10"
             />
-            <div className={cx("edit__profileBtn")}>
-              <label htmlFor={`avatar_${id}`}>프로필 변경</label>
-              <button type="button">프로필 삭제</button>
+            <div className="flex flex-col gap-2">
+              <Button asChild variant="outline" size="sm" className="justify-center">
+                <label htmlFor={`avatar_${id}`} className="cursor-pointer">
+                  프로필 변경
+                </label>
+              </Button>
+              <Button type="button" variant="ghost" size="sm">
+                프로필 삭제
+              </Button>
               <input id={`avatar_${id}`} type="file" accept="image/*" hidden />
             </div>
           </div>
 
-          <div className={cx("edit__texts")}>
-            <dl>
-              <dt>이름</dt>
-              <dd>
-                <input type="text" placeholder="first name" />
-                <input type="text" placeholder="last name" />
+          <div className="flex flex-col gap-5">
+            <dl className="grid gap-3">
+              <dt className="text-sm font-semibold text-muted-foreground">이름</dt>
+              <dd className="grid gap-3 sm:grid-cols-2">
+                <input type="text" placeholder="first name" className={inputBase} />
+                <input type="text" placeholder="last name" className={inputBase} />
               </dd>
             </dl>
-            <dl>
-              <dt>email</dt>
+            <dl className="grid gap-3">
+              <dt className="text-sm font-semibold text-muted-foreground">email</dt>
               <dd>
-                <input type="text" placeholder="email" />
+                <input type="text" placeholder="email" className={inputBase} />
               </dd>
             </dl>
           </div>

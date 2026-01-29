@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import classNames from "classnames/bind";
-import styles from "./new-page.module.scss";
 import Link from "next/link";
 import Image from "next/image";
 import { INIT_NEW_USER_VALUE, PLACEHOLDER_SRC } from "@/constants";
@@ -10,8 +8,7 @@ import { PayloadNewUser, isErrorAlertMsg } from "@/types";
 import { useRouter } from "next/router";
 import { compressImageFile } from "@/util";
 import { uploadAvatarToSupabase } from "@/lib/avatarUpload";
-
-const cx = classNames.bind(styles);
+import { Button } from "@/components/ui";
 
 export default function NewPage() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
@@ -91,36 +88,47 @@ export default function NewPage() {
     alert("입력값을 확인해주세요.");
   };
 
+  const inputBase =
+    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10";
+
   return (
-    <form className={cx("new")} onSubmit={handleSubmit(onSubmit, onError)}>
-      <div className={cx("new__head")}>
-        <div className={cx("new__actions")}>
-          <Link href={`/`} className="btn btn--line">
-            뒤로가기
-          </Link>
-          <button type="submit" className="btn btn--solid btn--warm" disabled={isSubmitting}>
-            {isSubmitting ? "추가 중..." : "추가하기"}
-          </button>
-        </div>
+    <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit, onError)}>
+      <div className="flex items-center justify-end gap-2">
+        <Button asChild variant="outline">
+          <Link href={`/`}>뒤로가기</Link>
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-[linear-gradient(135deg,#f6b481,#f4a261)] text-slate-900 hover:opacity-90"
+        >
+          {isSubmitting ? "추가 중..." : "추가하기"}
+        </Button>
       </div>
-      <div className={cx("new__body")}>
-        <div className={cx("new__box")}>
-          <div className={cx("new__profile")}>
+
+      <div className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+        <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
+          <div className="flex flex-col gap-3">
             <Image
               src={previewUrl || PLACEHOLDER_SRC}
               alt=""
-              width={120}
-              height={120}
+              width={140}
+              height={140}
               unoptimized
+              className="h-[140px] w-[140px] rounded-2xl border border-border/60 bg-muted object-cover dark:border-white/10"
             />
 
-            <div className={cx("new__profileBtn")}>
-              <label htmlFor={`new_avatar`}>{previewUrl ? "프로필 변경" : "프로필 추가"}</label>
-              <button type="button" onClick={handleRemoveImage}>
+            <div className="flex flex-col gap-2">
+              <Button asChild variant="outline" size="sm" className="justify-center">
+                <label htmlFor="new_avatar" className="cursor-pointer">
+                  {previewUrl ? "프로필 변경" : "프로필 추가"}
+                </label>
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={handleRemoveImage}>
                 프로필 삭제
-              </button>
+              </Button>
               <input
-                id={`new_avatar`}
+                id="new_avatar"
                 type="file"
                 accept="image/*"
                 hidden
@@ -129,56 +137,60 @@ export default function NewPage() {
             </div>
           </div>
 
-          <div className={cx("new__texts")}>
-            <dl>
-              <dt>이름</dt>
-              <dd>
-                <div className="input-group">
+          <div className="flex flex-col gap-5">
+            <dl className="grid gap-3">
+              <dt className="text-sm font-semibold text-muted-foreground">이름</dt>
+              <dd className="grid gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
                   <input
                     type="text"
                     placeholder="first name"
+                    className={inputBase}
                     {...register("first_name", {
                       required: "필수 입력값입니다.",
                       validate: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
                     })}
                   />
                   {errors.first_name && (
-                    <span className="error-msg">{errors.first_name.message}</span>
+                    <span className="text-xs text-destructive">{errors.first_name.message}</span>
                   )}
                 </div>
 
-                <div className="input-group">
+                <div className="flex flex-col gap-1">
                   <input
                     type="text"
                     placeholder="last name"
+                    className={inputBase}
                     {...register("last_name", {
                       required: "필수 입력값입니다.",
                       validate: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
                     })}
                   />
                   {errors.last_name && (
-                    <span className="error-msg">{errors.last_name.message}</span>
+                    <span className="text-xs text-destructive">{errors.last_name.message}</span>
                   )}
                 </div>
               </dd>
             </dl>
-            <dl>
-              <dt>email</dt>
-              <dd>
-                <div className="input-group">
-                  <input
-                    type="text"
-                    placeholder="email"
-                    {...register("email", {
-                      required: "필수 입력값입니다.",
-                      pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                        message: "유효한 이메일 형식이 아닙니다.",
-                      },
-                    })}
-                  />
-                  {errors.email && <span className="error-msg">{errors.email.message}</span>}
-                </div>
+
+            <dl className="grid gap-3">
+              <dt className="text-sm font-semibold text-muted-foreground">email</dt>
+              <dd className="flex flex-col gap-1">
+                <input
+                  type="text"
+                  placeholder="email"
+                  className={inputBase}
+                  {...register("email", {
+                    required: "필수 입력값입니다.",
+                    pattern: {
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                      message: "유효한 이메일 형식이 아닙니다.",
+                    },
+                  })}
+                />
+                {errors.email && (
+                  <span className="text-xs text-destructive">{errors.email.message}</span>
+                )}
               </dd>
             </dl>
           </div>

@@ -1,15 +1,12 @@
 import React from "react";
-import classNames from "classnames/bind";
 import Link from "next/link";
-import styles from "./login.module.scss";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { SingUpForm } from "@/types";
 import { EMAIL_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { getSupabaseClient } from "@/lib/supabase.client";
 import { useRouter } from "next/router";
-
-const cx = classNames.bind(styles);
+import { Button } from "@/components/ui";
 
 const getSignupErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
@@ -100,22 +97,34 @@ export default function SignupPage() {
     // 테스트
   };
 
+  const inputBase =
+    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10";
+
   return (
-    <div className={cx("auth")}>
-      <section className={cx("auth__card")}>
-        <div className={cx("auth__cardHeader")}>
-          <span className={cx("auth__kicker")}>Sign Up</span>
-          <h3 className={cx("auth__title")}>회원가입</h3>
-          <p className={cx("auth__subtitle")}>필수 정보는 이메일과 비밀번호예요.</p>
+    <div className="mx-auto w-full max-w-xl">
+      <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 p-7 shadow-lg dark:border-white/10 dark:bg-slate-900/70">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(224,122,95,0.18),transparent_70%)] dark:bg-[radial-gradient(circle,rgba(56,189,248,0.2),transparent_70%)]"
+        />
+        <div className="relative z-10">
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary dark:bg-primary/20 dark:text-primary-foreground">
+            Sign Up
+          </span>
+          <h3 className="mt-3 text-2xl font-semibold text-foreground">회원가입</h3>
+          <p className="mt-2 text-sm text-muted-foreground">필수 정보는 이메일과 비밀번호예요.</p>
         </div>
 
-        <form className={cx("auth__form")} onSubmit={handleSubmit(onSubmit, onError)}>
-          <div className={cx("auth__field")}>
-            <label className={cx("auth__label")} htmlFor="signup_name">
+        <form
+          className="relative z-10 mt-6 flex flex-col gap-4"
+          onSubmit={handleSubmit(onSubmit, onError)}
+        >
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-muted-foreground" htmlFor="signup_name">
               이름 (선택)
             </label>
             <input
-              className={cx("auth__input")}
+              className={inputBase}
               type="text"
               placeholder="홍길동"
               {...register("signup_name", {
@@ -124,12 +133,12 @@ export default function SignupPage() {
             />
           </div>
 
-          <div className={cx("auth__field")}>
-            <label className={cx("auth__label")} htmlFor="signup_phone">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-muted-foreground" htmlFor="signup_phone">
               휴대폰 번호 (선택)
             </label>
             <input
-              className={cx("auth__input")}
+              className={inputBase}
               type="tel"
               placeholder="하이픈 없이 입력해주세요"
               {...register("signup_phone", {
@@ -146,16 +155,16 @@ export default function SignupPage() {
               })}
             />
             {errors.signup_phone && (
-              <span className="error-msg">{errors.signup_phone.message}</span>
+              <span className="text-xs text-destructive">{errors.signup_phone.message}</span>
             )}
           </div>
 
-          <div className={cx("auth__field")}>
-            <label className={cx("auth__label")} htmlFor="signup_email">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-muted-foreground" htmlFor="signup_email">
               이메일
             </label>
             <input
-              className={cx("auth__input")}
+              className={inputBase}
               type="email"
               placeholder="someone@email.com"
               {...register("signup_email", {
@@ -168,16 +177,19 @@ export default function SignupPage() {
               })}
             />
             {errors.signup_email && (
-              <span className="error-msg">{errors.signup_email.message}</span>
+              <span className="text-xs text-destructive">{errors.signup_email.message}</span>
             )}
           </div>
 
-          <div className={cx("auth__field")}>
-            <label className={cx("auth__label")} htmlFor="signup_password">
+          <div className="flex flex-col gap-2">
+            <label
+              className="text-xs font-semibold text-muted-foreground"
+              htmlFor="signup_password"
+            >
               비밀번호
             </label>
             <input
-              className={cx("auth__input")}
+              className={inputBase}
               type="password"
               placeholder="8자 이상 입력하세요"
               {...register("signup_password", {
@@ -186,23 +198,28 @@ export default function SignupPage() {
               })}
             />
             {errors.signup_password && (
-              <span className="error-msg">{errors.signup_password.message}</span>
+              <span className="text-xs text-destructive">{errors.signup_password.message}</span>
             )}
           </div>
 
-          <div className={cx("auth__actions")}>
-            <button type="submit" className="btn btn--solid btn--warm">
+          <div className="flex flex-col gap-3">
+            <Button type="submit" disabled={isSubmitting}>
               회원가입
-            </button>
+            </Button>
 
-            <div className={cx("auth__divider")}>또는</div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border/70 before:content-[''] after:h-px after:flex-1 after:bg-border/70 after:content-['']">
+              또는
+            </div>
 
             <GithubLoginBtn />
           </div>
         </form>
 
-        <div className={cx("auth__footer")}>
-          이미 계정이 있나요? <Link href="/login">로그인</Link>
+        <div className="mt-5 text-center text-sm text-muted-foreground">
+          이미 계정이 있나요?{" "}
+          <Link href="/login" className="font-semibold text-primary">
+            로그인
+          </Link>
         </div>
       </section>
     </div>

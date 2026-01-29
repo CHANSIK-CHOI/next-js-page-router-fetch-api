@@ -1,4 +1,5 @@
-export { default as AlertDialog } from "./radix-ui/alert-dialog";
-export { default as DialogProvider } from "./radix-ui/DialogProvider";
-export { useDialog } from "./radix-ui/DialogProvider";
+export { default as AlertDialog } from "./alert-dialog";
+export { default as DialogProvider } from "./Dialog/DialogProvider";
+export { useDialog } from "./Dialog/DialogProvider";
 export { default as Alert } from "./Alert/Alert";
+export { Button, buttonVariants } from "./button";

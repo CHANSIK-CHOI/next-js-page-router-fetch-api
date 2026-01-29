@@ -20,13 +20,13 @@ export default function Alert({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialog.Content container={container}>
+      <AlertDialog.Content container={container} size="sm">
         <AlertDialog.Header>
           {title && <AlertDialog.Title>{title}</AlertDialog.Title>}
 
           <AlertDialog.Description>{description}</AlertDialog.Description>
         </AlertDialog.Header>
-        <AlertDialog.Footer>
+        <AlertDialog.Footer isFull>
           <AlertDialog.Action>{actionText}</AlertDialog.Action>
         </AlertDialog.Footer>
       </AlertDialog.Content>

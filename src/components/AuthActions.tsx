@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
-import classNames from "classnames/bind";
-import styles from "./global-layout.module.scss";
 import { getSupabaseClient } from "@/lib/supabase.client";
 import type { Session } from "@supabase/supabase-js";
 import Image from "next/image";
 import Link from "next/link";
-
-const cx = classNames.bind(styles);
+import { Button } from "@/components/ui";
 
 export default function AuthActions() {
   const [session, setSession] = useState<Session | null>(null);
@@ -48,18 +45,18 @@ export default function AuthActions() {
     user?.user_metadata?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatar;
 
   return (
-    <div className={cx("authActions")}>
+    <div className="flex items-center gap-3">
       {!session ? (
-        <Link href={"/login"} className={cx("authButton")}>
-          로그인
-        </Link>
+        <Button asChild variant="outline" size="sm" className="rounded-full">
+          <Link href="/login">로그인</Link>
+        </Button>
       ) : (
         <>
-          <div className={cx("profile")}>
-            <span className={cx("avatar")}>
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-white/70 px-3 py-1.5 text-sm shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted text-xs font-semibold text-primary">
               {avatarUrl ? (
                 <Image
-                  className={cx("avatarImage")}
+                  className="h-full w-full object-cover"
                   src={avatarUrl}
                   alt={`${userName} avatar`}
                   width={50}
@@ -67,18 +64,14 @@ export default function AuthActions() {
                   unoptimized={!avatarUrl}
                 />
               ) : (
-                <span className={cx("avatarFallback")}>{userName.slice(0, 1)}</span>
+                <span className="uppercase">{userName.slice(0, 1)}</span>
               )}
             </span>
-            <span className={cx("userName")}>{userName} 님</span>
+            <span className="text-sm font-medium text-foreground">{userName} 님</span>
           </div>
-          <button
-            type="button"
-            className={cx("authButton", "authButtonSecondary")}
-            onClick={handleLogout}
-          >
+          <Button variant="outline" size="sm" className="rounded-full" onClick={handleLogout}>
             로그아웃
-          </button>
+          </Button>
         </>
       )}
     </div>

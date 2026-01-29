@@ -1,9 +1,7 @@
 import React from "react";
 import Image from "next/image";
-import styles from "@/pages/login/login.module.scss";
-import classNames from "classnames/bind";
 import { getSupabaseClient } from "@/lib/supabase.client";
-const cx = classNames.bind(styles);
+import { Button } from "@/components/ui";
 
 export default function GithubLoginBtn() {
   const supabaseClient = getSupabaseClient();
@@ -20,9 +18,14 @@ export default function GithubLoginBtn() {
   };
 
   return (
-    <button type="button" className={cx("auth__oauth")} onClick={handleLoginGithub}>
-      <Image src="/icons/github.svg" alt="GitHub" width={18} height={18} />
+    <Button
+      type="button"
+      variant="outline"
+      className="h-11 w-full gap-2 rounded-full border-primary/30 bg-white/70 text-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/70"
+      onClick={handleLoginGithub}
+    >
+      <Image src="/icons/github.svg" alt="GitHub" width={18} height={18} className="dark:invert" />
       GitHub로 로그인
-    </button>
+    </Button>
   );
 }

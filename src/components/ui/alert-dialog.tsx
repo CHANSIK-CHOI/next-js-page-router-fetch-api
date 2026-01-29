@@ -3,8 +3,8 @@
 import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from "react";
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui";
 
-import { cn } from "@/util";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui";
 
 function AlertDialog({ ...props }: ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Root>) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
@@ -80,12 +80,16 @@ function AlertDialogHeader({ className, ...props }: ComponentPropsWithoutRef<"di
   );
 }
 
-function AlertDialogFooter({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+function AlertDialogFooter({
+  className,
+  isFull,
+  ...props
+}: ComponentPropsWithoutRef<"div"> & { isFull?: boolean }) {
   return (
     <div
       data-slot="alert-dialog-footer"
       className={cn(
-        "bg-muted/50 -mx-4 -mb-4 rounded-b-xl border-t p-4 flex flex-col-reverse gap-2 group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end",
+        `bg-muted/50 -mx-4 -mb-4 rounded-b-xl border-t p-4 flex flex-col-reverse gap-2 ${!isFull && "group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end"}`,
         className
       )}
       {...props}

@@ -1,5 +1,3 @@
-import classNames from "classnames/bind";
-import styles from "./index.module.scss";
 import UserBox from "@/components/UserBox";
 import Link from "next/link";
 import { getUserApi } from "@/lib/users.server";
@@ -9,8 +7,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
-import { Alert } from "@/components/ui";
-const cx = classNames.bind(styles);
+import { Alert, Button } from "@/components/ui";
 
 export const getStaticProps = async () => {
   try {
@@ -127,17 +124,19 @@ export default function UserList({
 
   return (
     <>
-      <div className={cx("userList")}>
-        <div className={cx("userList__head")}>
-          <div className={cx("userList__title")}>
-            <span className={cx("userList__result")}>검색 결과 : {users.length}건</span>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-end justify-between gap-4 rounded-2xl border border-border/60 bg-background/70 p-5 shadow-sm dark:border-white/10 dark:bg-slate-900/60">
+          <div className="flex items-center gap-3">
+            <span className="rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
+              검색 결과 : {users.length}건
+            </span>
           </div>
 
-          <div className={cx("userList__actions")}>
-            <label className={cx("userList__sort")}>
-              <span className={cx("userList__sortLabel")}>정렬</span>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <span className="text-sm font-semibold">정렬</span>
               <select
-                className={cx("userList__select")}
+                className="h-9 min-w-[170px] rounded-full border border-border/60 bg-white/70 px-4 text-sm font-semibold text-foreground shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-slate-900/70"
                 value={sortOption}
                 onChange={(event) => setSortOption(event.target.value)}
               >
@@ -147,71 +146,64 @@ export default function UserList({
                 <option value="nameDesc">이름 내림차순</option>
               </select>
             </label>
-            {/* 삭제하기 */}
+
             {!userDeleteState.isShowDeleteCheckbox ? (
-              <button
-                type="button"
-                className="btn btn--line"
+              <Button
+                variant="outline"
                 onClick={() => userDeleteDispatch({ type: "SHOW_CHECKBOX" })}
               >
                 삭제할 유저 선택하기
-              </button>
+              </Button>
             ) : (
               <>
-                <button
-                  type="button"
-                  className="btn btn--line"
+                <Button
+                  variant="outline"
                   onClick={() => userDeleteDispatch({ type: "HIDE_CHECKBOX" })}
                 >
                   선택취소
-                </button>
+                </Button>
                 {isAllChecked ? (
-                  <button
-                    type="button"
-                    className="btn btn--line"
+                  <Button
+                    variant="outline"
                     onClick={() => userDeleteDispatch({ type: "RESET_CHECKED" })}
                   >
                     전체취소
-                  </button>
+                  </Button>
                 ) : (
-                  <button
-                    type="button"
-                    className="btn btn--solid"
+                  <Button
                     onClick={() =>
                       userDeleteDispatch({ type: "ALL_CHECKED", payload: { ids: targetIds } })
                     }
                   >
                     전체선택
-                  </button>
+                  </Button>
                 )}
 
-                <button
-                  type="button"
-                  className="btn btn--solid btn--danger"
+                <Button
+                  variant="destructive"
                   disabled={userDeleteState.deleteing}
                   onClick={handleDeleteCheckedItem}
                 >
                   {userDeleteState.deleteing ? "삭제중..." : "삭제하기"}
-                </button>
+                </Button>
               </>
             )}
 
-            {/* 추가하기 */}
             {!userDeleteState.isShowDeleteCheckbox && (
-              <Link href={`users/new`} className="btn btn--solid btn--warm">
-                새 유저 추가
-              </Link>
+              <Button
+                asChild
+                className="bg-[linear-gradient(135deg,#f6b481,#f4a261)] text-slate-900 hover:opacity-90"
+              >
+                <Link href={`users/new`}>새 유저 추가</Link>
+              </Button>
             )}
-
-            {/* 전체수정 */}
-            {/* <Link href={`users/bulk-edit`} className="btn btn--line">전체 유저 정보 수정</Link> */}
           </div>
         </div>
 
-        <div className={cx("userList__body")}>
-          <ul className={cx("userList__list")}>
+        <div className="mb-6">
+          <ul className="grid auto-rows-fr list-none grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
             {sortedUsers?.map((user) => (
-              <li key={user.id} className={cx("userList__item")}>
+              <li key={user.id} className="h-full">
                 <UserBox
                   {...user}
                   deleteState={userDeleteState}

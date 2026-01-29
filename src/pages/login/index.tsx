@@ -1,15 +1,12 @@
 import React from "react";
-import classNames from "classnames/bind";
 import Link from "next/link";
-import styles from "./login.module.scss";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { EMAIL_PATTERN, LOGIN_EMAIL_FORM } from "@/constants";
 import { LoginForm } from "@/types";
 import { getSupabaseClient } from "@/lib/supabase.client";
 import { useRouter } from "next/router";
-
-const cx = classNames.bind(styles);
+import { Button } from "@/components/ui";
 
 const getLoginErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
@@ -57,22 +54,34 @@ export default function LoginPage() {
     alert("입력값을 확인해주세요.");
   };
 
+  const inputBase =
+    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10";
+
   return (
-    <div className={cx("auth")}>
-      <section className={cx("auth__card")}>
-        <div className={cx("auth__cardHeader")}>
-          <span className={cx("auth__kicker")}>Login</span>
-          <h3 className={cx("auth__title")}>로그인</h3>
-          <p className={cx("auth__subtitle")}>이메일과 비밀번호로 시작하세요.</p>
+    <div className="mx-auto w-full max-w-xl">
+      <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 p-7 shadow-lg dark:border-white/10 dark:bg-slate-900/70">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(224,122,95,0.2),transparent_70%)] dark:bg-[radial-gradient(circle,rgba(56,189,248,0.2),transparent_70%)]"
+        />
+        <div className="relative z-10">
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary dark:bg-primary/20 dark:text-primary-foreground">
+            Login
+          </span>
+          <h3 className="mt-3 text-2xl font-semibold text-foreground">로그인</h3>
+          <p className="mt-2 text-sm text-muted-foreground">이메일과 비밀번호로 시작하세요.</p>
         </div>
 
-        <form className={cx("auth__form")} onSubmit={handleSubmit(onSubmit, onError)}>
-          <div className={cx("auth__field")}>
-            <label className={cx("auth__label")} htmlFor="login_email">
+        <form
+          className="relative z-10 mt-6 flex flex-col gap-4"
+          onSubmit={handleSubmit(onSubmit, onError)}
+        >
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-muted-foreground" htmlFor="login_email">
               이메일
             </label>
             <input
-              className={cx("auth__input")}
+              className={inputBase}
               type="email"
               placeholder="someone@email.com"
               {...register("login_email", {
@@ -84,15 +93,20 @@ export default function LoginPage() {
                 },
               })}
             />
-            {errors.login_email && <span className="error-msg">{errors.login_email.message}</span>}
+            {errors.login_email && (
+              <span className="text-xs text-destructive">{errors.login_email.message}</span>
+            )}
           </div>
 
-          <div className={cx("auth__field")}>
-            <label className={cx("auth__label")} htmlFor="login_password">
+          <div className="flex flex-col gap-2">
+            <label
+              className="text-xs font-semibold text-muted-foreground"
+              htmlFor="login_password"
+            >
               비밀번호
             </label>
             <input
-              className={cx("auth__input")}
+              className={inputBase}
               type="password"
               placeholder="비밀번호를 입력하세요"
               {...register("login_password", {
@@ -101,28 +115,35 @@ export default function LoginPage() {
               })}
             />
             {errors.login_password && (
-              <span className="error-msg">{errors.login_password.message}</span>
+              <span className="text-xs text-destructive">{errors.login_password.message}</span>
             )}
           </div>
 
-          <div className={cx("auth__metaRow")}>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span>비밀번호를 잊으셨나요?</span>
-            <Link href="/login/reset">비밀번호 재설정</Link>
+            <Link href="/login/reset" className="font-semibold text-primary">
+              비밀번호 재설정
+            </Link>
           </div>
 
-          <div className={cx("auth__actions")}>
-            <button type="submit" className="btn btn--solid">
+          <div className="flex flex-col gap-3">
+            <Button type="submit" disabled={isSubmitting}>
               로그인
-            </button>
+            </Button>
 
-            <div className={cx("auth__divider")}>또는</div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground before:h-px before:flex-1 before:bg-border/70 before:content-[''] after:h-px after:flex-1 after:bg-border/70 after:content-['']">
+              또는
+            </div>
 
             <GithubLoginBtn />
           </div>
         </form>
 
-        <div className={cx("auth__footer")}>
-          아직 계정이 없나요? <Link href="/login/signup">회원가입</Link>
+        <div className="mt-5 text-center text-sm text-muted-foreground">
+          아직 계정이 없나요?{" "}
+          <Link href="/login/signup" className="font-semibold text-primary">
+            회원가입
+          </Link>
         </div>
       </section>
     </div>
