@@ -2,7 +2,7 @@ import { useContext, createContext } from "react";
 import { type AlertProps } from "@/components/ui";
 
 type AlertContextValue = {
-  openAlert: (props: AlertProps & { onCloseComplete?: () => void }) => void;
+  openAlert: (props: AlertProps) => void;
 };
 
 export const AlertContext = createContext<AlertContextValue | null>(null);
