@@ -4,7 +4,6 @@ import { Button } from "@/components/ui";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { getSupabaseClient } from "@/lib/supabase.client";
 import { EMAIL_PATTERN } from "@/constants";
-import { useRouter } from "next/router";
 
 type ForgotEmail = {
   forgot_email: string;
@@ -31,7 +30,6 @@ const getForgotErrorMessage = (message?: string) => {
   return "비밀번호 재설정 메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.";
 };
 export default function PasswordResetPage() {
-  const router = useRouter();
   const supabaseClient = getSupabaseClient();
   const {
     register,

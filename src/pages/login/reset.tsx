@@ -48,7 +48,7 @@ export default function PasswordResetPage() {
       return;
     }
 
-    const { data, error } = await supabaseClient.auth.updateUser({
+    const { error } = await supabaseClient.auth.updateUser({
       password: values.reset_password,
     });
 
