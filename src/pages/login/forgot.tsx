@@ -1,68 +1,66 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { getSupabaseClient } from "@/lib/supabase.client";
+import { EMAIL_PATTERN } from "@/constants";
 import { useRouter } from "next/router";
 
-type ResetPassword = {
-  reset_password: string;
+type ForgotEmail = {
+  forgot_email: string;
 };
 
+const getForgotErrorMessage = (message?: string) => {
+  const normalized = (message ?? "").toLowerCase();
+  if (
+    normalized.includes("invalid email") ||
+    normalized.includes("unable to validate email") ||
+    normalized.includes("email address")
+  ) {
+    return "유효한 이메일 형식이 아닙니다.";
+  }
+  if (normalized.includes("email rate limit exceeded")) {
+    return "인증 메일 발송 한도를 초과했습니다. 2시간 후에 다시 시도해주세요.";
+  }
+  if (normalized.includes("captcha")) {
+    return "캡차 인증에 실패했습니다. 다시 시도해주세요.";
+  }
+  if (normalized.includes("user not found")) {
+    return "가입되지 않은 이메일입니다.";
+  }
+  return "비밀번호 재설정 메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.";
+};
 export default function PasswordResetPage() {
-  const supabaseClient = getSupabaseClient();
   const router = useRouter();
-  const [canReset, setCanReset] = useState(false);
-  const [email, setEmail] = useState("");
-
-  useEffect(() => {
-    if (!supabaseClient) return;
-
-    const {
-      data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange((event, session) => {
-      console.log("event:", event, "session:", session, "url:", window.location.href);
-      if (event === "PASSWORD_RECOVERY") {
-        setCanReset(true);
-        setEmail(session?.user?.email ?? "");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabaseClient]);
-
+  const supabaseClient = getSupabaseClient();
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<ResetPassword>({
+  } = useForm<ForgotEmail>({
     mode: "onSubmit",
-    defaultValues: { reset_password: "" },
+    defaultValues: { forgot_email: "" },
   });
 
-  const onSubmit = async (values: ResetPassword) => {
+  const onSubmit = async (values: ForgotEmail) => {
     if (isSubmitting) return;
     if (!supabaseClient) return;
-    if (!canReset) {
-      alert("비밀번호 재설정 링크로 다시 접속해주세요.");
-      return;
-    }
 
-    const { data, error } = await supabaseClient.auth.updateUser({
-      password: values.reset_password,
+    const { data, error } = await supabaseClient.auth.resetPasswordForEmail(values.forgot_email, {
+      redirectTo: `${window.location.origin}/login/reset`,
     });
 
+    console.log({ data, error }, values.forgot_email);
     if (error) {
-      alert("비밀번호 변경에 실패했습니다.");
+      console.error(error.message);
+      alert(getForgotErrorMessage(error.message));
       return;
     }
 
-    alert("비밀번호가 변경되었습니다. 다시 로그인해주세요.");
-    await supabaseClient.auth.signOut();
-    await router.replace("/login");
+    alert("이메일로 인증 링크가 전송되었습니다. 확인 후 비밀번호를 변경해주세요.");
   };
 
-  const onError = (errors: FieldErrors<ResetPassword>) => {
+  const onError = (errors: FieldErrors<ForgotEmail>) => {
     console.error("Validation Errors:", errors);
     alert("입력값을 확인해주세요.");
   };
@@ -82,7 +80,9 @@ export default function PasswordResetPage() {
             Reset
           </span>
           <h3 className="mt-3 text-2xl font-semibold text-foreground">비밀번호 재설정</h3>
-          <p className="mt-2 text-sm text-muted-foreground">새 비밀번호를 입력하세요.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            비밀번호 재설정 할 이메일을 입력하세요.
+          </p>
         </div>
 
         <form
@@ -90,39 +90,31 @@ export default function PasswordResetPage() {
           onSubmit={handleSubmit(onSubmit, onError)}
         >
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-muted-foreground" htmlFor="reset_email">
+            <label className="text-xs font-semibold text-muted-foreground" htmlFor="forgot_email">
               이메일
             </label>
             <input
-              id="reset_email"
               className={inputBase}
               type="email"
               placeholder="someone@email.com"
-              readOnly
-              value={email}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-muted-foreground" htmlFor="reset_password">
-              새 비밀번호
-            </label>
-            <input
-              className={inputBase}
-              type="password"
-              placeholder="8자 이상 입력하세요"
-              {...register("reset_password", {
+              {...register("forgot_email", {
                 required: "필수 입력값입니다.",
-                validate: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
+                setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
+                pattern: {
+                  value: EMAIL_PATTERN,
+                  message: "유효한 이메일 형식이 아닙니다.",
+                },
               })}
             />
-            {errors.reset_password && (
-              <span className="text-xs text-destructive">{errors.reset_password.message}</span>
+            {errors.forgot_email && (
+              <span className="text-xs text-destructive">{errors.forgot_email.message}</span>
             )}
           </div>
 
           <div className="flex flex-col gap-3">
-            <Button type="submit">비밀번호 변경</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              비밀번호 변경
+            </Button>
           </div>
         </form>
 

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
-import { useAlert, Button } from "@/components/ui";
+import { useAlert, Button, Select } from "@/components/ui";
 
 export const getStaticProps = async () => {
   try {
@@ -142,16 +142,17 @@ export default function UserList({
           <div className="flex flex-wrap items-center justify-end gap-2">
             <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <span className="text-sm font-semibold">정렬</span>
-              <select
-                className="h-9 min-w-[170px] rounded-full border border-border/60 bg-white/70 px-4 text-sm font-semibold text-foreground shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70"
-                value={sortOption}
-                onChange={(event) => setSortOption(event.target.value)}
-              >
-                <option value="latest">최신 등록 순</option>
-                <option value="oldest">오래된 등록 순</option>
-                <option value="nameAsc">이름 오름차순</option>
-                <option value="nameDesc">이름 내림차순</option>
-              </select>
+              <Select defaultValue="latest" onValueChange={setSortOption}>
+                <Select.Trigger className="w-[180px]">
+                  <Select.Value />
+                </Select.Trigger>
+                <Select.Content>
+                  <Select.Item value="latest">최신 등록 순</Select.Item>
+                  <Select.Item value="oldest">오래된 등록 순</Select.Item>
+                  <Select.Item value="nameAsc">이름 오름차순</Select.Item>
+                  <Select.Item value="nameDesc">이름 내림차순</Select.Item>
+                </Select.Content>
+              </Select>
             </label>
 
             {!userDeleteState.isShowDeleteCheckbox ? (

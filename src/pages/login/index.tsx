@@ -10,7 +10,10 @@ import { Button } from "@/components/ui";
 
 const getLoginErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
-  if (normalized.includes("invalid login credentials") || normalized.includes("invalid_credentials")) {
+  if (
+    normalized.includes("invalid login credentials") ||
+    normalized.includes("invalid_credentials")
+  ) {
     return "이메일 또는 비밀번호를 확인해주세요.";
   }
   if (normalized.includes("email not confirmed")) {
@@ -99,10 +102,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label
-              className="text-xs font-semibold text-muted-foreground"
-              htmlFor="login_password"
-            >
+            <label className="text-xs font-semibold text-muted-foreground" htmlFor="login_password">
               비밀번호
             </label>
             <input
@@ -121,7 +121,7 @@ export default function LoginPage() {
 
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span>비밀번호를 잊으셨나요?</span>
-            <Link href="/login/reset" className="font-semibold text-primary">
+            <Link href="/login/forgot" className="font-semibold text-primary">
               비밀번호 재설정
             </Link>
           </div>
