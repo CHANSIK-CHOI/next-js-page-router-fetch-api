@@ -16,6 +16,13 @@ export default function PasswordResetPage() {
   const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hasCode = new URLSearchParams(window.location.search).has("code");
+    console.log(hasCode);
+    if (hasCode) setIsRecovery(true);
+  }, []);
+
+  useEffect(() => {
     if (!supabaseClient) return;
 
     const {
@@ -23,12 +30,6 @@ export default function PasswordResetPage() {
     } = supabaseClient.auth.onAuthStateChange((event, session) => {
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
         setEmail(session?.user?.email ?? "");
-        const amr = (session as { amr?: { method?: string }[] } | null)?.amr ?? [];
-        setIsRecovery(amr.some((entry) => entry.method === "recovery"));
-        console.log(
-          { amr },
-          amr.some((entry) => entry.method === "recovery")
-        );
       }
     });
 
