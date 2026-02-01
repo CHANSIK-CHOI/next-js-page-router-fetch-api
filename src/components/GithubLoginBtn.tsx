@@ -1,10 +1,10 @@
 import React from "react";
 import Image from "next/image";
-import { getSupabaseClient } from "@/lib/supabase.client";
 import { Button } from "@/components/ui";
+import { useSession } from "./useSession";
 
 export default function GithubLoginBtn() {
-  const supabaseClient = getSupabaseClient();
+  const { supabaseClient } = useSession();
 
   const handleLoginGithub = async () => {
     if (!supabaseClient) return;

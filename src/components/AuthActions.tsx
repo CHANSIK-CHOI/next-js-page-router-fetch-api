@@ -1,38 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase.client";
-import type { Session } from "@supabase/supabase-js";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui";
+import { useSession } from "./useSession";
 
 export default function AuthActions() {
-  const [session, setSession] = useState<Session | null>(null);
-  const supabaseClient = getSupabaseClient();
+  const { session, supabaseClient } = useSession();
 
   const handleLogout = async () => {
     if (!supabaseClient) return;
-    const { error } = await supabaseClient.auth.signOut();
+    const { error } = await supabaseClient.auth.signOut({ scope: "global" });
+
+    if (error?.name === "AuthSessionMissingError") {
+      await supabaseClient.auth.signOut({ scope: "local" });
+    }
+
     console.log("Logout", { error });
   };
-
-  useEffect(() => {
-    if (!supabaseClient) return;
-    let isMounted = true;
-
-    supabaseClient.auth.getSession().then(({ data }) => {
-      if (isMounted) setSession(data.session ?? null);
-    });
-
-    const { data: subscription } = supabaseClient.auth.onAuthStateChange((_event, nextSession) => {
-      console.log({ nextSession });
-      setSession(nextSession);
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.subscription.unsubscribe();
-    };
-  }, [supabaseClient]);
 
   const user = session?.user;
   const rawName =

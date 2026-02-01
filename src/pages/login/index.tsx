@@ -4,9 +4,9 @@ import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { EMAIL_PATTERN, LOGIN_EMAIL_FORM } from "@/constants";
 import { LoginForm } from "@/types";
-import { getSupabaseClient } from "@/lib/supabase.client";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
+import { useSession } from "@/components/useSession";
 
 const getLoginErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
@@ -23,7 +23,7 @@ const getLoginErrorMessage = (message?: string) => {
 };
 
 export default function LoginPage() {
-  const supabaseClient = getSupabaseClient();
+  const { supabaseClient } = useSession();
   const router = useRouter();
   const {
     register,

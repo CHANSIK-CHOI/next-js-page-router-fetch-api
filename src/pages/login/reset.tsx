@@ -2,15 +2,15 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { useForm, type FieldErrors } from "react-hook-form";
-import { getSupabaseClient } from "@/lib/supabase.client";
 import { useRouter } from "next/router";
+import { useSession } from "@/components/useSession";
 
 type ResetPassword = {
   reset_password: string;
 };
 
 export default function PasswordResetPage() {
-  const supabaseClient = getSupabaseClient();
+  const { supabaseClient } = useSession();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isRecovery, setIsRecovery] = useState(false);
@@ -73,7 +73,7 @@ export default function PasswordResetPage() {
   };
 
   const inputBase =
-    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10";
+    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring read-only:cursor-not-allowed read-only:bg-muted/40 read-only:text-muted-foreground dark:border-white/10 dark:read-only:bg-white/5";
 
   return (
     <div className="mx-auto w-full max-w-xl">

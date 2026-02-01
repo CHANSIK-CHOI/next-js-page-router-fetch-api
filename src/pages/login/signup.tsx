@@ -4,9 +4,9 @@ import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { SingUpForm } from "@/types";
 import { EMAIL_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
-import { getSupabaseClient } from "@/lib/supabase.client";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
+import { useSession } from "@/components/useSession";
 
 const getSignupErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
@@ -41,7 +41,7 @@ const formatPhoneNumber = (value: string) => {
 };
 
 export default function SignupPage() {
-  const supabaseClient = getSupabaseClient();
+  const { supabaseClient } = useSession();
   const router = useRouter();
 
   const {
