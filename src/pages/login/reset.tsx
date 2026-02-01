@@ -12,7 +12,6 @@ type ResetPassword = {
 export default function PasswordResetPage() {
   const supabaseClient = getSupabaseClient();
   const router = useRouter();
-  const [canReset, setCanReset] = useState(false);
   const [email, setEmail] = useState("");
 
   useEffect(() => {
@@ -21,9 +20,7 @@ export default function PasswordResetPage() {
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((event, session) => {
-      console.log("event:", event, "session:", session, "url:", window.location.href);
-      if (event === "PASSWORD_RECOVERY") {
-        setCanReset(true);
+      if (event === "INITIAL_SESSION") {
         setEmail(session?.user?.email ?? "");
       }
     });
@@ -43,10 +40,6 @@ export default function PasswordResetPage() {
   const onSubmit = async (values: ResetPassword) => {
     if (isSubmitting) return;
     if (!supabaseClient) return;
-    if (!canReset) {
-      alert("비밀번호 재설정 링크로 다시 접속해주세요.");
-      return;
-    }
 
     const { error } = await supabaseClient.auth.updateUser({
       password: values.reset_password,
