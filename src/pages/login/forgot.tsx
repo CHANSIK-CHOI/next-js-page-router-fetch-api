@@ -44,8 +44,9 @@ export default function PasswordResetPage() {
     if (isSubmitting) return;
     if (!supabaseClient) return;
 
+    console.log(`${window.location.origin}`);
     const { data, error } = await supabaseClient.auth.resetPasswordForEmail(values.forgot_email, {
-      redirectTo: `/login/reset`,
+      redirectTo: `${window.location.origin}/login/reset`,
     });
 
     console.log({ data, error }, values.forgot_email);
