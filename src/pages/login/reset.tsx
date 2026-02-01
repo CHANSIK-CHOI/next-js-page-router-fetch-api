@@ -13,6 +13,7 @@ export default function PasswordResetPage() {
   const supabaseClient = getSupabaseClient();
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
     if (!supabaseClient) return;
@@ -20,8 +21,14 @@ export default function PasswordResetPage() {
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((event, session) => {
-      if (event === "INITIAL_SESSION") {
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
         setEmail(session?.user?.email ?? "");
+        const amr = (session as { amr?: { method?: string }[] } | null)?.amr ?? [];
+        setIsRecovery(amr.some((entry) => entry.method === "recovery"));
+        console.log(
+          { amr },
+          amr.some((entry) => entry.method === "recovery")
+        );
       }
     });
 
@@ -40,6 +47,10 @@ export default function PasswordResetPage() {
   const onSubmit = async (values: ResetPassword) => {
     if (isSubmitting) return;
     if (!supabaseClient) return;
+    if (!isRecovery) {
+      alert("복구 링크로 다시 접속해주세요.");
+      return;
+    }
 
     const { error } = await supabaseClient.auth.updateUser({
       password: values.reset_password,
@@ -94,6 +105,9 @@ export default function PasswordResetPage() {
               readOnly
               value={email}
             />
+            {!email && (
+              <span className="text-xs text-destructive">복구 링크로 다시 접속해주세요.</span>
+            )}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -115,7 +129,9 @@ export default function PasswordResetPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <Button type="submit">비밀번호 변경</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              비밀번호 변경
+            </Button>
           </div>
         </form>
 
