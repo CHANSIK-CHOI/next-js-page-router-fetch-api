@@ -22,7 +22,7 @@ export default function Page() {
   const onSubmit = async (values: ForgotEmail) => {
     if (isSubmitting) return;
 
-    const response = await fetch("/api/forgot-password", {
+    const response = await fetch("/api/auth/reset-password-for-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: values.forgot_email.trim() }),

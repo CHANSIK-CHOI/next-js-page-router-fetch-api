@@ -5,24 +5,11 @@ import { useForm, type FieldErrors } from "react-hook-form";
 import { EMAIL_PATTERN, LOGIN_EMAIL_FORM } from "@/constants";
 import { LoginForm } from "@/types";
 import { useRouter } from "next/router";
-import { Button } from "@/components/ui";
+import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
 
-const getLoginErrorMessage = (message?: string) => {
-  const normalized = (message ?? "").toLowerCase();
-  if (
-    normalized.includes("invalid login credentials") ||
-    normalized.includes("invalid_credentials")
-  ) {
-    return "이메일 또는 비밀번호를 확인해주세요.";
-  }
-  if (normalized.includes("email not confirmed")) {
-    return "이메일 인증 후 로그인해주세요.";
-  }
-  return "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
-};
-
 export default function LoginPage() {
+  const { openAlert } = useAlert();
   const { supabaseClient } = useSession();
   const router = useRouter();
   const {
@@ -38,22 +25,23 @@ export default function LoginPage() {
     if (isSubmitting) return;
     if (!supabaseClient) return;
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: values.login_email.trim(),
-      password: values.login_password,
+    const response = await fetch("/api/auth/reset-password-for-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: values.login_email.trim(),
+        password: values.login_password.trim(),
+      }),
     });
-
-    if (error) {
-      alert(getLoginErrorMessage(error.message));
+    const body = await response.json();
+    if (!response.ok) {
+      openAlert({
+        description: body.message,
+      });
       return;
     }
 
     await router.replace("/");
-  };
-
-  const onError = (errors: FieldErrors<LoginForm>) => {
-    console.error("Validation Errors:", errors);
-    alert("입력값을 확인해주세요.");
   };
 
   const inputBase =
@@ -74,10 +62,7 @@ export default function LoginPage() {
           <p className="mt-2 text-sm text-muted-foreground">이메일과 비밀번호로 시작하세요.</p>
         </div>
 
-        <form
-          className="relative z-10 mt-6 flex flex-col gap-4"
-          onSubmit={handleSubmit(onSubmit, onError)}
-        >
+        <form className="relative z-10 mt-6 flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold text-muted-foreground" htmlFor="login_email">
               이메일
@@ -110,7 +95,12 @@ export default function LoginPage() {
               placeholder="비밀번호를 입력하세요"
               {...register("login_password", {
                 required: "필수 입력값입니다.",
-                validate: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
+                setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
+                validate: {
+                  notBlank: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
+                  minLength: (value) =>
+                    value.trim().length >= 8 || "비밀번호는 8자 이상 입력해주세요.",
+                },
               })}
             />
             {errors.login_password && (
