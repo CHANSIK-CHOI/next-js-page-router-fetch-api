@@ -2,8 +2,6 @@ import { getSupabaseServer } from "@/lib/supabase.server";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
-
   if (req.method !== "DELETE") {
     res.setHeader("Allow", ["DELETE"]);
     return res.status(405).json({ error: "Method Not Allowed" });

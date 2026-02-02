@@ -7,6 +7,7 @@ import type {
 } from "@/types";
 import { EDITABLE_USER_KEYS } from "@/constants";
 import type { FormState } from "react-hook-form";
+import { NextApiRequest } from "next";
 
 export const readFileAsDataURL = (file: File): Promise<string> => {
   return new Promise((resolve) => {
@@ -116,4 +117,23 @@ export async function compressImageFile(
   const newName = file.name.replace(/\.\w+$/, `.${ext}`);
 
   return new File([blob], newName, { type: mimeType });
+}
+
+export function getBaseUrl(req: NextApiRequest) {
+  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (configuredUrl) return configuredUrl.replace(/\/$/, "");
+
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const proto =
+    typeof forwardedProto === "string" && forwardedProto.length > 0
+      ? forwardedProto.split(",")[0].trim()
+      : "http";
+
+  const forwardedHost = req.headers["x-forwarded-host"];
+  const host =
+    typeof forwardedHost === "string" && forwardedHost.length > 0
+      ? forwardedHost.split(",")[0].trim()
+      : req.headers.host;
+
+  return host ? `${proto}://${host}` : "http://localhost:3000";
 }

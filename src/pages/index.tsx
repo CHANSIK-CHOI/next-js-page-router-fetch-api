@@ -72,7 +72,7 @@ export default function UserList({
   }, [users, sortOption]);
   const hasAlertedRef = useRef(false);
 
-  const { openAlert: openTestAlert } = useAlert();
+  const { openAlert } = useAlert();
 
   useEffect(() => {
     if (userMessage && !hasAlertedRef.current) {
@@ -92,11 +92,8 @@ export default function UserList({
 
   const handleDeleteCheckedItem = async () => {
     if (userDeleteState.checkedIds.length === 0) {
-      // alert("선택한 데이터가 없습니다.");
-      openTestAlert({
+      openAlert({
         description: "선택한 데이터가 없습니다.",
-        onOk: () => console.log("onOk"),
-        onMotionComplete: (isOpen) => console.log("onCloseComplete", isOpen),
       });
       return;
     }

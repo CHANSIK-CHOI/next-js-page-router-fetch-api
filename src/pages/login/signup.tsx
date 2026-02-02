@@ -73,8 +73,6 @@ export default function SignupPage() {
       },
     });
 
-    console.log({ data, error });
-
     if (error) {
       alert(getSignupErrorMessage(error.message));
       return;

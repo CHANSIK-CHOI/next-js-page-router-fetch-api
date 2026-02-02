@@ -1,36 +1,15 @@
 import React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui";
-import { useForm, type FieldErrors } from "react-hook-form";
+import { Button, useAlert } from "@/components/ui";
+import { useForm } from "react-hook-form";
 import { EMAIL_PATTERN } from "@/constants";
-import { useSession } from "@/components/useSession";
 
 type ForgotEmail = {
   forgot_email: string;
 };
 
-const getForgotErrorMessage = (message?: string) => {
-  const normalized = (message ?? "").toLowerCase();
-  if (
-    normalized.includes("invalid email") ||
-    normalized.includes("unable to validate email") ||
-    normalized.includes("email address")
-  ) {
-    return "유효한 이메일 형식이 아닙니다.";
-  }
-  if (normalized.includes("email rate limit exceeded")) {
-    return "인증 메일 발송 한도를 초과했습니다. 2시간 후에 다시 시도해주세요.";
-  }
-  if (normalized.includes("captcha")) {
-    return "캡차 인증에 실패했습니다. 다시 시도해주세요.";
-  }
-  if (normalized.includes("user not found")) {
-    return "가입되지 않은 이메일입니다.";
-  }
-  return "비밀번호 재설정 메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.";
-};
-export default function PasswordResetPage() {
-  const { supabaseClient } = useSession();
+export default function Page() {
+  const { openAlert } = useAlert();
   const {
     register,
     handleSubmit,
@@ -42,26 +21,16 @@ export default function PasswordResetPage() {
 
   const onSubmit = async (values: ForgotEmail) => {
     if (isSubmitting) return;
-    if (!supabaseClient) return;
 
-    console.log(`${window.location.origin}`);
-    const { data, error } = await supabaseClient.auth.resetPasswordForEmail(values.forgot_email, {
-      redirectTo: `${window.location.origin}/login/reset`,
+    const response = await fetch("/api/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: values.forgot_email.trim() }),
     });
-
-    console.log({ data, error }, values.forgot_email);
-    if (error) {
-      console.error(error.message);
-      alert(getForgotErrorMessage(error.message));
-      return;
-    }
-
-    alert("이메일로 인증 링크가 전송되었습니다. 확인 후 비밀번호를 변경해주세요.");
-  };
-
-  const onError = (errors: FieldErrors<ForgotEmail>) => {
-    console.error("Validation Errors:", errors);
-    alert("입력값을 확인해주세요.");
+    const body = await response.json();
+    openAlert({
+      description: body.message,
+    });
   };
 
   const inputBase =
@@ -84,10 +53,7 @@ export default function PasswordResetPage() {
           </p>
         </div>
 
-        <form
-          className="relative z-10 mt-6 flex flex-col gap-4"
-          onSubmit={handleSubmit(onSubmit, onError)}
-        >
+        <form className="relative z-10 mt-6 flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold text-muted-foreground" htmlFor="forgot_email">
               이메일

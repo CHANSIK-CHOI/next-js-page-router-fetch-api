@@ -8,13 +8,12 @@ export default function GithubLoginBtn() {
 
   const handleLoginGithub = async () => {
     if (!supabaseClient) return;
-    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+    await supabaseClient.auth.signInWithOAuth({
       provider: "github",
       options: {
         redirectTo: `${window.location.origin}/`,
       },
     });
-    console.log("Login", { data, error });
   };
 
   return (

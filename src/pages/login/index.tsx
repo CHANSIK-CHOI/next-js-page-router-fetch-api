@@ -38,12 +38,11 @@ export default function LoginPage() {
     if (isSubmitting) return;
     if (!supabaseClient) return;
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
+    const { error } = await supabaseClient.auth.signInWithPassword({
       email: values.login_email.trim(),
       password: values.login_password,
     });
 
-    console.log({ data, error });
     if (error) {
       alert(getLoginErrorMessage(error.message));
       return;

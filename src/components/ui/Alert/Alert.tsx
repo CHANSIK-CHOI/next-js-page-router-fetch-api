@@ -39,7 +39,9 @@ export default function Alert({
             {title}
           </AlertDialog.Title>
 
-          <AlertDialog.Description>{description}</AlertDialog.Description>
+          <AlertDialog.Description className="whitespace-pre-line">
+            {description}
+          </AlertDialog.Description>
         </AlertDialog.Header>
         <AlertDialog.Footer isFull>
           <AlertDialog.Action autoFocus onClick={onOk}>
