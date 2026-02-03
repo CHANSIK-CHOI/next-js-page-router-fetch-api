@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
-import { useForm, type FieldErrors } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { EMAIL_PATTERN, LOGIN_EMAIL_FORM } from "@/constants";
 import { LoginForm } from "@/types";
 import { useRouter } from "next/router";
@@ -25,7 +25,7 @@ export default function LoginPage() {
     if (isSubmitting) return;
     if (!supabaseClient) return;
 
-    const response = await fetch("/api/auth/reset-password-for-email", {
+    const response = await fetch("/api/auth/sign-in-with-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

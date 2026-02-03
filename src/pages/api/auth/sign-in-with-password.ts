@@ -42,6 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       email,
       password,
     });
+
     if (error) {
       console.error(error);
       return res.status(400).json({ message: getLoginErrorMessage(error.message) });
