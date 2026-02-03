@@ -5,7 +5,7 @@ import { useForm, type FieldErrors } from "react-hook-form";
 import { SingUpForm } from "@/types";
 import { EMAIL_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { useRouter } from "next/router";
-import { Button } from "@/components/ui";
+import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
 
 const getSignupErrorMessage = (message?: string) => {
@@ -41,6 +41,7 @@ const formatPhoneNumber = (value: string) => {
 };
 
 export default function SignupPage() {
+  const { openAlert } = useAlert();
   const { supabaseClient } = useSession();
   const router = useRouter();
 
@@ -74,19 +75,29 @@ export default function SignupPage() {
     });
 
     if (error) {
-      alert(getSignupErrorMessage(error.message));
+      openAlert({
+        description: getSignupErrorMessage(error.message),
+      });
       return;
     }
 
     if (data.session) {
-      await supabaseClient.auth.signOut();
-      alert("회원가입이 완료되었습니다. 로그인해주세요.");
-      await router.replace("/login");
+      supabaseClient.auth.signOut();
+      openAlert({
+        description: "회원가입이 완료되었습니다. 로그인해주세요.",
+        onOk: () => {
+          router.replace("/login");
+        },
+      });
       return;
     }
 
-    alert("이메일로 인증 링크가 전송되었습니다. 확인 후 로그인 해주세요.");
-    await router.replace("/login");
+    openAlert({
+      description: "이메일로 인증 링크가 전송되었습니다. 확인 후 로그인 해주세요.",
+      onOk: () => {
+        router.replace("/login");
+      },
+    });
   };
 
   const onError = (errors: FieldErrors<SingUpForm>) => {
@@ -188,10 +199,14 @@ export default function SignupPage() {
             <input
               className={inputBase}
               type="password"
-              placeholder="8자 이상 입력하세요"
+              placeholder="비밀번호를 입력하세요"
               {...register("signup_password", {
                 required: "필수 입력값입니다.",
-                validate: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
+                validate: {
+                  notBlank: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
+                  minLength: (value) =>
+                    value.trim().length >= 8 || "비밀번호는 8자 이상 입력해주세요.",
+                },
               })}
             />
             {errors.signup_password && (

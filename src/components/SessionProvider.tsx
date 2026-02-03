@@ -19,6 +19,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     });
 
     const { data: subscription } = supabaseClient.auth.onAuthStateChange((_event, nextSession) => {
+      console.log({ nextSession });
       setSession(nextSession);
     });
 

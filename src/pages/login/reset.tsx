@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui";
-import { useForm, type FieldErrors } from "react-hook-form";
+import { Button, useAlert } from "@/components/ui";
+import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
 import { useSession } from "@/components/useSession";
 
@@ -10,6 +10,7 @@ type ResetPassword = {
 };
 
 export default function PasswordResetPage() {
+  const { openAlert } = useAlert();
   const { supabaseClient } = useSession();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export default function PasswordResetPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hasCode = new URLSearchParams(window.location.search).has("code");
-    console.log(hasCode);
+    console.log({ hasCode });
     if (hasCode) setIsRecovery(true);
   }, []);
 
@@ -49,7 +50,9 @@ export default function PasswordResetPage() {
     if (isSubmitting) return;
     if (!supabaseClient) return;
     if (!isRecovery) {
-      alert("복구 링크로 다시 접속해주세요.");
+      openAlert({
+        description: "복구 링크로 다시 접속해주세요.",
+      });
       return;
     }
 
@@ -58,18 +61,19 @@ export default function PasswordResetPage() {
     });
 
     if (error) {
-      alert("비밀번호 변경에 실패했습니다.");
+      openAlert({
+        description: "비밀번호 변경에 실패했습니다.",
+      });
       return;
     }
 
-    alert("비밀번호가 변경되었습니다. 다시 로그인해주세요.");
-    await supabaseClient.auth.signOut();
-    await router.replace("/login");
-  };
-
-  const onError = (errors: FieldErrors<ResetPassword>) => {
-    console.error("Validation Errors:", errors);
-    alert("입력값을 확인해주세요.");
+    openAlert({
+      description: "비밀번호가 변경되었습니다.\n다시 로그인해주세요.",
+      onOk: () => {
+        supabaseClient.auth.signOut();
+        router.replace("/login");
+      },
+    });
   };
 
   const inputBase =
@@ -90,10 +94,7 @@ export default function PasswordResetPage() {
           <p className="mt-2 text-sm text-muted-foreground">새 비밀번호를 입력하세요.</p>
         </div>
 
-        <form
-          className="relative z-10 mt-6 flex flex-col gap-4"
-          onSubmit={handleSubmit(onSubmit, onError)}
-        >
+        <form className="relative z-10 mt-6 flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold text-muted-foreground" htmlFor="reset_email">
               이메일

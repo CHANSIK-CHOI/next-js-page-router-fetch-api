@@ -3,13 +3,23 @@ import Link from "next/link";
 import { Button, useAlert } from "@/components/ui";
 import { useForm } from "react-hook-form";
 import { EMAIL_PATTERN } from "@/constants";
+import { useSession } from "@/components/useSession";
 
 type ForgotEmail = {
   forgot_email: string;
 };
 
+const getResetPasswordErrorMessage = (message?: string) => {
+  const normalized = (message ?? "").toLowerCase();
+  if (normalized.includes("email rate limit exceeded")) {
+    return "인증 메일 발송 한도를 초과했습니다. 잠시 후 다시 시도해주세요.";
+  }
+  return "비밀번호 변경요청에 실패했습니다. 다시 시도해주세요.";
+};
+
 export default function Page() {
   const { openAlert } = useAlert();
+  const { supabaseClient } = useSession();
   const {
     register,
     handleSubmit,
@@ -21,15 +31,21 @@ export default function Page() {
 
   const onSubmit = async (values: ForgotEmail) => {
     if (isSubmitting) return;
+    if (!supabaseClient) return;
 
-    const response = await fetch("/api/auth/reset-password-for-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: values.forgot_email.trim() }),
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(values.forgot_email.trim(), {
+      redirectTo: `${window.location.origin}/login/reset`,
     });
-    const body = await response.json();
+
+    if (error) {
+      openAlert({
+        description: getResetPasswordErrorMessage(error.message),
+      });
+      return;
+    }
+
     openAlert({
-      description: body.message,
+      description: "입력하신 이메일로\n비밀번호 재설정 메일이 발송되었습니다.",
     });
   };
 

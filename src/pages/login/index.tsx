@@ -8,6 +8,20 @@ import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
 
+const getLoginErrorMessage = (message?: string) => {
+  const normalized = (message ?? "").toLowerCase();
+  if (
+    normalized.includes("invalid login credentials") ||
+    normalized.includes("invalid_credentials")
+  ) {
+    return "이메일 또는 비밀번호를 확인해주세요.";
+  }
+  if (normalized.includes("email not confirmed")) {
+    return "이메일 인증 후 로그인해주세요.";
+  }
+  return "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
+};
+
 export default function LoginPage() {
   const { openAlert } = useAlert();
   const { supabaseClient } = useSession();
@@ -25,18 +39,14 @@ export default function LoginPage() {
     if (isSubmitting) return;
     if (!supabaseClient) return;
 
-    const response = await fetch("/api/auth/sign-in-with-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: values.login_email.trim(),
-        password: values.login_password.trim(),
-      }),
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: values.login_email.trim(),
+      password: values.login_password.trim(),
     });
-    const body = await response.json();
-    if (!response.ok) {
+
+    if (error) {
       openAlert({
-        description: body.message,
+        description: getLoginErrorMessage(error.message),
       });
       return;
     }
