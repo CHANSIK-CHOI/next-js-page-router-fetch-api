@@ -58,8 +58,8 @@ async function main() {
   const baseTime = Date.now();
   const rows = users.map((u, index) => ({
     email: u.email,
-    first_name: u.first_name,
-    last_name: u.last_name,
+    name: u.name,
+    phone: u.phone,
     avatar: u.avatar,
     created_at: new Date(baseTime - (users.length - index) * 1000).toISOString(),
   }));

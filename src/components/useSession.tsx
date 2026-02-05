@@ -4,6 +4,7 @@ import type { Session, SupabaseClient } from "@supabase/supabase-js";
 type SessionContextValue = {
   session: Session | null;
   supabaseClient: SupabaseClient | null;
+  isSessionInit: boolean;
 };
 
 export const SessionContext = createContext<SessionContextValue | null>(null);

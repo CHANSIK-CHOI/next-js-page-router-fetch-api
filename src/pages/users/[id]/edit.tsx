@@ -99,8 +99,13 @@ export default function EditPage({
             <dl className="grid gap-3">
               <dt className="text-sm font-semibold text-muted-foreground">이름</dt>
               <dd className="grid gap-3 sm:grid-cols-2">
-                <input type="text" placeholder="first name" className={inputBase} />
-                <input type="text" placeholder="last name" className={inputBase} />
+                <input type="text" placeholder="name" className={inputBase} />
+              </dd>
+            </dl>
+            <dl className="grid gap-3">
+              <dt className="text-sm font-semibold text-muted-foreground">phone</dt>
+              <dd className="grid gap-3 sm:grid-cols-2">
+                <input type="text" placeholder="phone" className={inputBase} />
               </dd>
             </dl>
             <dl className="grid gap-3">

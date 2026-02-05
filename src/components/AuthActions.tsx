@@ -14,8 +14,6 @@ export default function AuthActions() {
     if (error?.name === "AuthSessionMissingError") {
       await supabaseClient.auth.signOut({ scope: "local" });
     }
-
-    console.log("Logout", { error });
   };
 
   const user = session?.user;
@@ -30,7 +28,7 @@ export default function AuthActions() {
 
   return (
     <div className="flex items-center gap-3">
-      {!session ? (
+      {!session?.access_token ? (
         <Button asChild variant="outline" size="sm" className="rounded-full">
           <Link href="/login">로그인</Link>
         </Button>

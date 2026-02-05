@@ -1,5 +1,4 @@
 import UserBox from "@/components/UserBox";
-import Link from "next/link";
 import { getUserApi } from "@/lib/users.server";
 import { InferGetStaticPropsType } from "next";
 import { isErrorAlertMsg } from "@/types";
@@ -8,6 +7,7 @@ import { useRouter } from "next/router";
 import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
 import { useAlert, Button, Select } from "@/components/ui";
+import { useSession } from "@/components/useSession";
 
 export const getStaticProps = async () => {
   try {
@@ -28,6 +28,7 @@ export default function UserList({
   userMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const router = useRouter();
+  const { session } = useSession();
   const [users, setUsers] = useState(allUsers);
   const [sortOption, setSortOption] = useState("latest");
   const [userDeleteState, userDeleteDispatch] = useReducer(
@@ -45,15 +46,15 @@ export default function UserList({
     */
     if (sortOption === "nameAsc") {
       return sorted.sort((leftUser, rightUser) => {
-        const leftName = `${leftUser.last_name} ${leftUser.first_name}`.trim();
-        const rightName = `${rightUser.last_name} ${rightUser.first_name}`.trim();
+        const leftName = `${leftUser.name}`.trim();
+        const rightName = `${rightUser.name}`.trim();
         return leftName.localeCompare(rightName);
       });
     }
     if (sortOption === "nameDesc") {
       return sorted.sort((leftUser, rightUser) => {
-        const leftName = `${leftUser.last_name} ${leftUser.first_name}`.trim();
-        const rightName = `${rightUser.last_name} ${rightUser.first_name}`.trim();
+        const leftName = `${leftUser.name}`.trim();
+        const rightName = `${rightUser.name}`.trim();
         return rightName.localeCompare(leftName);
       });
     }
@@ -77,7 +78,9 @@ export default function UserList({
   useEffect(() => {
     if (userMessage && !hasAlertedRef.current) {
       console.error(userMessage);
-      alert(userMessage);
+      openAlert({
+        description: userMessage,
+      });
       hasAlertedRef.current = true;
     }
   }, [userMessage]);
@@ -101,29 +104,47 @@ export default function UserList({
     if (userDeleteState.deleteing) return;
 
     const targetUsers = users.filter(({ id }) => userDeleteState.checkedIds.includes(id));
-    const targetUsersnames = targetUsers.map((u) => `${u.first_name} ${u.last_name}`).join(", ");
+    const targetUsersnames = targetUsers.map((u) => `${u.name}`).join(", ");
 
     const confirmMsg = `${targetUsersnames} 유저들을 삭제하시겠습니까?`;
     if (!confirm(confirmMsg)) return;
 
     try {
       userDeleteDispatch({ type: "SUBMIT_CHECKED_ITEMS_START" });
-      const result = await deleteUserApi(userDeleteState.checkedIds);
-      console.log(result);
+      await deleteUserApi(userDeleteState.checkedIds);
       userDeleteDispatch({ type: "SUBMIT_SUCCESS" });
-      alert("삭제를 완료하였습니다.");
-      await router.replace(router.asPath, undefined, { unstable_skipClientCache: true });
-      // 캐시 갱신: 서버에 저장된 정적 페이지를 “다음 요청 때 새로 만들게” 하는 것 (지금 보고 있는 화면은 그대로)
-      // UI 즉시 반영: 사용자가 보고 있는 화면의 상태를 바로 바꾸는 것 (라우터로 새 요청하거나, 로컬 상태 업데이트)
+      openAlert({
+        description: "삭제를 완료하였습니다.",
+        onOk: () => {
+          router.replace(router.asPath, undefined, { unstable_skipClientCache: true });
+          // 캐시 갱신: 서버에 저장된 정적 페이지를 “다음 요청 때 새로 만들게” 하는 것 (지금 보고 있는 화면은 그대로)
+          // UI 즉시 반영: 사용자가 보고 있는 화면의 상태를 바로 바꾸는 것 (라우터로 새 요청하거나, 로컬 상태 업데이트)
+        },
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;
       console.error(err);
-      alert(userMessage);
+      openAlert({
+        description: userMessage,
+      });
       userDeleteDispatch({
         type: "SUBMIT_ERROR",
       });
     }
+  };
+
+  const handleClickNewUser = () => {
+    if (!session?.access_token) {
+      openAlert({
+        description: "로그인 후 새로운 유저를 추가할 수 있습니다.",
+        onOk: () => {
+          router.push("login");
+        },
+      });
+      return;
+    }
+    router.push("users/new");
   };
 
   return (
@@ -196,10 +217,11 @@ export default function UserList({
 
             {!userDeleteState.isShowDeleteCheckbox && (
               <Button
-                asChild
+                onClick={handleClickNewUser}
                 className="bg-[linear-gradient(135deg,#f5f5f5,#d4d4d4)] text-neutral-900 hover:opacity-90"
               >
-                <Link href={`users/new`}>새 유저 추가</Link>
+                새 유저 추가
+                {/* <Link href={`users/new`}>새 유저 추가</Link> */}
               </Button>
             )}
           </div>

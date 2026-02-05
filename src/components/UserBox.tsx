@@ -7,8 +7,8 @@ import { UserDeleteAction, UserDeleteState } from "@/reducer";
 
 type UserBoxProps = {
   avatar?: User["avatar"];
-  first_name: User["first_name"];
-  last_name: User["last_name"];
+  name: User["name"];
+  phone: User["phone"];
   email: User["email"];
   id: User["id"];
   deleteState: UserDeleteState;
@@ -17,8 +17,8 @@ type UserBoxProps = {
 
 export default function UserBox({
   avatar,
-  first_name,
-  last_name,
+  name,
+  phone,
   email,
   id,
   deleteState,
@@ -46,7 +46,7 @@ export default function UserBox({
           <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted dark:border-white/10">
             <Image
               src={avatar || PLACEHOLDER_SRC}
-              alt={`${first_name} ${last_name}의 프로필`}
+              alt={`${name} 의 프로필`}
               width={120}
               height={120}
               unoptimized={!avatar}
@@ -55,9 +55,10 @@ export default function UserBox({
           </div>
 
           <div className="min-w-0 flex flex-col gap-1">
-            <span className="whitespace-normal break-words text-base font-semibold">
-              {first_name} {last_name}
-            </span>
+            <span className="whitespace-normal break-words text-base font-semibold">{name}</span>
+            {phone && (
+              <span className="whitespace-normal break-words text-base font-semibold">{phone}</span>
+            )}
             <span className="whitespace-normal break-all text-sm text-muted-foreground">
               {email}
             </span>

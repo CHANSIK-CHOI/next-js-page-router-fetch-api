@@ -59,7 +59,7 @@ export default function DetailPage({
   }
   if (!user) return "문제가 발생했습니다. 다시 시도하세요.";
 
-  const { avatar, first_name, last_name, email, id } = user;
+  const { avatar, name, phone, email, id } = user;
 
   return (
     <div className="flex flex-col gap-5">
@@ -80,7 +80,7 @@ export default function DetailPage({
           <div className="h-[140px] w-[140px] overflow-hidden rounded-2xl border border-border/60 bg-muted dark:border-white/10">
             <Image
               src={avatar || PLACEHOLDER_SRC}
-              alt={`${first_name} ${last_name}의 프로필`}
+              alt={`${name}의 프로필`}
               width={140}
               height={140}
               unoptimized={!avatar}
@@ -91,10 +91,14 @@ export default function DetailPage({
           <div className="flex flex-col gap-4">
             <dl className="grid gap-2">
               <dt className="text-sm font-semibold text-muted-foreground">이름</dt>
-              <dd className="text-base font-semibold text-foreground">
-                {first_name} {last_name}
-              </dd>
+              <dd className="text-base font-semibold text-foreground">{name}</dd>
             </dl>
+            {phone && (
+              <dl className="grid gap-2">
+                <dt className="text-sm font-semibold text-muted-foreground">phone</dt>
+                <dd className="text-base font-semibold text-foreground">{phone}</dd>
+              </dl>
+            )}
             <dl className="grid gap-2">
               <dt className="text-sm font-semibold text-muted-foreground">email</dt>
               <dd className="text-base font-semibold text-foreground">{email}</dd>

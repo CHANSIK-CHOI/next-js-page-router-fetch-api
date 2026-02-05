@@ -1,28 +1,46 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { INIT_NEW_USER_VALUE, PLACEHOLDER_SRC } from "@/constants";
-import { useForm, type FieldErrors } from "react-hook-form";
+import { EMAIL_PATTERN, INIT_NEW_USER_VALUE, PHONE_PATTERN, PLACEHOLDER_SRC } from "@/constants";
+import { useForm } from "react-hook-form";
 import { postUserApi } from "@/lib/users.client";
 import { PayloadNewUser, isErrorAlertMsg } from "@/types";
 import { useRouter } from "next/router";
 import { compressImageFile } from "@/util";
 import { uploadAvatarToSupabase } from "@/lib/avatarUpload";
-import { Button } from "@/components/ui";
+import { Button, useAlert } from "@/components/ui";
+import { useSession } from "@/components/useSession";
 
 export default function NewPage() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-
+  const { session, isSessionInit } = useSession();
   const router = useRouter();
   const {
     register,
     handleSubmit,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<PayloadNewUser>({
     mode: "onSubmit",
     defaultValues: INIT_NEW_USER_VALUE,
   });
+  const { openAlert } = useAlert();
+
+  useEffect(() => {
+    if (isSessionInit) return;
+
+    if (!session?.access_token) {
+      openAlert({
+        description: "로그인 후 새로운 유저를 추가할 수 있습니다.",
+        onOk: () => {
+          router.replace("/");
+        },
+      });
+      return;
+    }
+  }, [isSessionInit, session, openAlert, router]);
 
   useEffect(() => {
     return () => {
@@ -62,40 +80,74 @@ export default function NewPage() {
   const onSubmit = async (payload: PayloadNewUser) => {
     if (isSubmitting) return;
 
-    const confirmMsg = `${payload.first_name} ${payload.last_name}님의 데이터를 추가하시겠습니까?`;
+    const confirmMsg = `${payload.name}님의 데이터를 추가하시겠습니까?`;
     if (!confirm(confirmMsg)) return;
 
     try {
       const avatarResult = avatarFile ? await uploadAvatarToSupabase(avatarFile) : null;
       const payloadWithAvatar: PayloadNewUser = {
         ...payload,
-        avatar: avatarResult?.avatarUrl ?? "",
+        avatar: avatarResult?.avatarUrl ?? payload.avatar ?? "",
       };
-      const result = await postUserApi(payloadWithAvatar);
-      console.log(result);
-      alert("추가를 완료하였습니다.");
-      await router.replace("/", undefined, { unstable_skipClientCache: true });
+      await postUserApi(payloadWithAvatar);
+      openAlert({
+        description: "추가를 완료하였습니다.",
+        onOk: () => {
+          router.replace("/", undefined, { unstable_skipClientCache: true });
+        },
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;
       console.error(err);
-      alert(userMessage);
+      openAlert({
+        description: userMessage,
+      });
     }
   };
 
-  const onError = (errors: FieldErrors<PayloadNewUser>) => {
-    console.error("Validation Errors:", errors);
-    alert("입력값을 확인해주세요.");
+  const handleMyInfo = () => {
+    const user = session?.user;
+    if (!user) return;
+
+    const metadata = user.user_metadata ?? {};
+    const name = String(metadata.name ?? metadata.full_name ?? metadata.user_name ?? "").trim();
+    const phone = String(metadata.phone ?? "").trim();
+    const avatar_url = metadata.avatar_url;
+    const currentValues = getValues();
+
+    setValue("email", user.email ?? currentValues.email, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setValue("name", name || currentValues.name, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setValue("phone", phone || currentValues.phone || "", {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+
+    if (typeof avatar_url === "string" && avatar_url) {
+      if (previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
+      setAvatarFile(null);
+      setPreviewUrl(avatar_url);
+      setValue("avatar", avatar_url, { shouldDirty: true });
+    }
   };
 
   const inputBase =
     "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10";
 
   return (
-    <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit, onError)}>
+    <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
       <div className="flex items-center justify-end gap-2">
         <Button asChild variant="outline">
           <Link href={`/`}>뒤로가기</Link>
+        </Button>
+        <Button type="button" variant="outline" onClick={handleMyInfo}>
+          내 정보 입력하기
         </Button>
         <Button
           type="submit"
@@ -146,28 +198,32 @@ export default function NewPage() {
                     type="text"
                     placeholder="first name"
                     className={inputBase}
-                    {...register("first_name", {
+                    {...register("name", {
                       required: "필수 입력값입니다.",
+                      setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
                       validate: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
                     })}
                   />
-                  {errors.first_name && (
-                    <span className="text-xs text-destructive">{errors.first_name.message}</span>
+                  {errors.name && (
+                    <span className="text-xs text-destructive">{errors.name.message}</span>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <input
                     type="text"
-                    placeholder="last name"
+                    placeholder="phone number"
                     className={inputBase}
-                    {...register("last_name", {
-                      required: "필수 입력값입니다.",
-                      validate: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
+                    {...register("phone", {
+                      setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
+                      pattern: {
+                        value: PHONE_PATTERN,
+                        message: "유효한 전화번호 형식이 아닙니다.",
+                      },
                     })}
                   />
-                  {errors.last_name && (
-                    <span className="text-xs text-destructive">{errors.last_name.message}</span>
+                  {errors.phone && (
+                    <span className="text-xs text-destructive">{errors.phone.message}</span>
                   )}
                 </div>
               </dd>
@@ -182,8 +238,9 @@ export default function NewPage() {
                   className={inputBase}
                   {...register("email", {
                     required: "필수 입력값입니다.",
+                    setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
                     pattern: {
-                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                      value: EMAIL_PATTERN,
                       message: "유효한 이메일 형식이 아닙니다.",
                     },
                   })}

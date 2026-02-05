@@ -4,12 +4,12 @@ export const PLACEHOLDER_SRC = "https://placehold.co/100x100?text=Hello+World";
 
 export const INIT_NEW_USER_VALUE: InitUserFormObject = {
   email: "",
-  first_name: "",
-  last_name: "",
+  name: "",
+  phone: "",
   avatar: undefined,
 };
 
-export const EDITABLE_USER_KEYS: EditableUserKey[] = ["email", "first_name", "last_name", "avatar"];
+export const EDITABLE_USER_KEYS: EditableUserKey[] = ["email", "name", "phone", "avatar"];
 
 export const LOGIN_EMAIL_FORM: LoginForm = {
   login_email: "",

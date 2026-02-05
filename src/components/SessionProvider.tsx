@@ -8,19 +8,26 @@ type SessionProviderProps = {
 };
 export default function SessionProvider({ children }: SessionProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
+  const [isSessionInit, setIsSessionInit] = useState(true);
   const supabaseClient: SupabaseClient | null = getSupabaseClient();
 
   useEffect(() => {
-    if (!supabaseClient) return;
+    if (!supabaseClient) {
+      console.error("Supabase를 확인해주세요.");
+      setIsSessionInit(false);
+      return;
+    }
     let isMounted = true;
 
     supabaseClient.auth.getSession().then(({ data }) => {
-      if (isMounted) setSession(data.session ?? null);
+      if (!isMounted) return;
+      setSession(data.session ?? null);
+      setIsSessionInit(false);
     });
 
     const { data: subscription } = supabaseClient.auth.onAuthStateChange((_event, nextSession) => {
-      console.log({ nextSession });
       setSession(nextSession);
+      setIsSessionInit(false);
     });
 
     return () => {
@@ -30,7 +37,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   }, [supabaseClient]);
 
   return (
-    <SessionContext.Provider value={{ session, supabaseClient }}>
+    <SessionContext.Provider value={{ session, supabaseClient, isSessionInit }}>
       {children}
     </SessionContext.Provider>
   );

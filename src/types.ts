@@ -2,9 +2,9 @@ export type User = {
   avatar: string;
   created_at?: string;
   email: string;
-  first_name: string;
+  name: string;
   id: string;
-  last_name: string;
+  phone: string;
 };
 
 type UserKeys = keyof User;

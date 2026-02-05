@@ -8,9 +8,29 @@ type IssueUploadUrlResponse =
   | { error: string; alertMsg?: string };
 
 export async function uploadAvatarToSupabase(file: File, userId?: string) {
+  const supabaseClient = getSupabaseClient();
+  if (!supabaseClient) {
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  }
+
+  const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) {
+    const error: ErrorAlertMsg = new Error("Unauthorized");
+    error.alertMsg = "로그인이 필요합니다.";
+    throw error;
+  }
+
   const signedUpload = await fetch("/api/signed-upload-url", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
     body: JSON.stringify({ mime: file.type, userId }),
   }).then((r) => r.json() as Promise<IssueUploadUrlResponse>);
 
@@ -18,11 +38,6 @@ export async function uploadAvatarToSupabase(file: File, userId?: string) {
     const error: ErrorAlertMsg = new Error(signedUpload.error);
     if (signedUpload.alertMsg) error.alertMsg = signedUpload.alertMsg;
     throw error;
-  }
-
-  const supabaseClient = getSupabaseClient();
-  if (!supabaseClient) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
   }
 
   // Storage에 실제 업로드
