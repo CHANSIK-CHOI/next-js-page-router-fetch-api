@@ -14,23 +14,23 @@ const parseBearerToken = (authorization?: string | string[]) => {
   return token;
 };
 
-const hasAdminRole = (appMetadata: unknown) => {
-  if (!appMetadata || typeof appMetadata !== "object") return false;
+// const hasAdminRole = (appMetadata: unknown) => {
+//   if (!appMetadata || typeof appMetadata !== "object") return false;
 
-  const metadata = appMetadata as { role?: unknown; roles?: unknown };
-  const roles: string[] = [];
+//   const metadata = appMetadata as { role?: unknown; roles?: unknown };
+//   const roles: string[] = [];
 
-  if (typeof metadata.role === "string") roles.push(metadata.role.toLowerCase());
-  if (Array.isArray(metadata.roles)) {
-    roles.push(
-      ...metadata.roles
-        .filter((role): role is string => typeof role === "string")
-        .map((role) => role.toLowerCase())
-    );
-  }
+//   if (typeof metadata.role === "string") roles.push(metadata.role.toLowerCase());
+//   if (Array.isArray(metadata.roles)) {
+//     roles.push(
+//       ...metadata.roles
+//         .filter((role): role is string => typeof role === "string")
+//         .map((role) => role.toLowerCase())
+//     );
+//   }
 
-  return roles.includes("admin");
-};
+//   return roles.includes("admin");
+// };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
