@@ -10,6 +10,7 @@ import { compressImageFile } from "@/util";
 import { uploadAvatarToSupabase } from "@/lib/avatarUpload";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
+import { useConfirm } from "@/components/ui/Confirm/useConfirm";
 
 export default function NewPage() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
@@ -27,6 +28,7 @@ export default function NewPage() {
     defaultValues: INIT_NEW_USER_VALUE,
   });
   const { openAlert } = useAlert();
+  const { openConfirm } = useConfirm();
 
   useEffect(() => {
     if (isSessionInit) return;
@@ -81,7 +83,10 @@ export default function NewPage() {
     if (isSubmitting) return;
 
     const confirmMsg = `${payload.name}님의 데이터를 추가하시겠습니까?`;
-    if (!confirm(confirmMsg)) return;
+    const confirmed = await openConfirm({
+      description: confirmMsg,
+    });
+    if (!confirmed) return;
 
     try {
       const avatarResult = avatarFile ? await uploadAvatarToSupabase(avatarFile) : null;
@@ -99,7 +104,6 @@ export default function NewPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;
-      console.error(err);
       openAlert({
         description: userMessage,
       });

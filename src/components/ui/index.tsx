@@ -7,6 +7,8 @@ export { default as AlertDialog } from "./radix-ui/alert-dialog";
 export { default as DialogProvider } from "./Dialog/DialogProvider";
 export { default as Alert, type AlertProps } from "./Alert/Alert";
 export { default as AlertProvider } from "./Alert/AlertProvider";
+export { default as Confirm, type ConfirmProps } from "./Confirm/Confirm";
+export { default as ConfirmProvider } from "./Confirm/ConfirmProvider";
 
 // hook
 export { useDialog } from "./Dialog/useDialog";

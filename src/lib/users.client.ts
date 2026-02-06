@@ -27,7 +27,8 @@ const getAuthHeaders = async (): Promise<HeadersInit> => {
 export const postUserApi = async (payload: PayloadNewUser): Promise<ApiResponseNewUser> => {
   const response = await fetch("/api/post-new-user", {
     method: "POST",
-    headers: await getAuthHeaders(),
+    // headers: await getAuthHeaders(),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 

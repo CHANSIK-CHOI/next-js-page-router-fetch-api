@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { DialogContext } from "./useDialog";
-import AlertProvider from "../Alert/AlertProvider";
+import { AlertProvider, ConfirmProvider } from "@/components/ui";
 
 type DialogProviderProps = {
   children: ReactNode;
@@ -10,7 +10,9 @@ type DialogProviderProps = {
 export default function DialogProvider({ children, container }: DialogProviderProps) {
   return (
     <DialogContext.Provider value={{ container }}>
-      <AlertProvider>{children}</AlertProvider>
+      <ConfirmProvider>
+        <AlertProvider>{children}</AlertProvider>
+      </ConfirmProvider>
     </DialogContext.Provider>
   );
 }

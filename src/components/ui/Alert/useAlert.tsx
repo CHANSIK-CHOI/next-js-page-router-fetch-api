@@ -10,7 +10,7 @@ export const AlertContext = createContext<AlertContextValue | null>(null);
 export function useAlert() {
   const ctx = useContext(AlertContext);
   if (!ctx) {
-    throw new Error("AleryProvider 안에서만 사용하세요");
+    throw new Error("AlertProvider 안에서만 사용하세요");
   }
   return ctx;
 }

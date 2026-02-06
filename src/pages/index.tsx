@@ -8,6 +8,7 @@ import { INIT_USER_DELETE_STATE, userDeleteReducer } from "@/reducer";
 import { deleteUserApi } from "@/lib/users.client";
 import { useAlert, Button, Select } from "@/components/ui";
 import { useSession } from "@/components/useSession";
+import { useConfirm } from "@/components/ui/Confirm/useConfirm";
 
 export const getStaticProps = async () => {
   try {
@@ -74,6 +75,7 @@ export default function UserList({
   const hasAlertedRef = useRef(false);
 
   const { openAlert } = useAlert();
+  const { openConfirm } = useConfirm();
 
   useEffect(() => {
     if (userMessage && !hasAlertedRef.current) {
@@ -107,7 +109,10 @@ export default function UserList({
     const targetUsersnames = targetUsers.map((u) => `${u.name}`).join(", ");
 
     const confirmMsg = `${targetUsersnames} 유저들을 삭제하시겠습니까?`;
-    if (!confirm(confirmMsg)) return;
+    const confirmed = await openConfirm({
+      description: confirmMsg,
+    });
+    if (!confirmed) return;
 
     try {
       userDeleteDispatch({ type: "SUBMIT_CHECKED_ITEMS_START" });
