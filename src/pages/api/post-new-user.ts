@@ -1,6 +1,7 @@
 import { PayloadNewUser } from "@/types";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServer } from "@/lib/supabase.server";
+import { FAILED_POST_MSG } from "@/constants";
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -35,10 +36,7 @@ const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({
-      error: "Method Not Allowed",
-      alertMsg: "요청 방식이 올바르지 않습니다.",
-    });
+    throw new Error("Method Not Allowed");
   }
 
   try {
@@ -72,17 +70,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { name, phone, email, avatar }: PayloadNewUser = req.body;
     if (!name || !email) {
-      console.error("post-new-user : name, email은 필수 입력값입니다.");
+      console.error("post-new-user : VALIDATION_ERROR");
       return res.status(400).json({
-        error: "Validation error",
         alertMsg: "name, email은 필수 입력값입니다.",
       });
     }
 
     if (!EMAIL_REGEX.test(email.trim())) {
-      console.error("post-new-user : 유효한 이메일 형식이 아닙니다.");
+      console.error("post-new-user : VALIDATION_ERROR");
       return res.status(400).json({
-        error: "Validation error",
         alertMsg: "유효한 이메일 형식이 아닙니다.",
       });
     }
@@ -99,16 +95,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select()
       .single();
 
-    // 이메일 중복 오류
     if (error?.code === "23505") {
       console.error(`post-new-user : ${error.message}`);
       return res.status(409).json({
-        error: error.message,
         alertMsg: `${email} 해당 이메일은\n이미 사용 중인 이메일입니다.`,
       });
     }
 
-    // Supabase insert 결과에서 실패가 났을 때 처리
     if (error || !data) {
       throw new Error(error?.message ?? "Insert failed");
     }
@@ -116,15 +109,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       await res.revalidate("/");
     } catch (error) {
-      console.error("post-new-user : revalidate failed", error);
+      console.error("post-new-user : REVALIDATE_FAILED", error);
     }
 
     return res.status(200).json({ data });
   } catch (error) {
-    console.error(error);
+    console.error(`post-new-user : ${error}`);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Unknown error",
-      alertMsg: "새로운 유저를 추가할 수 없습니다. 관리자에게 문의 부탁드립니다.",
+      alertMsg: FAILED_POST_MSG,
     });
   }
 }

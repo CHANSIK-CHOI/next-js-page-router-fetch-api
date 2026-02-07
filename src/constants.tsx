@@ -25,3 +25,5 @@ export const SINGUP_EMAIL_FORM: SingUpForm = {
 
 export const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const PHONE_PATTERN = /^01[016789]-?\d{3,4}-?\d{4}$/;
+
+export const FAILED_POST_MSG = "새로운 유저를 추가할 수 없습니다. 관리자에게 문의 부탁드립니다.";

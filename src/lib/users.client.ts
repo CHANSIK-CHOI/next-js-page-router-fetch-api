@@ -1,6 +1,15 @@
 import type { ApiResponseDeleteUser, ApiResponseNewUser, PayloadNewUser, User } from "@/types";
-import readErrorBody from "@/lib/readErrorBody";
 import { getSupabaseClient } from "@/lib/supabase.client";
+import { FAILED_POST_MSG } from "@/constants";
+
+const readAlertMsg = async (response: Response): Promise<string> => {
+  try {
+    const body = await response.json();
+    return typeof body?.alertMsg === "string" ? body.alertMsg : FAILED_POST_MSG;
+  } catch {
+    return FAILED_POST_MSG;
+  }
+};
 
 const getAuthHeaders = async (): Promise<HeadersInit> => {
   const supabaseClient = getSupabaseClient();
@@ -33,12 +42,9 @@ export const postUserApi = async (payload: PayloadNewUser): Promise<ApiResponseN
   });
 
   if (!response.ok) {
-    const { error, alertMsg, rawText } = await readErrorBody(response);
-    if (error) console.error(error);
-    const err = new Error(error ?? alertMsg ?? rawText ?? "Request failed") as Error & {
-      alertMsg?: string;
-    };
-    if (alertMsg) err.alertMsg = alertMsg;
+    const body: { alertMsg: string } = await response.json();
+    const alertMsg = !body.alertMsg ? FAILED_POST_MSG : body.alertMsg;
+    const err = new Error(alertMsg);
     throw err;
   }
 
@@ -54,9 +60,8 @@ export const deleteUserApi = async (ids: User["id"][]): Promise<ApiResponseDelet
   });
 
   if (!response.ok) {
-    const { error, alertMsg, rawText } = await readErrorBody(response);
-    if (error) console.error(error);
-    const err = new Error(error ?? alertMsg ?? rawText ?? "Request failed") as Error & {
+    const alertMsg = await readAlertMsg(response);
+    const err = new Error(alertMsg ?? "Request failed") as Error & {
       alertMsg?: string;
     };
     if (alertMsg) err.alertMsg = alertMsg;

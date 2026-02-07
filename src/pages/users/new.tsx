@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { EMAIL_PATTERN, INIT_NEW_USER_VALUE, PHONE_PATTERN, PLACEHOLDER_SRC } from "@/constants";
+import {
+  EMAIL_PATTERN,
+  FAILED_POST_MSG,
+  INIT_NEW_USER_VALUE,
+  PHONE_PATTERN,
+  PLACEHOLDER_SRC,
+} from "@/constants";
 import { useForm } from "react-hook-form";
 import { postUserApi } from "@/lib/users.client";
-import { PayloadNewUser, isErrorAlertMsg } from "@/types";
+import { PayloadNewUser } from "@/types";
 import { useRouter } from "next/router";
-import { compressImageFile } from "@/util";
+import { compressImageFile, formatPhoneNumber } from "@/util";
 import { uploadAvatarToSupabase } from "@/lib/avatarUpload";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
@@ -102,10 +108,9 @@ export default function NewPage() {
         },
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      const userMessage = isErrorAlertMsg(err) && err.alertMsg ? err.alertMsg : message;
+      const message = err instanceof Error ? err.message : FAILED_POST_MSG;
       openAlert({
-        description: userMessage,
+        description: message,
       });
     }
   };
@@ -196,49 +201,56 @@ export default function NewPage() {
           <div className="flex flex-col gap-5">
             <dl className="grid gap-3">
               <dt className="text-sm font-semibold text-muted-foreground">이름</dt>
-              <dd className="grid gap-3 sm:grid-cols-2">
-                <div className="flex flex-col gap-1">
-                  <input
-                    type="text"
-                    placeholder="first name"
-                    className={inputBase}
-                    {...register("name", {
-                      required: "필수 입력값입니다.",
-                      setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
-                      validate: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
-                    })}
-                  />
-                  {errors.name && (
-                    <span className="text-xs text-destructive">{errors.name.message}</span>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <input
-                    type="text"
-                    placeholder="phone number"
-                    className={inputBase}
-                    {...register("phone", {
-                      setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
-                      pattern: {
-                        value: PHONE_PATTERN,
-                        message: "유효한 전화번호 형식이 아닙니다.",
-                      },
-                    })}
-                  />
-                  {errors.phone && (
-                    <span className="text-xs text-destructive">{errors.phone.message}</span>
-                  )}
-                </div>
+              <dd className="flex flex-col gap-1">
+                <input
+                  type="text"
+                  placeholder="홍길동"
+                  className={inputBase}
+                  {...register("name", {
+                    required: "필수 입력값입니다.",
+                    setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
+                    validate: (value) => !!value.trim() || "공백으로 입력할 수 없습니다.",
+                  })}
+                />
+                {errors.name && (
+                  <span className="text-xs text-destructive">{errors.name.message}</span>
+                )}
               </dd>
             </dl>
 
             <dl className="grid gap-3">
-              <dt className="text-sm font-semibold text-muted-foreground">email</dt>
+              <dt className="text-sm font-semibold text-muted-foreground">휴대폰 번호</dt>
+              <dd className="flex flex-col gap-1">
+                <input
+                  type="tel"
+                  placeholder="하이픈 없이 입력해주세요"
+                  className={inputBase}
+                  {...register("phone", {
+                    setValueAs: (value) =>
+                      typeof value === "string" ? formatPhoneNumber(value) : value,
+                    onChange: (event) => {
+                      event.target.value = formatPhoneNumber(event.target.value);
+                    },
+                    validate: (value) => {
+                      if (!value) return true;
+                      return (
+                        PHONE_PATTERN.test(value.trim()) || "휴대폰 번호 형식이 올바르지 않습니다."
+                      );
+                    },
+                  })}
+                />
+                {errors.phone && (
+                  <span className="text-xs text-destructive">{errors.phone.message}</span>
+                )}
+              </dd>
+            </dl>
+
+            <dl className="grid gap-3">
+              <dt className="text-sm font-semibold text-muted-foreground">이메일</dt>
               <dd className="flex flex-col gap-1">
                 <input
                   type="text"
-                  placeholder="email"
+                  placeholder="someone@email.com"
                   className={inputBase}
                   {...register("email", {
                     required: "필수 입력값입니다.",

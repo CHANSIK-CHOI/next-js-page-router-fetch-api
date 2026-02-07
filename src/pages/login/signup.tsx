@@ -3,7 +3,7 @@ import Link from "next/link";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { SingUpForm } from "@/types";
-import { EMAIL_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
+import { EMAIL_PATTERN, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
@@ -150,14 +150,15 @@ export default function SignupPage() {
               type="tel"
               placeholder="하이픈 없이 입력해주세요"
               {...register("signup_phone", {
-                setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
+                setValueAs: (value) =>
+                  typeof value === "string" ? formatPhoneNumber(value) : value,
+                onChange: (event) => {
+                  event.target.value = formatPhoneNumber(event.target.value);
+                },
                 validate: (value) => {
                   if (!value) return true;
-                  const digits = String(value).replace(/\D/g, "");
                   return (
-                    digits.length === 10 ||
-                    digits.length === 11 ||
-                    "휴대폰 번호 형식이 올바르지 않습니다."
+                    PHONE_PATTERN.test(value.trim()) || "휴대폰 번호 형식이 올바르지 않습니다."
                   );
                 },
               })}
