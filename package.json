@@ -9,6 +9,7 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "seed:reqres": "node src/scripts/seed-reqres.mjs",
+    "seed:feedback": "node src/scripts/seed-feedback.mjs",
     "reset:avatars": "node src/scripts/reset-avatar-storage.mjs"
   },
   "dependencies": {

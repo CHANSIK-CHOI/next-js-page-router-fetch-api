@@ -1,0 +1,139 @@
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui";
+import { PLACEHOLDER_SRC } from "@/constants";
+
+const queueItems = [
+  {
+    id: "fb-102",
+    displayName: "S.Kim",
+    companyName: "",
+    isCompanyPublic: false,
+    avatarUrl: "",
+    summary: "기획 의도와 구현 범위를 잘 설명했어요.",
+    rating: 4,
+    status: "pending",
+    createdAt: "2026-02-05",
+  },
+  {
+    id: "fb-103",
+    displayName: "Min",
+    companyName: "Studio Amp",
+    isCompanyPublic: true,
+    avatarUrl: "https://placehold.co/80x80?text=M",
+    summary: "디자인과 개발 사이의 균형이 좋았습니다.",
+    rating: 5,
+    status: "revised_pending",
+    createdAt: "2026-02-07",
+  },
+];
+
+const renderStars = (rating: number) => "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(rating);
+
+export default function AdminFeedbackPage() {
+  return (
+    <div className="flex flex-col gap-6">
+      <section className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              관리자
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-foreground">피드백 검토 큐</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              승인 대기 및 수정된 피드백을 검토하고 공개 여부를 결정합니다.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href="/feedback">공개 보드</Link>
+            </Button>
+            <Button type="button">승인 대기만 보기</Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">대기</p>
+          <strong className="mt-2 block text-2xl font-semibold text-foreground">2</strong>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            수정 대기
+          </p>
+          <strong className="mt-2 block text-2xl font-semibold text-foreground">1</strong>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            이번 주 승인
+          </p>
+          <strong className="mt-2 block text-2xl font-semibold text-foreground">6</strong>
+        </div>
+      </section>
+
+      <section className="grid gap-4">
+        {queueItems.map((item) => (
+          <article
+            key={item.id}
+            className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-300">
+                  {item.status === "revised_pending" ? "수정 승인 대기" : "승인 대기"}
+                </span>
+                <span className="text-xs text-muted-foreground">{item.createdAt} 등록</span>
+              </div>
+              <span className="text-sm font-semibold text-amber-500">
+                {renderStars(item.rating)}
+              </span>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
+                  <Image
+                    src={item.avatarUrl || PLACEHOLDER_SRC}
+                    alt={`${item.displayName} avatar`}
+                    width={40}
+                    height={40}
+                    unoptimized={!item.avatarUrl}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <span className="text-base font-semibold text-foreground">
+                  {item.displayName}
+                </span>
+                {item.isCompanyPublic && item.companyName && (
+                  <span className="rounded-full border border-border/60 px-2.5 py-0.5 text-xs">
+                    {item.companyName}
+                  </span>
+                )}
+              </div>
+              <p className="text-base text-foreground">{item.summary}</p>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/feedback/${item.id}`}>상세 보기</Link>
+              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" size="sm">
+                  비공개
+                </Button>
+                <Button type="button" variant="outline" size="sm">
+                  반려
+                </Button>
+                <Button type="button" size="sm">
+                  승인
+                </Button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </section>
+    </div>
+  );
+}

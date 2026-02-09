@@ -1,0 +1,52 @@
+{
+  "data": [
+    {
+      "display_name": "Jamie",
+      "company_name": "Nexa Labs",
+      "is_company_public": true,
+      "avatar_url": "https://placehold.co/120x120?text=J",
+      "email": "jamie@nexa.example",
+      "summary": "구성력이 탄탄하고, 문제 정의가 명확했어요.",
+      "strengths": "요구사항을 빠르게 구조화하고, UI를 일관되게 구성합니다.",
+      "questions": "권한 정책을 어떻게 확장할 계획인지 궁금합니다.",
+      "suggestions": "필터링 UX에 짧은 도움말이 있으면 좋겠습니다.",
+      "rating": 5,
+      "tags": ["Frontend", "UX", "Clarity"],
+      "status": "approved",
+      "is_public": true,
+      "revision_count": 0
+    },
+    {
+      "display_name": "S.Kim",
+      "company_name": "",
+      "is_company_public": false,
+      "avatar_url": "",
+      "email": "s.kim@example.com",
+      "summary": "기획 의도와 구현 범위를 잘 설명했어요.",
+      "strengths": "기획 단계에서 핵심 요구사항을 빠르게 잡아냅니다.",
+      "questions": "테스트 전략은 어떻게 가져가나요?",
+      "suggestions": "모바일 폼 레이아웃을 조금 더 단순화하면 좋겠어요.",
+      "rating": 4,
+      "tags": ["Communication", "Planning"],
+      "status": "pending",
+      "is_public": false,
+      "revision_count": 0
+    },
+    {
+      "display_name": "Min",
+      "company_name": "Studio Amp",
+      "is_company_public": true,
+      "avatar_url": "https://placehold.co/120x120?text=M",
+      "email": "min@studioamp.example",
+      "summary": "디자인과 개발 사이의 균형이 좋았습니다.",
+      "strengths": "UI 디테일과 성능을 함께 고려합니다.",
+      "questions": "배포 후 로그/모니터링은 어떤 계획인가요?",
+      "suggestions": "승인 대기 배지 색상을 더 명확하게 구분해도 좋겠습니다.",
+      "rating": 5,
+      "tags": ["UI", "Detail", "Balance"],
+      "status": "revised_pending",
+      "is_public": true,
+      "revision_count": 1
+    }
+  ]
+}
