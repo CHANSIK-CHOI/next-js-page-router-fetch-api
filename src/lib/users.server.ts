@@ -1,6 +1,5 @@
 import type { ErrorAlertMsg, FeedbackData, User, UserRole } from "@/types";
 import { getSupabaseServer } from "@/lib/supabase.server";
-import { error } from "node:console";
 
 export function getUserApi(): Promise<{ data: User[] }>;
 export function getUserApi(id: User["id"]): Promise<{ data: User | null }>;

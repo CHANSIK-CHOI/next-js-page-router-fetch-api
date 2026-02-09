@@ -7,7 +7,6 @@ import { EMAIL_PATTERN, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
-import { addUserDataRole } from "@/lib/users.client";
 
 const getSignupErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
