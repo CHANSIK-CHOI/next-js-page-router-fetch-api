@@ -7,6 +7,7 @@ import { EMAIL_PATTERN, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
+import { addUserDataRole } from "@/lib/users.client";
 
 const getSignupErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
@@ -77,6 +78,19 @@ export default function SignupPage() {
     if (error) {
       openAlert({
         description: getSignupErrorMessage(error.message),
+      });
+      return;
+    }
+
+    const response = await fetch("/api/user-roles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data.session),
+    });
+    const isInsertUserRole = await response.json();
+    if (!isInsertUserRole) {
+      openAlert({
+        description: "회원님 계정의 권한 설정이 실패했습니다.\n관리자에게 문의 부탁드립니다.",
       });
       return;
     }

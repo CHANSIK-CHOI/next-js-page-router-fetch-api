@@ -54,26 +54,29 @@ export default function GlobalLayout({ children }: { children: ReactNode }) {
                 />
                 <div className="relative z-10 flex flex-col gap-4">
                   <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary dark:bg-primary/20 dark:text-primary-foreground">
-                    Next.js · Supabase
+                    Interview Feedback Board
                   </span>
                   <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-                    Next.js & Supabase 를 활용한 Auth & CRUD 프로젝트
+                    인터뷰어 피드백을 기록하는
+                    <br />
+                    참여형 보드
                   </h1>
                   <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                    지금까지 배운 Next.js & Supabase를 활용해 사용자 데이터를 관리하고 CRUD를
-                    구현합니다.
+                    로그인한 방문자가 피드백을 남기고, 관리자가 승인·공개를 운영합니다.
+                    <br />
+                    권한 분리와 CRUD 흐름을 한 화면에서 보여주는 포트폴리오입니다.
                   </p>
                 </div>
                 <aside className="relative z-10 grid gap-3">
                   <div className="rounded-2xl border border-border/60 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
                     <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      스택
+                      핵심 기능
                     </span>
                     <strong className="mt-2 block text-lg font-semibold text-foreground">
-                      Next.js (Page Router) + Supabase
+                      작성 · 검토 · 공개 흐름
                     </strong>
                     <span className="mt-1 block text-sm text-muted-foreground">
-                      Database · Storage · Auth · Webhooks
+                      Auth · RLS · 승인 대기 · 관리자 검토
                     </span>
                   </div>
                 </aside>
