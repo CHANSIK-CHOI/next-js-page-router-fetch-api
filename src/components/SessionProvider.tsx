@@ -44,12 +44,9 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     }
     if (roleSyncUserRef.current === session.user.id) return;
 
-    roleSyncUserRef.current = session.user.id;
-
     // 로그인 수단과 관계없이 세션 생성 시 user_roles를 동기화한다.
-
     const syncUserRole = async () => {
-      const response = await fetch("/api/user-roles", {
+      const response = await fetch("/api/user-roles/ensure", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,11 +54,14 @@ export default function SessionProvider({ children }: SessionProviderProps) {
         },
       });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        const message = payload?.error ?? "Failed to sync user role";
+      const payload: { role?: "admin" | "reviewer" | null; error?: string } =
+        await response.json().catch(() => ({}));
+      if (!response.ok || payload.error) {
+        const message = payload.error ?? "Failed to sync user role";
         throw new Error(message);
       }
+
+      roleSyncUserRef.current = session.user.id;
     };
 
     syncUserRole().catch((error) => {

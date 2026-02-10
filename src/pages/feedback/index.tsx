@@ -64,7 +64,7 @@ export default function FeedbackBoardPage({
       return;
     }
 
-    let isMounted = true;
+    const controller = new AbortController();
 
     const checkAdmin = async () => {
       try {
@@ -73,15 +73,16 @@ export default function FeedbackBoardPage({
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
+          signal: controller.signal,
         });
-        const result: { role?: UserRole["role"]; error?: string } = await response.json();
-        if (!response.ok) {
+        const result: { role?: UserRole["role"] | null; error?: string | null } =
+          await response.json().catch(() => ({}));
+        if (!response.ok || result.error) {
           throw new Error(result.error ?? "Failed to fetch user role");
         }
-        if (!isMounted) return;
         setIsAdminUi(result.role === "admin");
       } catch (error) {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
         console.error("Failed to get user role", error);
         setIsAdminUi(false);
       }
@@ -90,7 +91,7 @@ export default function FeedbackBoardPage({
     checkAdmin();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [isSessionInit, session?.access_token]);
 
