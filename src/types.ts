@@ -1,3 +1,5 @@
+import { PostgrestError } from "@supabase/supabase-js";
+
 export type User = {
   avatar: string;
   created_at?: string;
@@ -95,3 +97,5 @@ export type UserRole = {
   role: "admin" | "reviewer"; // 권한 역할
   created_at?: string; // 역할이 부여된 시각 기록
 };
+
+export type SupabaseError = PostgrestError | null;

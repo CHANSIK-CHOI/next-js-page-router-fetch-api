@@ -1,47 +1,74 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServer } from "@/lib/supabase.server";
-import type { PostgrestError, Session } from "@supabase/supabase-js";
-import { UserRole } from "@/types";
+import { SupabaseError, UserRole } from "@/types";
+
+// GET: 현재 로그인 유저의 role만 반환
+// POST: role 없으면 reviewer로 삽입 (이미 있으면 그대로)
+// 인증은 Authorization Bearer 토큰으로만 처리
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST" && req.method !== "GET") {
+    res.setHeader("Allow", ["POST", "GET"]);
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  const supabaseServer = getSupabaseServer();
+  if (!supabaseServer) {
+    return res.status(500).json({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
+  }
+
+  const authHeader = req.headers.authorization;
+  const accessToken =
+    typeof authHeader === "string" && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!accessToken) {
+    return res.status(401).json({ error: "Missing access token" });
+  }
+
   try {
-    if (req.method !== "POST") {
-      res.setHeader("Allow", ["POST"]);
-      res.status(405).json({ error: "Method Not Allowed" });
-      return;
-    }
-
-    const supabaseServer = getSupabaseServer();
-    if (!supabaseServer) {
-      throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-    }
-
-    const session: Session | null = req.body;
-    if (!session) throw new Error("Session is Null");
-
-    const { data: authData, error: authError } = await supabaseServer.auth.getUser(
-      session.access_token
-    );
+    const { data: authData, error: authError } = await supabaseServer.auth.getUser(accessToken);
     if (authError || !authData.user) {
-      throw new Error(authError?.message);
+      return res.status(401).json({ error: authError?.message ?? "Unauthorized" });
     }
 
-    const { data, error }: { data: UserRole[] | null; error: PostgrestError | null } =
-      await supabaseServer
+    if (req.method === "GET") {
+      const { data, error }: { data: UserRole | null; error: SupabaseError } = await supabaseServer
         .from("user_roles")
-        .insert({
-          user_id: authData.user.id,
-          role: "reviewer",
-        })
-        .select();
+        .select("user_id, role")
+        .eq("user_id", authData.user.id)
+        .maybeSingle();
 
-    if (error || !data) {
-      throw new Error(error?.message ?? "Insert failed");
+      if (error) throw new Error(error.message);
+      return res.status(200).json({ role: data?.role ?? null });
     }
 
-    return res.status(200).json(true);
+    if (req.method === "POST") {
+      const {
+        data: existingRole,
+        error: existingError,
+      }: { data: UserRole | null; error: SupabaseError } = await supabaseServer
+        .from("user_roles")
+        .select("user_id, role")
+        .eq("user_id", authData.user.id)
+        .maybeSingle();
+      if (existingError) throw new Error(existingError.message);
+
+      if (existingRole) {
+        return res.status(200).json({ role: existingRole.role });
+      }
+
+      const { data, error }: { data: UserRole[] | null; error: SupabaseError } =
+        await supabaseServer
+          .from("user_roles")
+          .insert({
+            user_id: authData.user.id,
+            role: "reviewer",
+          })
+          .select();
+      if (error || !data || !data[0]) throw new Error(error?.message ?? "Insert failed");
+
+      return res.status(200).json({ role: data[0].role });
+    }
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
-    console.error(message);
-    return res.status(500).json(false);
+    return res.status(500).json({ error: message });
   }
 }

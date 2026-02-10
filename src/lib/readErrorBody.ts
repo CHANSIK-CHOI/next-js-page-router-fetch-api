@@ -3,10 +3,6 @@ type ErrorBody = { error?: string; alertMsg?: string };
 const readErrorBody = async (response: Response): Promise<ErrorBody & { rawText?: string }> => {
   const contentType = response.headers.get("content-type") ?? "";
   const isJson = contentType.includes("application/json");
-  if (process.env.NODE_ENV !== "production") {
-    console.log("contentType : ", contentType);
-    console.log("isJson : ", isJson);
-  }
 
   const cloned = response.clone();
   try {

@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { SessionContext } from "./useSession";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase.client";
@@ -10,6 +10,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [isSessionInit, setIsSessionInit] = useState(true);
   const supabaseClient: SupabaseClient | null = getSupabaseClient();
+  const roleSyncUserRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!supabaseClient) {
@@ -35,6 +36,38 @@ export default function SessionProvider({ children }: SessionProviderProps) {
       subscription.subscription.unsubscribe();
     };
   }, [supabaseClient]);
+
+  useEffect(() => {
+    if (!session?.user?.id || !session.access_token) {
+      roleSyncUserRef.current = null;
+      return;
+    }
+    if (roleSyncUserRef.current === session.user.id) return;
+
+    roleSyncUserRef.current = session.user.id;
+
+    // 로그인 수단과 관계없이 세션 생성 시 user_roles를 동기화한다.
+
+    const syncUserRole = async () => {
+      const response = await fetch("/api/user-roles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const message = payload?.error ?? "Failed to sync user role";
+        throw new Error(message);
+      }
+    };
+
+    syncUserRole().catch((error) => {
+      console.error("Failed to sync user role", error);
+    });
+  }, [session?.user?.id, session?.access_token]);
 
   return (
     <SessionContext.Provider value={{ session, supabaseClient, isSessionInit }}>

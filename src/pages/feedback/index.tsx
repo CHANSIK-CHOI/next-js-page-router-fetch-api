@@ -3,9 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button, useAlert } from "@/components/ui";
 import { PLACEHOLDER_SRC } from "@/constants";
-import { getFeedbacksApi, getUserRoles } from "@/lib/users.server";
+import { getApprovedFeedbacksApi } from "@/lib/users.server";
+import { cn } from "@/lib/utils";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/useSession";
+import { UserRole } from "@/types";
 
 const statusBadge = (status: string) => {
   if (status === "approved") {
@@ -29,18 +31,15 @@ const renderStars = (rating: number) => {
 
 export const getStaticProps = async () => {
   try {
-    const [feedbackItems, userRoles] = await Promise.all([getFeedbacksApi(), getUserRoles()]);
-
     return {
-      props: { feedbackItems, userRoles, alertMessage: null },
+      props: { approvedData: await getApprovedFeedbacksApi(), alertMessage: null },
     };
   } catch (error) {
     console.error(error);
 
     return {
       props: {
-        feedbackItems: [],
-        userRoles: [],
+        approvedData: [],
         alertMessage: "데이터를 정상적으로 불러올 수 없습니다.",
       },
     };
@@ -48,26 +47,88 @@ export const getStaticProps = async () => {
 };
 
 export default function FeedbackBoardPage({
-  feedbackItems,
-  userRoles,
+  approvedData,
   alertMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const hasAlertedRef = useRef(false);
   const { openAlert } = useAlert();
   const { session, isSessionInit } = useSession();
   const [isAdminUi, setIsAdminUi] = useState(false);
-
-  const adminUserData = userRoles.find((roles) => roles.role === "admin");
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (isSessionInit) return;
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setIsAdminUi(false);
+      setPendingCount(null);
+      return;
+    }
 
-    const { id } = session.user;
-    if (adminUserData?.user_id === id) setIsAdminUi(true);
+    let isMounted = true;
 
-    return () => setIsAdminUi(false);
-  }, [isSessionInit, session]);
+    const checkAdmin = async () => {
+      try {
+        const response = await fetch("/api/user-roles", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        const result: { role?: UserRole["role"]; error?: string } = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error ?? "Failed to fetch user role");
+        }
+        if (!isMounted) return;
+        setIsAdminUi(result.role === "admin");
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Failed to get user role", error);
+        setIsAdminUi(false);
+      }
+    };
+
+    checkAdmin();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isSessionInit, session?.access_token]);
+
+  useEffect(() => {
+    if (!isAdminUi || !session?.access_token) {
+      setPendingCount(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadPendingCount = async () => {
+      try {
+        const response = await fetch("/api/feedbacks/pending-count", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        const result: { count?: number; error?: string } = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error ?? "Failed to fetch pending count");
+        }
+        if (!isMounted) return;
+        setPendingCount(typeof result.count === "number" ? result.count : 0);
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Failed to get pending count", error);
+        setPendingCount(null);
+      }
+    };
+
+    loadPendingCount();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAdminUi, session?.access_token]);
 
   useEffect(() => {
     if (alertMessage && !hasAlertedRef.current) {
@@ -102,13 +163,18 @@ export default function FeedbackBoardPage({
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section
+        className={cn("grid gap-4", {
+          "md:grid-cols-3": isAdminUi,
+          "md:grid-cols-2": !isAdminUi,
+        })}
+      >
         <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             전체
           </p>
           <strong className="mt-2 block text-2xl font-semibold text-foreground">
-            {feedbackItems.length}
+            {approvedData.length + (isAdminUi ? pendingCount ?? 0 : 0)}
           </strong>
         </div>
         <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
@@ -116,21 +182,23 @@ export default function FeedbackBoardPage({
             승인됨
           </p>
           <strong className="mt-2 block text-2xl font-semibold text-foreground">
-            {feedbackItems.filter((item) => item.status === "approved").length}
+            {approvedData.length}
           </strong>
         </div>
-        <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            승인 대기
-          </p>
-          <strong className="mt-2 block text-2xl font-semibold text-foreground">
-            {feedbackItems.filter((item) => item.status !== "approved").length}
-          </strong>
-        </div>
+        {isAdminUi && (
+          <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              승인 대기
+            </p>
+            <strong className="mt-2 block text-2xl font-semibold text-foreground">
+              {pendingCount ?? "-"}
+            </strong>
+          </div>
+        )}
       </section>
 
       <section className="grid gap-4">
-        {feedbackItems.map((item) => (
+        {approvedData.map((item) => (
           <article
             key={item.id}
             className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70"

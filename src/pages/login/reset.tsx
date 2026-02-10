@@ -19,7 +19,6 @@ export default function PasswordResetPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hasCode = new URLSearchParams(window.location.search).has("code");
-    console.log({ hasCode });
     if (hasCode) setIsRecovery(true);
   }, []);
 

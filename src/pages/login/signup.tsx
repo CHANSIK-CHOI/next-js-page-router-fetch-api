@@ -10,7 +10,6 @@ import { useSession } from "@/components/useSession";
 
 const getSignupErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
-  console.log({ normalized });
   if (normalized.includes("already registered") || normalized.includes("user already registered")) {
     return "이미 가입된 이메일입니다.";
   }
@@ -77,19 +76,6 @@ export default function SignupPage() {
     if (error) {
       openAlert({
         description: getSignupErrorMessage(error.message),
-      });
-      return;
-    }
-
-    const response = await fetch("/api/user-roles", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data.session),
-    });
-    const isInsertUserRole = await response.json();
-    if (!isInsertUserRole) {
-      openAlert({
-        description: "회원님 계정의 권한 설정이 실패했습니다.\n관리자에게 문의 부탁드립니다.",
       });
       return;
     }
