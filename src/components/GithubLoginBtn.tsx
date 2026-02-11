@@ -11,7 +11,7 @@ export default function GithubLoginBtn() {
     await supabaseClient.auth.signInWithOAuth({
       provider: "github",
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}/feedback`,
       },
     });
   };

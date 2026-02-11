@@ -21,7 +21,7 @@ import { useConfirm } from "@/components/ui/Confirm/useConfirm";
 export default function NewPage() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const { session, isSessionInit } = useSession();
+  const { session, isInitSessionComplete } = useSession();
   const router = useRouter();
   const {
     register,
@@ -37,7 +37,7 @@ export default function NewPage() {
   const { openConfirm } = useConfirm();
 
   useEffect(() => {
-    if (isSessionInit) return;
+    if (!isInitSessionComplete) return;
 
     if (!session?.access_token) {
       openAlert({
@@ -48,7 +48,7 @@ export default function NewPage() {
       });
       return;
     }
-  }, [isSessionInit, session, openAlert, router]);
+  }, [isInitSessionComplete, session, openAlert, router]);
 
   useEffect(() => {
     return () => {

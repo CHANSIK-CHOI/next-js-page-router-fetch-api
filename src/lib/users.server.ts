@@ -45,7 +45,7 @@ export const getApprovedFeedbacksApi = async (): Promise<FeedbackData[]> => {
   }
 
   // status = 'approved' + is_public = true 데이터만 조회
-  const { data, error: feedbackError } = await supabaseServer
+  const { data, error } = await supabaseServer
     .from("feedbacks")
     .select()
     .eq("status", "approved")
@@ -54,8 +54,8 @@ export const getApprovedFeedbacksApi = async (): Promise<FeedbackData[]> => {
       ascending: false,
     });
 
-  if (feedbackError || !data) {
-    throw new Error("getApprovedFeedbacksApi Error!");
+  if (error || !data) {
+    throw new Error("Failed fetch getApprovedFeedbacksApi");
   }
 
   return data;

@@ -5,7 +5,7 @@ import type { UserRole } from "@/types";
 type SessionContextValue = {
   session: Session | null;
   supabaseClient: SupabaseClient | null;
-  isSessionInit: boolean;
+  isInitSessionComplete: boolean;
   role: UserRole["role"] | null;
   isRoleLoading: boolean;
 };

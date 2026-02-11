@@ -1,23 +1,26 @@
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { SessionContext } from "./useSession";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase.client";
+import { UserRole } from "@/types";
 
 type SessionProviderProps = {
   children: ReactNode;
 };
+
+const CACHE_KEY = (id: string) => `role:${id}`;
+const CACHE_TTL = 5 * 60 * 1000; // 5분
+
 export default function SessionProvider({ children }: SessionProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
-  const [isSessionInit, setIsSessionInit] = useState(true);
+  const [isInitSessionComplete, setIsInitSessionComplete] = useState(false);
   const supabaseClient: SupabaseClient | null = getSupabaseClient();
-  const roleSyncUserRef = useRef<string | null>(null);
-  const [role, setRole] = useState<"admin" | "reviewer" | null>(null);
+  const [role, setRole] = useState<UserRole["role"] | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(false);
 
   useEffect(() => {
     if (!supabaseClient) {
-      console.error("Supabase를 확인해주세요.");
-      setIsSessionInit(false);
+      setIsInitSessionComplete(false);
       return;
     }
     let isMounted = true;
@@ -25,12 +28,12 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     supabaseClient.auth.getSession().then(({ data }) => {
       if (!isMounted) return;
       setSession(data.session ?? null);
-      setIsSessionInit(false);
+      setIsInitSessionComplete(true);
     });
 
     const { data: subscription } = supabaseClient.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
-      setIsSessionInit(false);
+      setIsInitSessionComplete(true);
     });
 
     return () => {
@@ -41,12 +44,22 @@ export default function SessionProvider({ children }: SessionProviderProps) {
 
   useEffect(() => {
     if (!session?.user?.id || !session.access_token) {
-      roleSyncUserRef.current = null;
       setRole(null);
       setIsRoleLoading(false);
       return;
     }
-    if (roleSyncUserRef.current === session.user.id) return;
+
+    const cacheKey = CACHE_KEY(session.user.id);
+    const cached = sessionStorage.getItem(cacheKey);
+
+    if (cached) {
+      const { role, ts } = JSON.parse(cached);
+      setRole(role ?? null);
+      setIsRoleLoading(false);
+
+      const isFresh = Date.now() - ts < CACHE_TTL;
+      if (isFresh) return;
+    }
 
     // 로그인 수단과 관계없이 세션 생성 시 user_roles를 동기화한다.
     const syncUserRole = async () => {
@@ -62,13 +75,14 @@ export default function SessionProvider({ children }: SessionProviderProps) {
       const payload: { role: "admin" | "reviewer" | null; error: string | null } = await response
         .json()
         .catch(() => ({}));
-      if (!response.ok || payload.error) {
-        const message = payload.error ?? "Failed to sync user role";
+
+      if (!response.ok || payload.error || !payload.role) {
+        const message = payload.error ?? "Failed Post user roles";
         throw new Error(message);
       }
 
-      setRole(payload.role ?? null);
-      roleSyncUserRef.current = session.user.id;
+      setRole(payload.role);
+      sessionStorage.setItem(cacheKey, JSON.stringify({ role: payload.role, ts: Date.now() }));
     };
 
     syncUserRole()
@@ -83,7 +97,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
 
   return (
     <SessionContext.Provider
-      value={{ session, supabaseClient, isSessionInit, role, isRoleLoading }}
+      value={{ session, supabaseClient, isInitSessionComplete, role, isRoleLoading }}
     >
       {children}
     </SessionContext.Provider>

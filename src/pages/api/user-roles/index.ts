@@ -17,8 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .json({ role: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
   }
 
-  const authHeader = req.headers.authorization;
-  const accessToken = getAccessToken(authHeader);
+  const accessToken = getAccessToken(req.headers.authorization);
   if (!accessToken) {
     return res.status(401).json({ role: null, error: "Missing access token" });
   }
@@ -26,9 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { data: authData, error: authError } = await supabaseServer.auth.getUser(accessToken);
     if (authError || !authData.user) {
-      return res
-        .status(401)
-        .json({ role: null, error: authError?.message ?? "Unauthorized" });
+      return res.status(401).json({ role: null, error: authError?.message ?? "Unauthorized" });
     }
 
     const {
@@ -39,9 +36,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select("user_id, role")
       .eq("user_id", authData.user.id)
       .maybeSingle();
-    if (existingError) throw new Error(existingError.message);
+    if (existingError || !existingRole?.role) {
+      return res
+        .status(401)
+        .json({ role: null, error: existingError?.message ?? "Select failed Existing Role" });
+    }
 
-    return res.status(200).json({ role: existingRole?.role ?? null, error: null });
+    return res.status(200).json({ role: existingRole.role, error: null });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     return res.status(500).json({ role: null, error: message });

@@ -16,8 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .json({ count: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
   }
 
-  const authHeader = req.headers.authorization;
-  const accessToken = getAccessToken(authHeader);
+  const accessToken = getAccessToken(req.headers.authorization);
   if (!accessToken) {
     return res.status(401).json({ count: null, error: "Missing access token" });
   }
@@ -37,7 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .select("user_id, role")
         .eq("user_id", authData.user.id)
         .maybeSingle();
-    if (roleError) throw new Error(roleError.message);
+    if (roleError || !roleData?.role) {
+      return res
+        .status(401)
+        .json({ role: null, error: roleError?.message ?? "Select failed Role Data" });
+    }
 
     if (!roleData || roleData.role !== "admin") {
       return res.status(403).json({ count: null, error: "Forbidden" });
@@ -56,12 +59,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (countError || count === null) {
       return res
         .status(401)
-        .json({ count: null, error: countError?.message ?? "Failed to fetch pending count" });
+        .json({ count: null, error: countError?.message ?? "Select failed Pending Data Count" });
     }
 
     return res.status(200).json({ count, error: null });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to fetch pending count";
+    const message = e instanceof Error ? e.message : "Unknown error";
     return res.status(500).json({ count: null, error: message });
   }
 }

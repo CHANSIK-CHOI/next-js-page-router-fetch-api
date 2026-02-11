@@ -32,13 +32,12 @@ export default function FeedbackBoardPage({
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const hasAlertedRef = useRef(false);
   const { openAlert } = useAlert();
-  const { session, isSessionInit, role, isRoleLoading } = useSession();
+  const { session, role, isRoleLoading } = useSession();
   const isAdminUi = role === "admin";
   const [pendingCount, setPendingCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (alertMessage && !hasAlertedRef.current) {
-      console.error(alertMessage);
       openAlert({
         description: alertMessage,
       });
@@ -47,7 +46,7 @@ export default function FeedbackBoardPage({
   }, [alertMessage]);
 
   useEffect(() => {
-    if (isSessionInit || isRoleLoading || !isAdminUi || !session?.access_token) {
+    if (isRoleLoading || !isAdminUi || !session?.access_token) {
       setPendingCount(null);
       return;
     }
@@ -68,15 +67,15 @@ export default function FeedbackBoardPage({
           .json()
           .catch(() => ({}));
 
-        if (!response.ok || result.error) {
+        if (!response.ok || result.error || !result.count) {
           throw new Error(result.error ?? "Failed to fetch pending count");
         }
 
         if (controller.signal.aborted) return;
-        setPendingCount(typeof result.count === "number" ? result.count : 0);
+        setPendingCount(result.count);
       } catch (error) {
         if (controller.signal.aborted) return;
-        console.error("Failed to get pending count", error);
+        console.error(error);
         setPendingCount(null);
       }
     };
@@ -84,7 +83,7 @@ export default function FeedbackBoardPage({
     loadPendingCount();
 
     return () => controller.abort();
-  }, [isSessionInit, isRoleLoading, isAdminUi, session?.access_token]);
+  }, [isRoleLoading, isAdminUi, session?.access_token]);
 
   return (
     <div className="flex flex-col gap-6">

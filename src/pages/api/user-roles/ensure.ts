@@ -17,8 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .json({ role: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
   }
 
-  const authHeader = req.headers.authorization;
-  const accessToken = getAccessToken(authHeader);
+  const accessToken = getAccessToken(req.headers.authorization);
   if (!accessToken) {
     return res.status(401).json({ role: null, error: "Missing access token" });
   }
@@ -29,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ role: null, error: authError?.message ?? "Unauthorized" });
     }
 
+    // 데이터가 이미 있으면 기존 role 반환
     const {
       data: existingRole,
       error: existingError,
@@ -38,12 +38,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .select("user_id, role")
         .eq("user_id", authData.user.id)
         .maybeSingle();
-    if (existingError) throw new Error(existingError.message);
-
-    if (existingRole) {
-      return res.status(200).json({ role: existingRole.role, error: null });
+    if (existingError) {
+      return res
+        .status(401)
+        .json({ role: null, error: existingError?.message ?? "Select failed Existing Role" });
     }
 
+    if (existingRole?.role) {
+      return res.status(200).json({ role: existingRole?.role, error: null });
+    }
+
+    // 데이터가 없으면 새로 role 추가
     const { data, error }: { data: UserRole[] | null; error: SupabaseError } = await supabaseServer
       .from("user_roles")
       .insert({
@@ -51,7 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         role: "reviewer",
       })
       .select();
-    if (error || !data || !data[0]) throw new Error(error?.message ?? "Insert failed");
+    if (error || !data || !data[0]) {
+      return res.status(401).json({ role: null, error: error?.message ?? "Insert failed" });
+    }
 
     return res.status(200).json({ role: data[0].role, error: null });
   } catch (e) {
