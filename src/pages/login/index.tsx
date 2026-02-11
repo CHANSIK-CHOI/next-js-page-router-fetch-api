@@ -51,7 +51,7 @@ export default function LoginPage() {
       return;
     }
 
-    await router.replace("/");
+    await router.replace("/feedback");
   };
 
   const inputBase =

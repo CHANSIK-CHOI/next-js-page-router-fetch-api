@@ -7,27 +7,7 @@ import { getApprovedFeedbacksApi } from "@/lib/users.server";
 import { cn } from "@/lib/utils";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/useSession";
-import { UserRole } from "@/types";
-
-const statusBadge = (status: string) => {
-  if (status === "approved") {
-    return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300";
-  }
-  if (status === "revised_pending") {
-    return "bg-amber-500/15 text-amber-600 dark:text-amber-300";
-  }
-  return "bg-slate-500/15 text-slate-600 dark:text-slate-300";
-};
-
-const statusLabel = (status: string) => {
-  if (status === "approved") return "승인됨";
-  if (status === "revised_pending") return "승인 대기(수정됨)";
-  return "승인 대기";
-};
-
-const renderStars = (rating: number) => {
-  return "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(rating);
-};
+import { renderStars, statusBadge, statusLabel } from "@/util";
 
 export const getStaticProps = async () => {
   try {
@@ -52,84 +32,9 @@ export default function FeedbackBoardPage({
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const hasAlertedRef = useRef(false);
   const { openAlert } = useAlert();
-  const { session, isSessionInit } = useSession();
-  const [isAdminUi, setIsAdminUi] = useState(false);
+  const { session, isSessionInit, role, isRoleLoading } = useSession();
+  const isAdminUi = role === "admin";
   const [pendingCount, setPendingCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (isSessionInit) return;
-    if (!session?.access_token) {
-      setIsAdminUi(false);
-      setPendingCount(null);
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const checkAdmin = async () => {
-      try {
-        const response = await fetch("/api/user-roles", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          signal: controller.signal,
-        });
-        const result: { role?: UserRole["role"] | null; error?: string | null } =
-          await response.json().catch(() => ({}));
-        if (!response.ok || result.error) {
-          throw new Error(result.error ?? "Failed to fetch user role");
-        }
-        setIsAdminUi(result.role === "admin");
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        console.error("Failed to get user role", error);
-        setIsAdminUi(false);
-      }
-    };
-
-    checkAdmin();
-
-    return () => {
-      controller.abort();
-    };
-  }, [isSessionInit, session?.access_token]);
-
-  useEffect(() => {
-    if (!isAdminUi || !session?.access_token) {
-      setPendingCount(null);
-      return;
-    }
-
-    let isMounted = true;
-
-    const loadPendingCount = async () => {
-      try {
-        const response = await fetch("/api/feedbacks/pending-count", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-        const result: { count?: number; error?: string } = await response.json();
-        if (!response.ok) {
-          throw new Error(result.error ?? "Failed to fetch pending count");
-        }
-        if (!isMounted) return;
-        setPendingCount(typeof result.count === "number" ? result.count : 0);
-      } catch (error) {
-        if (!isMounted) return;
-        console.error("Failed to get pending count", error);
-        setPendingCount(null);
-      }
-    };
-
-    loadPendingCount();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isAdminUi, session?.access_token]);
 
   useEffect(() => {
     if (alertMessage && !hasAlertedRef.current) {
@@ -140,6 +45,46 @@ export default function FeedbackBoardPage({
       hasAlertedRef.current = true;
     }
   }, [alertMessage]);
+
+  useEffect(() => {
+    if (isSessionInit || isRoleLoading || !isAdminUi || !session?.access_token) {
+      setPendingCount(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadPendingCount = async () => {
+      try {
+        const response = await fetch("/api/feedbacks/pending-count", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          signal: controller.signal,
+        });
+
+        const result: { count: number | null; error: string | null } = await response
+          .json()
+          .catch(() => ({}));
+
+        if (!response.ok || result.error) {
+          throw new Error(result.error ?? "Failed to fetch pending count");
+        }
+
+        if (controller.signal.aborted) return;
+        setPendingCount(typeof result.count === "number" ? result.count : 0);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error("Failed to get pending count", error);
+        setPendingCount(null);
+      }
+    };
+
+    loadPendingCount();
+
+    return () => controller.abort();
+  }, [isSessionInit, isRoleLoading, isAdminUi, session?.access_token]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -155,7 +100,7 @@ export default function FeedbackBoardPage({
             <Button asChild variant="outline">
               <Link href="/feedback/new">피드백 남기기</Link>
             </Button>
-            {isAdminUi && (
+            {!isRoleLoading && isAdminUi && (
               <Button asChild>
                 <Link href="/admin/feedback">관리자 보기</Link>
               </Button>
@@ -175,7 +120,7 @@ export default function FeedbackBoardPage({
             전체
           </p>
           <strong className="mt-2 block text-2xl font-semibold text-foreground">
-            {approvedData.length + (isAdminUi ? pendingCount ?? 0 : 0)}
+            {approvedData.length + (isAdminUi ? (pendingCount ?? 0) : 0)}
           </strong>
         </div>
         <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">

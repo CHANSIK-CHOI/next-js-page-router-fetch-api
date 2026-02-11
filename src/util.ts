@@ -164,3 +164,23 @@ export const getAccessToken = (authHeader: string | undefined) => {
     ? authHeader.slice(7)
     : null;
 };
+
+export const statusBadge = (status: string) => {
+  if (status === "approved") {
+    return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300";
+  }
+  if (status === "revised_pending") {
+    return "bg-amber-500/15 text-amber-600 dark:text-amber-300";
+  }
+  return "bg-slate-500/15 text-slate-600 dark:text-slate-300";
+};
+
+export const statusLabel = (status: string) => {
+  if (status === "approved") return "승인됨";
+  if (status === "revised_pending") return "승인 대기(수정됨)";
+  return "승인 대기";
+};
+
+export const renderStars = (rating: number) => {
+  return "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(rating);
+};

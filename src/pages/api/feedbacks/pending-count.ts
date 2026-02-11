@@ -1,37 +1,37 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServer } from "@/lib/supabase.server";
 import type { SupabaseError, UserRole } from "@/types";
-import { getPendingFeedbacksCountApi } from "@/lib/users.server";
+import { getAccessToken } from "@/util";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).json({ error: "Method Not Allowed" });
+    return res.status(405).json({ count: null, error: "Method Not Allowed" });
   }
 
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
     return res
       .status(500)
-      .json({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
+      .json({ count: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
   }
 
   const authHeader = req.headers.authorization;
-  const accessToken =
-    typeof authHeader === "string" && authHeader.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : null;
+  const accessToken = getAccessToken(authHeader);
   if (!accessToken) {
-    return res.status(401).json({ error: "Missing access token" });
+    return res.status(401).json({ count: null, error: "Missing access token" });
   }
 
   try {
     const { data: authData, error: authError } = await supabaseServer.auth.getUser(accessToken);
     if (authError || !authData.user) {
-      return res.status(401).json({ error: authError?.message ?? "Unauthorized" });
+      return res.status(401).json({ count: null, error: authError?.message ?? "Unauthorized" });
     }
 
-    const { data: roleData, error: roleError }: { data: UserRole | null; error: SupabaseError } =
+    const {
+      data: roleData,
+      error: roleError,
+    }: { data: Pick<UserRole, "user_id" | "role"> | null; error: SupabaseError } =
       await supabaseServer
         .from("user_roles")
         .select("user_id, role")
@@ -40,13 +40,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (roleError) throw new Error(roleError.message);
 
     if (!roleData || roleData.role !== "admin") {
-      return res.status(403).json({ error: "Forbidden" });
+      return res.status(403).json({ count: null, error: "Forbidden" });
     }
 
-    const count = await getPendingFeedbacksCountApi();
-    return res.status(200).json({ count });
+    // status = 'pending' | 'revised_pending' 개수만 조회
+    const { count, error: countError } = await supabaseServer
+      .from("feedbacks")
+      .select("id", { count: "exact", head: true })
+      // 데이터는 가져오지 않고 “개수만” 세기 위한 Supabase 쿼리 옵션
+      // select("id"): 카운트 기준 컬럼 지정 (여기선 id)
+      // count: "exact": 정확한 개수를 계산
+      // head: true: 실제 row 데이터는 내려받지 않음 (헤더만)
+      .in("status", ["pending", "revised_pending"]);
+
+    if (countError || count === null) {
+      return res
+        .status(401)
+        .json({ count: null, error: countError?.message ?? "Failed to fetch pending count" });
+    }
+
+    return res.status(200).json({ count, error: null });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return res.status(500).json({ error: message });
+    const message = e instanceof Error ? e.message : "Failed to fetch pending count";
+    return res.status(500).json({ count: null, error: message });
   }
 }

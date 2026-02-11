@@ -1,10 +1,13 @@
 import { useContext, createContext } from "react";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
+import type { UserRole } from "@/types";
 
 type SessionContextValue = {
   session: Session | null;
   supabaseClient: SupabaseClient | null;
   isSessionInit: boolean;
+  role: UserRole["role"] | null;
+  isRoleLoading: boolean;
 };
 
 export const SessionContext = createContext<SessionContextValue | null>(null);

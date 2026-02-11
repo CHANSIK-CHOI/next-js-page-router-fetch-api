@@ -11,6 +11,8 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   const [isSessionInit, setIsSessionInit] = useState(true);
   const supabaseClient: SupabaseClient | null = getSupabaseClient();
   const roleSyncUserRef = useRef<string | null>(null);
+  const [role, setRole] = useState<"admin" | "reviewer" | null>(null);
+  const [isRoleLoading, setIsRoleLoading] = useState(false);
 
   useEffect(() => {
     if (!supabaseClient) {
@@ -40,12 +42,15 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   useEffect(() => {
     if (!session?.user?.id || !session.access_token) {
       roleSyncUserRef.current = null;
+      setRole(null);
+      setIsRoleLoading(false);
       return;
     }
     if (roleSyncUserRef.current === session.user.id) return;
 
     // 로그인 수단과 관계없이 세션 생성 시 user_roles를 동기화한다.
     const syncUserRole = async () => {
+      setIsRoleLoading(true);
       const response = await fetch("/api/user-roles/ensure", {
         method: "POST",
         headers: {
@@ -54,23 +59,32 @@ export default function SessionProvider({ children }: SessionProviderProps) {
         },
       });
 
-      const payload: { role?: "admin" | "reviewer" | null; error?: string } =
-        await response.json().catch(() => ({}));
+      const payload: { role: "admin" | "reviewer" | null; error: string | null } = await response
+        .json()
+        .catch(() => ({}));
       if (!response.ok || payload.error) {
         const message = payload.error ?? "Failed to sync user role";
         throw new Error(message);
       }
 
+      setRole(payload.role ?? null);
       roleSyncUserRef.current = session.user.id;
     };
 
-    syncUserRole().catch((error) => {
-      console.error("Failed to sync user role", error);
-    });
+    syncUserRole()
+      .catch((error) => {
+        console.error(error);
+        setRole(null);
+      })
+      .finally(() => {
+        setIsRoleLoading(false);
+      });
   }, [session?.user?.id, session?.access_token]);
 
   return (
-    <SessionContext.Provider value={{ session, supabaseClient, isSessionInit }}>
+    <SessionContext.Provider
+      value={{ session, supabaseClient, isSessionInit, role, isRoleLoading }}
+    >
       {children}
     </SessionContext.Provider>
   );

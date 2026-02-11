@@ -26,19 +26,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { data: authData, error: authError } = await supabaseServer.auth.getUser(accessToken);
     if (authError || !authData.user) {
-      return res
-        .status(401)
-        .json({ role: null, error: authError?.message ?? "Unauthorized" });
+      return res.status(401).json({ role: null, error: authError?.message ?? "Unauthorized" });
     }
 
     const {
       data: existingRole,
       error: existingError,
-    }: { data: UserRole | null; error: SupabaseError } = await supabaseServer
-      .from("user_roles")
-      .select("user_id, role")
-      .eq("user_id", authData.user.id)
-      .maybeSingle();
+    }: { data: Pick<UserRole, "user_id" | "role"> | null; error: SupabaseError } =
+      await supabaseServer
+        .from("user_roles")
+        .select("user_id, role")
+        .eq("user_id", authData.user.id)
+        .maybeSingle();
     if (existingError) throw new Error(existingError.message);
 
     if (existingRole) {
