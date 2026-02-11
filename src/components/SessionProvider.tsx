@@ -53,12 +53,16 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     const cached = sessionStorage.getItem(cacheKey);
 
     if (cached) {
-      const { role, ts } = JSON.parse(cached);
-      setRole(role ?? null);
-      setIsRoleLoading(false);
+      try {
+        const { role, ts } = JSON.parse(cached) as { role?: UserRole["role"] | null; ts?: number };
+        setRole(role ?? null);
+        setIsRoleLoading(false);
 
-      const isFresh = Date.now() - ts < CACHE_TTL;
-      if (isFresh) return;
+        const isFresh = typeof ts === "number" && Date.now() - ts < CACHE_TTL;
+        if (isFresh) return;
+      } catch {
+        sessionStorage.removeItem(cacheKey);
+      }
     }
 
     // 로그인 수단과 관계없이 세션 생성 시 user_roles를 동기화한다.

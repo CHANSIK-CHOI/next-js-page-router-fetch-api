@@ -67,8 +67,12 @@ export default function FeedbackBoardPage({
           .json()
           .catch(() => ({}));
 
-        if (!response.ok || result.error || !result.count) {
+        if (!response.ok || result.error) {
           throw new Error(result.error ?? "Failed to fetch pending count");
+        }
+
+        if (typeof result.count !== "number") {
+          throw new Error("Invalid pending count response");
         }
 
         if (controller.signal.aborted) return;

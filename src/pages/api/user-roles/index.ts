@@ -36,10 +36,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select("user_id, role")
       .eq("user_id", authData.user.id)
       .maybeSingle();
-    if (existingError || !existingRole?.role) {
+    if (existingError) {
       return res
-        .status(401)
+        .status(500)
         .json({ role: null, error: existingError?.message ?? "Select failed Existing Role" });
+    }
+
+    if (!existingRole?.role) {
+      return res.status(404).json({ role: null, error: "Role not found" });
     }
 
     return res.status(200).json({ role: existingRole.role, error: null });

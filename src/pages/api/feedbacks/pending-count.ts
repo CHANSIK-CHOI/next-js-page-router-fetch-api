@@ -36,13 +36,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .select("user_id, role")
         .eq("user_id", authData.user.id)
         .maybeSingle();
-    if (roleError || !roleData?.role) {
+    if (roleError) {
       return res
-        .status(401)
-        .json({ role: null, error: roleError?.message ?? "Select failed Role Data" });
+        .status(500)
+        .json({ count: null, error: roleError?.message ?? "Select failed Role Data" });
     }
 
-    if (!roleData || roleData.role !== "admin") {
+    if (!roleData?.role || roleData.role !== "admin") {
       return res.status(403).json({ count: null, error: "Forbidden" });
     }
 
@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (countError || count === null) {
       return res
-        .status(401)
+        .status(500)
         .json({ count: null, error: countError?.message ?? "Select failed Pending Data Count" });
     }
 
