@@ -43,6 +43,14 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   }, [supabaseClient]);
 
   useEffect(() => {
+    const skip = sessionStorage.getItem("skipRoleSync");
+    if (skip === "1") {
+      sessionStorage.removeItem("skipRoleSync");
+      setRole(null);
+      setIsRoleLoading(false);
+      return;
+    }
+
     if (!session?.user?.id || !session.access_token) {
       setRole(null);
       setIsRoleLoading(false);

@@ -81,7 +81,8 @@ export default function SignupPage() {
     }
 
     if (data.session) {
-      supabaseClient.auth.signOut();
+      sessionStorage.setItem("skipRoleSync", "1");
+      await supabaseClient.auth.signOut();
       openAlert({
         description: "회원가입이 완료되었습니다. 로그인해주세요.",
         onOk: () => {

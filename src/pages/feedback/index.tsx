@@ -7,7 +7,7 @@ import { getApprovedFeedbacksApi } from "@/lib/users.server";
 import { cn } from "@/lib/utils";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/useSession";
-import { renderStars, statusBadge, statusLabel } from "@/util";
+import { formatDateTime, renderStars, statusBadge, statusLabel } from "@/util";
 
 export const getStaticProps = async () => {
   try {
@@ -161,7 +161,9 @@ export default function FeedbackBoardPage({
                 >
                   {statusLabel(item.status)}
                 </span>
-                <span className="text-xs text-muted-foreground">{item.created_at} 등록</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDateTime(item.created_at)} 등록
+                </span>
               </div>
               <span className="text-sm font-semibold text-amber-500">
                 {renderStars(item.rating)}
@@ -205,7 +207,11 @@ export default function FeedbackBoardPage({
               <Button asChild variant="outline" size="sm">
                 <Link href={`/feedback/${item.id}`}>상세 보기</Link>
               </Button>
-              <span className="text-xs text-muted-foreground">마지막 수정 {item.updated_at}</span>
+              {item.created_at !== item.updated_at && (
+                <span className="text-xs text-muted-foreground">
+                  마지막 수정 {formatDateTime(item.updated_at)}
+                </span>
+              )}
             </div>
           </article>
         ))}

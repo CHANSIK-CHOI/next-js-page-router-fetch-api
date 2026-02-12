@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui";
+import { Button, useAlert } from "@/components/ui";
 import { PLACEHOLDER_SRC } from "@/constants";
+import { formatDateTime, renderStars } from "@/util";
+import { InferGetStaticPropsType } from "next";
+import { getPendingFeedbacksApi } from "@/lib/users.server";
 
 const queueItems = [
   {
@@ -29,9 +32,36 @@ const queueItems = [
   },
 ];
 
-const renderStars = (rating: number) => "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(rating);
+export const getStaticProps = async () => {
+  try {
+    return {
+      props: { pendingData: await getPendingFeedbacksApi(), alertMessage: null },
+    };
+  } catch (error) {
+    console.error(error);
 
-export default function AdminFeedbackPage() {
+    return {
+      props: { pendingData: [], alertMessage: "데이터를 정상적으로 불러올 수 없습니다." },
+    };
+  }
+};
+export default function AdminFeedbackPage({
+  pendingData,
+  alertMessage,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
+  const hasAlertedRef = useRef(false);
+  const { openAlert } = useAlert();
+  const [viewType, setViewType] = useState<"all" | "pending">("all");
+
+  useEffect(() => {
+    if (alertMessage && !hasAlertedRef.current) {
+      openAlert({
+        description: alertMessage,
+      });
+      hasAlertedRef.current = true;
+    }
+  }, [alertMessage]);
+
   return (
     <div className="flex flex-col gap-6">
       <section className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
@@ -49,14 +79,24 @@ export default function AdminFeedbackPage() {
             <Button asChild variant="outline">
               <Link href="/feedback">공개 보드</Link>
             </Button>
-            <Button type="button">승인 대기만 보기</Button>
+            {viewType !== "all" ? (
+              <Button type="button" onClick={() => setViewType("all")}>
+                전체 보기
+              </Button>
+            ) : (
+              <Button type="button" onClick={() => setViewType("pending")}>
+                승인 대기만 보기
+              </Button>
+            )}
           </div>
         </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">대기</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            대기
+          </p>
           <strong className="mt-2 block text-2xl font-semibold text-foreground">2</strong>
         </div>
         <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
@@ -74,7 +114,7 @@ export default function AdminFeedbackPage() {
       </section>
 
       <section className="grid gap-4">
-        {queueItems.map((item) => (
+        {pendingData.map((item) => (
           <article
             key={item.id}
             className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70"
@@ -84,7 +124,9 @@ export default function AdminFeedbackPage() {
                 <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-300">
                   {item.status === "revised_pending" ? "수정 승인 대기" : "승인 대기"}
                 </span>
-                <span className="text-xs text-muted-foreground">{item.createdAt} 등록</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDateTime(item.created_at)} 등록
+                </span>
               </div>
               <span className="text-sm font-semibold text-amber-500">
                 {renderStars(item.rating)}
@@ -95,20 +137,18 @@ export default function AdminFeedbackPage() {
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
                   <Image
-                    src={item.avatarUrl || PLACEHOLDER_SRC}
-                    alt={`${item.displayName} avatar`}
+                    src={item.avatar_url || PLACEHOLDER_SRC}
+                    alt={`${item.display_name} avatar`}
                     width={40}
                     height={40}
-                    unoptimized={!item.avatarUrl}
+                    unoptimized={!item.avatar_url}
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <span className="text-base font-semibold text-foreground">
-                  {item.displayName}
-                </span>
-                {item.isCompanyPublic && item.companyName && (
+                <span className="text-base font-semibold text-foreground">{item.display_name}</span>
+                {item.is_company_public && item.company_name && (
                   <span className="rounded-full border border-border/60 px-2.5 py-0.5 text-xs">
-                    {item.companyName}
+                    {item.company_name}
                   </span>
                 )}
               </div>
