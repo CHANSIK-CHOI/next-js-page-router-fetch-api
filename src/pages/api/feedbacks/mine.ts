@@ -3,6 +3,44 @@ import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
 import type { RevisedPendingOwnerFeedback, SupabaseError, UserRole } from "@/types";
 import { getAccessToken } from "@/util";
 
+const ALLOWED_STATUSES = ["pending", "revised_pending"] as const;
+type MineStatus = (typeof ALLOWED_STATUSES)[number];
+
+const parseStatusQuery = (
+  rawStatus: string | string[] | undefined
+): { statuses: MineStatus[] | null; error: string | null } => {
+  if (typeof rawStatus === "undefined") {
+    return { statuses: [...ALLOWED_STATUSES], error: null };
+  }
+
+  const parsed = (Array.isArray(rawStatus) ? rawStatus : [rawStatus])
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (parsed.length === 0) {
+    return {
+      statuses: null,
+      error: "Invalid status query. Use ?status=pending,revised_pending",
+    };
+  }
+
+  const invalidStatuses = parsed.filter(
+    (status): status is string => !ALLOWED_STATUSES.includes(status as MineStatus)
+  );
+  if (invalidStatuses.length > 0) {
+    return {
+      statuses: null,
+      error: `Unsupported status: ${invalidStatuses.join(", ")}`,
+    };
+  }
+
+  return {
+    statuses: Array.from(new Set(parsed)) as MineStatus[],
+    error: null,
+  };
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -14,6 +52,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const accessToken = getAccessToken(req.headers.authorization);
   if (!accessToken) {
     return res.status(401).json({ data: null, error: "Missing access token" });
+  }
+
+  const { statuses, error: statusError } = parseStatusQuery(req.query.status);
+  if (statusError || !statuses) {
+    return res.status(400).json({ data: null, error: statusError ?? "Invalid status query" });
   }
 
   const supabaseServer = getSupabaseServerByAccessToken(accessToken);
@@ -52,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from("feedbacks")
       .select()
       .eq("author_id", authData.user.id)
-      .in("status", ["pending", "revised_pending"]);
+      .in("status", statuses);
 
     if (dataError || !data) {
       return res

@@ -3,7 +3,7 @@ import { getSupabaseServer } from "@/lib/supabase.server";
 import type { SupabaseError, UserRole } from "@/types";
 import { getAccessToken } from "@/util";
 
-// POST: role 없으면 reviewer로 삽입, 있으면 기존 role 반환
+// POST: role 없으면 reviewer로 생성(201), 있으면 기존 role 반환(200)
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ role: null, error: error?.message ?? "Insert failed" });
     }
 
-    return res.status(200).json({ role: data[0].role, error: null });
+    return res.status(201).json({ role: data[0].role, error: null });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     return res.status(500).json({ role: null, error: message });

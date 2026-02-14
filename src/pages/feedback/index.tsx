@@ -9,6 +9,10 @@ import { mergeFeedbackList } from "@/util";
 import { FeedbackBox } from "@/components";
 import { RevisedPendingOwnerFeedback } from "@/types";
 
+const MINE_STATUS_QUERY = new URLSearchParams({
+  status: "pending,revised_pending",
+}).toString();
+
 export const getStaticProps = async () => {
   try {
     const approvedFeedbacksData = await getApprovedFeedbacksApi();
@@ -110,7 +114,7 @@ export default function FeedbackBoardPage({
     const controller = new AbortController();
     const getPendingOwnerFeedback = async () => {
       try {
-        const response = await fetch("/api/feedbacks/mine", {
+        const response = await fetch(`/api/feedbacks/mine?${MINE_STATUS_QUERY}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${session.access_token}`,

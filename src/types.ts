@@ -94,9 +94,3 @@ export type UserRole = {
   role: "admin" | "reviewer"; // 권한 역할
   created_at?: string; // 역할이 부여된 시각 기록
 };
-
-/*
-개선 권장(네이밍/자원 관점):
-GET /api/feedbacks/owner/revised-pending -> GET /api/feedbacks/mine?status=pending,revised_pending
-POST /api/user-roles/ensure는 action endpoint로는 유효하지만 pure REST로는 POST /api/user-roles + GET /api/user-roles/me 형태가 더 명확
-*/
