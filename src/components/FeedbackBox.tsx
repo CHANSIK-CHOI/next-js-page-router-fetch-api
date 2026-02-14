@@ -1,6 +1,6 @@
 import { PLACEHOLDER_SRC } from "@/constants";
 import { cn } from "@/lib/utils";
-import { FeedbackData } from "@/types";
+import { FeedbackListItem } from "@/types";
 import { formatDateTime, renderStars, statusBadge, statusLabel } from "@/util";
 import Image from "next/image";
 import React from "react";
@@ -8,11 +8,11 @@ import { Button } from "./ui";
 import Link from "next/link";
 
 type FeedbackBoxProps = {
-  data: FeedbackData;
+  data: FeedbackListItem;
 };
 
 export default function FeedbackBox({ data }: FeedbackBoxProps) {
-  const isRevisedPending = data.status === "revised_pending";
+  const isPreview = data.isPreview;
 
   return (
     <article className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70">
@@ -55,18 +55,17 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
         </div>
         <div
           className={cn("flex flex-col gap-3", {
-            "rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4":
-              isRevisedPending,
+            "rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4": isPreview,
           })}
         >
           <p
             className={cn("text-base text-foreground", {
-              "blur-sm select-none": isRevisedPending,
+              "blur-sm select-none": isPreview,
             })}
           >
             {data.summary}
           </p>
-          {isRevisedPending && (
+          {isPreview && (
             <p className="text-xs font-semibold text-amber-600 dark:text-amber-300">
               이미 승인된 피드백이 수정된 경우 관리자의 승인을 한번 더 받아야 공개가 됩니다.
             </p>
@@ -74,10 +73,10 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
         </div>
         <div
           className={cn("flex flex-wrap gap-2", {
-            "blur-sm select-none": isRevisedPending,
+            "blur-sm select-none": isPreview,
           })}
         >
-          {!isRevisedPending &&
+          {!isPreview &&
             data.tags.map((tag) => (
               <span
                 key={`${data.id}-${tag}`}
@@ -90,7 +89,7 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
       </div>
 
       <div className={cn("mt-4 flex flex-wrap items-center gap-3 justify-between")}>
-        {!isRevisedPending && (
+        {!isPreview && (
           <Button asChild variant="outline" size="sm">
             <Link href={`/feedback/${data.id}`}>상세 보기</Link>
           </Button>

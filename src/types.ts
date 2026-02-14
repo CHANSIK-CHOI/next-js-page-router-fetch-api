@@ -92,6 +92,60 @@ export type FeedbackData = {
   reviewed_by?: string; // 승인 담당자
 };
 
+type FeedbackBase = {
+  id: string;
+  author_id: string;
+  display_name: string;
+  company_name: string | null;
+  is_company_public: boolean;
+  avatar_url: string | null;
+  email: string;
+  is_public: boolean;
+  revision_count: number;
+  created_at: string;
+  updated_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+};
+
+export type ApprovedFeedback = FeedbackBase & {
+  status: "approved";
+  isPreview: false;
+  summary: string;
+  strengths: string | null;
+  questions: string | null;
+  suggestions: string | null;
+  rating: number;
+  tags: string[];
+};
+
+export type FeedbackKeys = keyof FeedbackBase;
+type PreviewKeys = Exclude<
+  FeedbackKeys,
+  "summary" | "strengths" | "questions" | "suggestions" | "rating" | "tags"
+>;
+
+export type RevisedPendingPreviewFeedback = Pick<FeedbackBase, PreviewKeys> & {
+  status: "revised_pending";
+  isPreview: true;
+};
+
+export type RevisedPendingOwnerFeedback = FeedbackBase & {
+  status: "revised_pending";
+  isPreview: false;
+  summary: string;
+  strengths: string | null;
+  questions: string | null;
+  suggestions: string | null;
+  rating: number;
+  tags: string[];
+};
+
+export type FeedbackListItem =
+  | ApprovedFeedback
+  | RevisedPendingPreviewFeedback
+  | RevisedPendingOwnerFeedback;
+
 export type UserRole = {
   user_id: string; // Auth 유저의 UID
   role: "admin" | "reviewer"; // 권한 역할

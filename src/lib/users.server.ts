@@ -1,4 +1,11 @@
-import type { ErrorAlertMsg, FeedbackData, User, UserRole } from "@/types";
+import type {
+  ApprovedFeedback,
+  ErrorAlertMsg,
+  FeedbackData,
+  RevisedPendingPreviewFeedback,
+  User,
+  UserRole,
+} from "@/types";
 import { getSupabaseServer } from "@/lib/supabase.server";
 import { PREVIEWCOLUMN } from "@/constants";
 
@@ -39,7 +46,7 @@ export async function getUserApi(id?: User["id"]) {
   return { data };
 }
 
-export const getApprovedFeedbacksApi = async (): Promise<FeedbackData[]> => {
+export const getApprovedFeedbacksApi = async (): Promise<ApprovedFeedback[]> => {
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
@@ -58,10 +65,15 @@ export const getApprovedFeedbacksApi = async (): Promise<FeedbackData[]> => {
     throw new Error("Failed fetch getApprovedFeedbacksApi");
   }
 
-  return data;
+  return data.map((item) => {
+    return {
+      ...item,
+      isPreview: false,
+    };
+  });
 };
 
-export const getRevisedPendingPreviewApi = async (): Promise<FeedbackData[]> => {
+export const getRevisedPendingPreviewApi = async (): Promise<RevisedPendingPreviewFeedback[]> => {
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
@@ -80,16 +92,12 @@ export const getRevisedPendingPreviewApi = async (): Promise<FeedbackData[]> => 
     throw new Error("Failed fetch getRevisedPendingPreviewApi");
   }
 
-  return data.map((item) => ({
-    ...item,
-    // revised_pending preview는 본문/태그를 노출하지 않는다.
-    summary: "",
-    strengths: "",
-    questions: "",
-    suggestions: "",
-    rating: null,
-    tags: [],
-  }));
+  return data.map((item) => {
+    return {
+      ...item,
+      isPreview: true,
+    };
+  });
 };
 // getRevisedPendingPublicFeedbacksApi
 

@@ -4,6 +4,10 @@ import type {
   PayloadModifiedUser,
   EditableUserKey,
   UsersFormValues,
+  ApprovedFeedback,
+  RevisedPendingPreviewFeedback,
+  RevisedPendingOwnerFeedback,
+  FeedbackListItem,
 } from "@/types";
 import { EDITABLE_USER_KEYS } from "@/constants";
 import type { FormState } from "react-hook-form";
@@ -204,4 +208,17 @@ export const compareUpdatedAtDesc = (a: WithUpdatedAt, b: WithUpdatedAt) => {
 
 export const mergeAndSortByUpdatedAtDesc = <T extends WithUpdatedAt>(...arrays: T[][]): T[] => {
   return arrays.flat().sort(compareUpdatedAtDesc);
+};
+
+export const mergeFeedbackList = (
+  approved: ApprovedFeedback[],
+  revisedPreview: RevisedPendingPreviewFeedback[],
+  revisedMine: RevisedPendingOwnerFeedback[]
+): FeedbackListItem[] => {
+  const map = new Map<string, FeedbackListItem>();
+
+  [...approved, ...revisedPreview].forEach((publicItem) => map.set(publicItem.id, publicItem));
+  revisedMine.forEach((ownerItem) => map.set(ownerItem.id, ownerItem)); // 내 글은 preview 덮어쓰기
+
+  return Array.from(map.values()).sort(compareUpdatedAtDesc);
 };
