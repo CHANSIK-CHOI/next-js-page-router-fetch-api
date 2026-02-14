@@ -35,7 +35,7 @@ export default function AdminFeedbackPage({
       });
       hasAlertedRef.current = true;
     }
-  }, [alertMessage]);
+  }, [alertMessage, openAlert]);
 
   return (
     <div className="flex flex-col gap-6">

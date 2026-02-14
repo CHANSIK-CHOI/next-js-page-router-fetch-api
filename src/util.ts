@@ -206,15 +206,6 @@ export const compareUpdatedAtDesc = (a: WithUpdatedAt, b: WithUpdatedAt) => {
   return bTime - aTime;
 };
 
-export const mergeAndSortByUpdatedAtDesc = <
-  TArrays extends ReadonlyArray<ReadonlyArray<WithUpdatedAt>>,
->(
-  ...arrays: TArrays
-): Array<TArrays[number][number]> => {
-  const merged = arrays.flat() as Array<TArrays[number][number]>;
-  return merged.sort(compareUpdatedAtDesc);
-};
-
 export const mergeFeedbackList = (
   approved: ApprovedFeedback[],
   revisedPreview: RevisedPendingPreviewFeedback[],

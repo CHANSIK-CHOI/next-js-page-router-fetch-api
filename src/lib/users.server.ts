@@ -7,7 +7,7 @@ import type {
   UserRole,
 } from "@/types";
 import { getSupabaseServer } from "@/lib/supabase.server";
-import { PREVIEWCOLUMN } from "@/constants";
+import { APPROVED_PUBLIC_COLUMNS, PREVIEWCOLUMN } from "@/constants";
 
 export function getUserApi(): Promise<{ data: User[] }>;
 export function getUserApi(id: User["id"]): Promise<{ data: User | null }>;
@@ -54,7 +54,7 @@ export const getApprovedFeedbacksApi = async (): Promise<ApprovedFeedback[]> => 
 
   const { data, error } = await supabaseServer
     .from("feedbacks")
-    .select()
+    .select(APPROVED_PUBLIC_COLUMNS)
     .eq("status", "approved")
     .eq("is_public", true)
     .order("created_at", {
@@ -68,6 +68,8 @@ export const getApprovedFeedbacksApi = async (): Promise<ApprovedFeedback[]> => 
   return data.map((item) => {
     return {
       ...item,
+      // 공개 보드 응답에는 이메일을 포함하지 않는다.
+      email: "",
       isPreview: false,
     };
   });
@@ -95,6 +97,8 @@ export const getRevisedPendingPreviewApi = async (): Promise<RevisedPendingPrevi
   return data.map((item) => {
     return {
       ...item,
+      // 공개 보드 preview 응답에는 이메일을 포함하지 않는다.
+      email: "",
       isPreview: true,
     };
   });

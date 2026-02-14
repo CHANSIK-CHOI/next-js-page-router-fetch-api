@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Button, useAlert } from "@/components/ui";
 import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/users.server";
@@ -43,10 +43,9 @@ export default function FeedbackBoardPage({
   const [ownerPendingFeedbacks, setOwnerPendingFeedbacks] = useState<RevisedPendingOwnerFeedback[]>(
     []
   );
-  const feedbackData = mergeFeedbackList(
-    approvedFeedbacksData,
-    revisedPendingPreviewData,
-    ownerPendingFeedbacks
+  const feedbackData = useMemo(
+    () => mergeFeedbackList(approvedFeedbacksData, revisedPendingPreviewData, ownerPendingFeedbacks),
+    [approvedFeedbacksData, revisedPendingPreviewData, ownerPendingFeedbacks]
   );
 
   useEffect(() => {
@@ -56,7 +55,7 @@ export default function FeedbackBoardPage({
       });
       hasAlertedRef.current = true;
     }
-  }, [alertMessage]);
+  }, [alertMessage, openAlert]);
 
   // admin 사용자 : 승인 대기 중 count 가져오기
   useEffect(() => {
@@ -126,11 +125,11 @@ export default function FeedbackBoardPage({
         }
 
         if (controller.signal.aborted) return;
-        if (!result.data) return;
         setOwnerPendingFeedbacks(result.data ?? []);
       } catch (error) {
         if (controller.signal.aborted) return;
         console.error(error);
+        setOwnerPendingFeedbacks([]);
       }
     };
     getPendingOwnerFeedback();

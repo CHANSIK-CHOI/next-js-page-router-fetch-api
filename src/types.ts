@@ -119,13 +119,7 @@ export type ApprovedFeedback = FeedbackBase & {
   tags: string[];
 };
 
-export type FeedbackKeys = keyof FeedbackBase;
-type PreviewKeys = Exclude<
-  FeedbackKeys,
-  "summary" | "strengths" | "questions" | "suggestions" | "rating" | "tags"
->;
-
-export type RevisedPendingPreviewFeedback = Pick<FeedbackBase, PreviewKeys> & {
+export type RevisedPendingPreviewFeedback = FeedbackBase & {
   status: "revised_pending";
   isPreview: true;
 };

@@ -85,7 +85,7 @@ export default function UserList({
       });
       hasAlertedRef.current = true;
     }
-  }, [userMessage]);
+  }, [userMessage, openAlert]);
 
   useEffect(() => {
     setUsers(allUsers);

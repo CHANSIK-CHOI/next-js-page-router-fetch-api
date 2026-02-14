@@ -4,6 +4,8 @@ import type { RevisedPendingOwnerFeedback, SupabaseError, UserRole } from "@/typ
 import { getAccessToken } from "@/util";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader("Cache-Control", "no-store");
+
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
     return res.status(405).json({ data: null, error: "Method Not Allowed" });

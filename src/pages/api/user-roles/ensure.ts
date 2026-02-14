@@ -5,6 +5,8 @@ import { getAccessToken } from "@/util";
 
 // POST: role 없으면 reviewer로 삽입, 있으면 기존 role 반환
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader("Cache-Control", "no-store");
+
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ role: null, error: "Method Not Allowed" });
@@ -40,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .maybeSingle();
     if (existingError) {
       return res
-        .status(401)
+        .status(500)
         .json({ role: null, error: existingError?.message ?? "Select failed Existing Role" });
     }
 
@@ -57,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
       .select();
     if (error || !data || !data[0]) {
-      return res.status(401).json({ role: null, error: error?.message ?? "Insert failed" });
+      return res.status(500).json({ role: null, error: error?.message ?? "Insert failed" });
     }
 
     return res.status(200).json({ role: data[0].role, error: null });
