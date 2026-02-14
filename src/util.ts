@@ -182,3 +182,26 @@ export const statusLabel = (status: string) => {
 export const renderStars = (rating: number) => {
   return "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(rating);
 };
+
+type WithUpdatedAt = { updated_at?: string | null };
+
+export const compareUpdatedAtDesc = (a: WithUpdatedAt, b: WithUpdatedAt) => {
+  if (!a.updated_at || !b.updated_at) {
+    console.error("compareUpdatedAtDesc: missing updated_at", { a, b });
+    return 0;
+  }
+
+  const aTime = new Date(a.updated_at).getTime();
+  const bTime = new Date(b.updated_at).getTime();
+
+  if (Number.isNaN(aTime) || Number.isNaN(bTime)) {
+    console.error("compareUpdatedAtDesc: invalid updated_at", { a, b });
+    return 0;
+  }
+
+  return bTime - aTime;
+};
+
+export const mergeAndSortByUpdatedAtDesc = <T extends WithUpdatedAt>(...arrays: T[][]): T[] => {
+  return arrays.flat().sort(compareUpdatedAtDesc);
+};

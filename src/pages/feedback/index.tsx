@@ -1,25 +1,28 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button, useAlert } from "@/components/ui";
-import { PLACEHOLDER_SRC } from "@/constants";
-import { getApprovedFeedbacksApi } from "@/lib/users.server";
+import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/users.server";
 import { cn } from "@/lib/utils";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/useSession";
-import { formatDateTime, renderStars, statusBadge, statusLabel } from "@/util";
+import { mergeAndSortByUpdatedAtDesc } from "@/util";
+import { FeedbackBox } from "@/components";
 
 export const getStaticProps = async () => {
   try {
+    const approvedFeedbacksData = await getApprovedFeedbacksApi();
+    const revisedPendingPreviewData = await getRevisedPendingPreviewApi();
+
     return {
-      props: { approvedData: await getApprovedFeedbacksApi(), alertMessage: null },
+      props: { approvedFeedbacksData, revisedPendingPreviewData, alertMessage: null },
     };
   } catch (error) {
     console.error(error);
 
     return {
       props: {
-        approvedData: [],
+        approvedFeedbacksData: [],
+        revisedPendingPreviewData: [],
         alertMessage: "데이터를 정상적으로 불러올 수 없습니다.",
       },
     };
@@ -27,7 +30,8 @@ export const getStaticProps = async () => {
 };
 
 export default function FeedbackBoardPage({
-  approvedData,
+  approvedFeedbacksData,
+  revisedPendingPreviewData,
   alertMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const hasAlertedRef = useRef(false);
@@ -35,6 +39,15 @@ export default function FeedbackBoardPage({
   const { session, role, isRoleLoading } = useSession();
   const isAdminUi = role === "admin";
   const [pendingCount, setPendingCount] = useState<number | null>(null);
+
+  const feedbackData = mergeAndSortByUpdatedAtDesc(
+    approvedFeedbacksData,
+    revisedPendingPreviewData
+  );
+
+  useEffect(() => {
+    console.log({ approvedFeedbacksData, revisedPendingPreviewData });
+  }, [approvedFeedbacksData, revisedPendingPreviewData]);
 
   useEffect(() => {
     if (alertMessage && !hasAlertedRef.current) {
@@ -123,7 +136,7 @@ export default function FeedbackBoardPage({
             전체
           </p>
           <strong className="mt-2 block text-2xl font-semibold text-foreground">
-            {approvedData.length + (isAdminUi ? (pendingCount ?? 0) : 0)}
+            {feedbackData.length + (isAdminUi ? (pendingCount ?? 0) : 0)}
           </strong>
         </div>
         <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
@@ -131,7 +144,7 @@ export default function FeedbackBoardPage({
             승인됨
           </p>
           <strong className="mt-2 block text-2xl font-semibold text-foreground">
-            {approvedData.length}
+            {feedbackData.length}
           </strong>
         </div>
         {isAdminUi && (
@@ -147,74 +160,9 @@ export default function FeedbackBoardPage({
       </section>
 
       <section className="grid gap-4">
-        {approvedData.map((item) => (
-          <article
-            key={item.id}
-            className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(
-                    item.status
-                  )}`}
-                >
-                  {statusLabel(item.status)}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {formatDateTime(item.created_at)} 등록
-                </span>
-              </div>
-              <span className="text-sm font-semibold text-amber-500">
-                {renderStars(item.rating)}
-              </span>
-            </div>
-
-            <div className="mt-4 flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
-                  <Image
-                    src={item.avatar_url || PLACEHOLDER_SRC}
-                    alt={`${item.display_name} avatar`}
-                    width={40}
-                    height={40}
-                    unoptimized={!item.avatar_url}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <span className="text-base font-semibold text-foreground">{item.display_name}</span>
-                {item.is_company_public && item.company_name && (
-                  <span className="rounded-full border border-border/60 px-2.5 py-0.5 text-xs">
-                    {item.company_name}
-                  </span>
-                )}
-                <span className="text-xs">수정 {item.revision_count}회</span>
-              </div>
-              <p className="text-base text-foreground">{item.summary}</p>
-              <div className="flex flex-wrap gap-2">
-                {item.tags.map((tag) => (
-                  <span
-                    key={`${item.id}-${tag}`}
-                    className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/feedback/${item.id}`}>상세 보기</Link>
-              </Button>
-              {item.created_at !== item.updated_at && (
-                <span className="text-xs text-muted-foreground">
-                  마지막 수정 {formatDateTime(item.updated_at)}
-                </span>
-              )}
-            </div>
-          </article>
-        ))}
+        {feedbackData.map((item) => {
+          return <FeedbackBox data={item} key={item.id} />;
+        })}
       </section>
     </div>
   );

@@ -1,5 +1,6 @@
 import type { ErrorAlertMsg, FeedbackData, User, UserRole } from "@/types";
 import { getSupabaseServer } from "@/lib/supabase.server";
+import { PREVIEWCOLUMN } from "@/constants";
 
 export function getUserApi(): Promise<{ data: User[] }>;
 export function getUserApi(id: User["id"]): Promise<{ data: User | null }>;
@@ -47,6 +48,7 @@ export const getApprovedFeedbacksApi = async (): Promise<FeedbackData[]> => {
   const { data, error } = await supabaseServer
     .from("feedbacks")
     .select()
+    .eq("status", "approved")
     .eq("is_public", true)
     .order("created_at", {
       ascending: false,
@@ -58,6 +60,38 @@ export const getApprovedFeedbacksApi = async (): Promise<FeedbackData[]> => {
 
   return data;
 };
+
+export const getRevisedPendingPreviewApi = async (): Promise<FeedbackData[]> => {
+  const supabaseServer = getSupabaseServer();
+  if (!supabaseServer) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  const { data, error } = await supabaseServer
+    .from("feedbacks")
+    .select(PREVIEWCOLUMN)
+    .eq("status", "revised_pending")
+    .eq("is_public", true)
+    .order("created_at", {
+      ascending: false,
+    });
+
+  if (error || !data) {
+    throw new Error("Failed fetch getRevisedPendingPreviewApi");
+  }
+
+  return data.map((item) => ({
+    ...item,
+    // revised_pending preview는 본문/태그를 노출하지 않는다.
+    summary: "",
+    strengths: "",
+    questions: "",
+    suggestions: "",
+    rating: null,
+    tags: [],
+  }));
+};
+// getRevisedPendingPublicFeedbacksApi
 
 export const getPendingFeedbacksApi = async (): Promise<FeedbackData[]> => {
   const supabaseServer = getSupabaseServer();

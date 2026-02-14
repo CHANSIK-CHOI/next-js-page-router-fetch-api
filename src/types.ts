@@ -77,7 +77,7 @@ export type FeedbackData = {
   strengths?: string; // 강점
   questions?: string; // 질문
   suggestions?: string; // 개선 제안
-  rating: number; // 별점
+  rating: number | null; // 별점
   tags: string[]; // 키워드
   status: "pending" | "approved" | "rejected" | "revised_pending"; // 승인 상태
   // approved : 승인됨

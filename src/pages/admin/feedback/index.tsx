@@ -7,31 +7,6 @@ import { formatDateTime, renderStars } from "@/util";
 import { InferGetStaticPropsType } from "next";
 import { getPendingFeedbacksApi } from "@/lib/users.server";
 
-const queueItems = [
-  {
-    id: "fb-102",
-    displayName: "S.Kim",
-    companyName: "",
-    isCompanyPublic: false,
-    avatarUrl: "",
-    summary: "기획 의도와 구현 범위를 잘 설명했어요.",
-    rating: 4,
-    status: "pending",
-    createdAt: "2026-02-05",
-  },
-  {
-    id: "fb-103",
-    displayName: "Min",
-    companyName: "Studio Amp",
-    isCompanyPublic: true,
-    avatarUrl: "https://placehold.co/80x80?text=M",
-    summary: "디자인과 개발 사이의 균형이 좋았습니다.",
-    rating: 5,
-    status: "revised_pending",
-    createdAt: "2026-02-07",
-  },
-];
-
 export const getStaticProps = async () => {
   try {
     return {
