@@ -25,7 +25,7 @@ const mockDetail = {
   revisionCount: 0,
 };
 
-const renderStars = (rating: number) => {
+const ratingStars = (rating: number) => {
   return "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(rating);
 };
 
@@ -41,9 +41,7 @@ export default function FeedbackDetailPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               피드백 상세
             </p>
-            <h2 className="mt-2 text-2xl font-semibold text-foreground">
-              {detail.summary}
-            </h2>
+            <h2 className="mt-2 text-2xl font-semibold text-foreground">{detail.summary}</h2>
             <p className="mt-1 text-sm text-muted-foreground">ID: {router.query.id}</p>
           </div>
           <div className="flex gap-2">
@@ -60,9 +58,7 @@ export default function FeedbackDetailPage() {
           <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-300">
             승인됨
           </span>
-          <span className="text-sm font-semibold text-amber-500">
-            {renderStars(detail.rating)}
-          </span>
+          <span className="text-sm font-semibold text-amber-500">{ratingStars(detail.rating)}</span>
           <span className="text-xs text-muted-foreground">수정 {detail.revisionCount}회</span>
         </div>
 
@@ -78,9 +74,7 @@ export default function FeedbackDetailPage() {
                 className="h-full w-full object-cover"
               />
             </div>
-            <span className="text-base font-semibold text-foreground">
-              {detail.displayName}
-            </span>
+            <span className="text-base font-semibold text-foreground">{detail.displayName}</span>
             {detail.isCompanyPublic && detail.companyName && (
               <span className="rounded-full border border-border/60 px-2.5 py-0.5 text-xs">
                 {detail.companyName}
@@ -101,11 +95,15 @@ export default function FeedbackDetailPage() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-border/60 bg-white/70 p-4 text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">등록일</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              등록일
+            </p>
             <p className="mt-2 text-base text-foreground">{detail.createdAt}</p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-white/70 p-4 text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">승인일</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              승인일
+            </p>
             <p className="mt-2 text-base text-foreground">{detail.reviewedAt}</p>
           </div>
         </div>

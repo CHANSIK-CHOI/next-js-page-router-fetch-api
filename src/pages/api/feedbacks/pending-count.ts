@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSupabaseServer } from "@/lib/supabase.server";
+import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
 import type { SupabaseError, UserRole } from "@/types";
 import { getAccessToken } from "@/util";
 
@@ -11,20 +11,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ count: null, error: "Method Not Allowed" });
   }
 
-  const supabaseServer = getSupabaseServer();
-  if (!supabaseServer) {
-    return res
-      .status(500)
-      .json({ count: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
-  }
-
   const accessToken = getAccessToken(req.headers.authorization);
   if (!accessToken) {
     return res.status(401).json({ count: null, error: "Missing access token" });
   }
 
+  const supabaseServer = getSupabaseServerByAccessToken(accessToken);
+  if (!supabaseServer) {
+    return res
+      .status(500)
+      .json({ count: null, error: "Missing SUPABASE_URL or SUPABASE_ANON_KEY" });
+  }
+
   try {
-    const { data: authData, error: authError } = await supabaseServer.auth.getUser(accessToken);
+    const { data: authData, error: authError } = await supabaseServer.auth.getUser();
     if (authError || !authData.user) {
       return res.status(401).json({ count: null, error: authError?.message ?? "Unauthorized" });
     }

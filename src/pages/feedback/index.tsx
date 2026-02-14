@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Button, useAlert } from "@/components/ui";
-import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/users.server";
+import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/feedback.server";
 import { cn } from "@/lib/utils";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/useSession";
@@ -44,7 +44,8 @@ export default function FeedbackBoardPage({
     []
   );
   const feedbackData = useMemo(
-    () => mergeFeedbackList(approvedFeedbacksData, revisedPendingPreviewData, ownerPendingFeedbacks),
+    () =>
+      mergeFeedbackList(approvedFeedbacksData, revisedPendingPreviewData, ownerPendingFeedbacks),
     [approvedFeedbacksData, revisedPendingPreviewData, ownerPendingFeedbacks]
   );
 
@@ -109,7 +110,7 @@ export default function FeedbackBoardPage({
     const controller = new AbortController();
     const getPendingOwnerFeedback = async () => {
       try {
-        const response = await fetch("/api/feedbacks/owner/revised-pending", {
+        const response = await fetch("/api/feedbacks/mine", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${session.access_token}`,

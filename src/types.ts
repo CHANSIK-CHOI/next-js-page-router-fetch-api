@@ -1,56 +1,6 @@
 import { PostgrestError } from "@supabase/supabase-js";
 
-export type User = {
-  avatar: string;
-  created_at?: string;
-  updated_at?: string;
-  email: string;
-  name: string;
-  id: string;
-  phone: string;
-};
-
-type UserKeys = keyof User;
-// key
-export type EditableUserKey = Exclude<UserKeys, "id">;
-type RequiredEditableUserKey = Exclude<EditableUserKey, "avatar">;
-
-// object
-export type InitUserFormObject = Pick<User, RequiredEditableUserKey> & { avatar?: User["avatar"] };
-type EditableUserFormObject = Partial<Omit<User, "id">>;
-
-// POST
-export type PayloadNewUser = InitUserFormObject;
-export type ApiResultNewUser = User & { created_at: string };
-export type ApiResponseNewUser = {
-  data: User;
-  revalidated: boolean;
-};
-
-// PATCH
-export type PayloadModifiedUser = EditableUserFormObject;
-export type ApiResultModifiedUser = PayloadModifiedUser & { updatedAt: string };
-export type PayloadAllModifiedUsers = { id: User["id"]; payload: EditableUserFormObject }[];
-export type ApiResultAllModifiedUsers = {
-  id: User["id"];
-  result: ApiResultModifiedUser;
-}[];
-
-// DELETE
-export type ApiResponseDeleteUser = {
-  data: User[];
-  revalidated: boolean;
-};
-
-// react form hooks
-export type UsersFormValues = {
-  users: User[];
-};
-
-export type ErrorAlertMsg = Error & { alertMsg?: string };
-
-export const isErrorAlertMsg = (err: unknown): err is ErrorAlertMsg =>
-  err instanceof Error && "alertMsg" in err;
+export type SupabaseError = PostgrestError | null;
 
 export type LoginForm = {
   login_email: string;
@@ -64,8 +14,7 @@ export type SingUpForm = {
   signup_password: string;
 };
 
-// Feedback
-export type FeedbackData = {
+/*
   id: string; // UUID
   author_id: string; // 작성자 Auth.uid
   display_name: string; // 공개 보드에 표시할 이름
@@ -77,7 +26,7 @@ export type FeedbackData = {
   strengths?: string; // 강점
   questions?: string; // 질문
   suggestions?: string; // 개선 제안
-  rating: number | null; // 별점
+  rating: number; // 별점
   tags: string[]; // 키워드
   status: "pending" | "approved" | "rejected" | "revised_pending"; // 승인 상태
   // approved : 승인됨
@@ -90,7 +39,7 @@ export type FeedbackData = {
   updated_at: string; // 수정일
   reviewed_at?: string; // 검토/승인/반려한 시간
   reviewed_by?: string; // 승인 담당자
-};
+*/
 
 type FeedbackBase = {
   id: string;
@@ -146,4 +95,8 @@ export type UserRole = {
   created_at?: string; // 역할이 부여된 시각 기록
 };
 
-export type SupabaseError = PostgrestError | null;
+/*
+개선 권장(네이밍/자원 관점):
+GET /api/feedbacks/owner/revised-pending -> GET /api/feedbacks/mine?status=pending,revised_pending
+POST /api/user-roles/ensure는 action endpoint로는 유효하지만 pure REST로는 POST /api/user-roles + GET /api/user-roles/me 형태가 더 명확
+*/

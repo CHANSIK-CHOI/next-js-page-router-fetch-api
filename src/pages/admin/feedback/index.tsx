@@ -1,27 +1,29 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button, useAlert } from "@/components/ui";
-import { PLACEHOLDER_SRC } from "@/constants";
-import { formatDateTime, renderStars } from "@/util";
 import { InferGetStaticPropsType } from "next";
-import { getPendingFeedbacksApi } from "@/lib/users.server";
 
 export const getStaticProps = async () => {
   try {
     return {
-      props: { pendingData: await getPendingFeedbacksApi(), alertMessage: null },
+      props: {
+        // pendingData: [],
+        alertMessage: null,
+      },
     };
   } catch (error) {
     console.error(error);
 
     return {
-      props: { pendingData: [], alertMessage: "데이터를 정상적으로 불러올 수 없습니다." },
+      props: {
+        // pendingData: [],
+        alertMessage: "데이터를 정상적으로 불러올 수 없습니다.",
+      },
     };
   }
 };
 export default function AdminFeedbackPage({
-  pendingData,
+  // pendingData,
   alertMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const hasAlertedRef = useRef(false);
@@ -89,7 +91,7 @@ export default function AdminFeedbackPage({
       </section>
 
       <section className="grid gap-4">
-        {pendingData.map((item) => (
+        {/* {pendingData.map((item) => (
           <article
             key={item.id}
             className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70"
@@ -104,7 +106,7 @@ export default function AdminFeedbackPage({
                 </span>
               </div>
               <span className="text-sm font-semibold text-amber-500">
-                {renderStars(item.rating ?? 0)}
+                {ratingStars(item.rating ?? 0)}
               </span>
             </div>
 
@@ -147,7 +149,7 @@ export default function AdminFeedbackPage({
               </div>
             </div>
           </article>
-        ))}
+        ))} */}
       </section>
     </div>
   );

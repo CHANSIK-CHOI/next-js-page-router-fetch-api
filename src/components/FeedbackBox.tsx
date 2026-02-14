@@ -1,7 +1,7 @@
 import { PLACEHOLDER_SRC } from "@/constants";
 import { cn } from "@/lib/utils";
 import { FeedbackListItem } from "@/types";
-import { formatDateTime, renderStars, statusBadge, statusLabel } from "@/util";
+import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/util";
 import Image from "next/image";
 import React from "react";
 import { Button } from "./ui";
@@ -29,7 +29,7 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
           </span>
         </div>
         {!isPreview && (
-          <span className="text-sm font-semibold text-amber-500">{renderStars(data.rating)}</span>
+          <span className="text-sm font-semibold text-amber-500">{ratingStars(data.rating)}</span>
         )}
       </div>
 

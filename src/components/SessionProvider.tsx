@@ -76,7 +76,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     // 로그인 수단과 관계없이 세션 생성 시 user_roles를 동기화한다.
     const syncUserRole = async () => {
       setIsRoleLoading(true);
-      const response = await fetch("/api/user-roles/ensure", {
+      const response = await fetch("/api/user-roles", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
