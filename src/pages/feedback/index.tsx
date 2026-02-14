@@ -5,8 +5,9 @@ import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/user
 import { cn } from "@/lib/utils";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/useSession";
-import { mergeAndSortByUpdatedAtDesc } from "@/util";
+import { mergeFeedbackList } from "@/util";
 import { FeedbackBox } from "@/components";
+import { RevisedPendingOwnerFeedback } from "@/types";
 
 export const getStaticProps = async () => {
   try {
@@ -39,15 +40,14 @@ export default function FeedbackBoardPage({
   const { session, role, isRoleLoading } = useSession();
   const isAdminUi = role === "admin";
   const [pendingCount, setPendingCount] = useState<number | null>(null);
-
-  const feedbackData = mergeAndSortByUpdatedAtDesc(
-    approvedFeedbacksData,
-    revisedPendingPreviewData
+  const [ownerPendingFeedbacks, setOwnerPendingFeedbacks] = useState<RevisedPendingOwnerFeedback[]>(
+    []
   );
-
-  useEffect(() => {
-    console.log({ approvedFeedbacksData, revisedPendingPreviewData });
-  }, [approvedFeedbacksData, revisedPendingPreviewData]);
+  const feedbackData = mergeFeedbackList(
+    approvedFeedbacksData,
+    revisedPendingPreviewData,
+    ownerPendingFeedbacks
+  );
 
   useEffect(() => {
     if (alertMessage && !hasAlertedRef.current) {
@@ -58,6 +58,7 @@ export default function FeedbackBoardPage({
     }
   }, [alertMessage]);
 
+  // admin 사용자 : 승인 대기 중 count 가져오기
   useEffect(() => {
     if (isRoleLoading || !isAdminUi || !session?.access_token) {
       setPendingCount(null);
@@ -65,7 +66,6 @@ export default function FeedbackBoardPage({
     }
 
     const controller = new AbortController();
-
     const loadPendingCount = async () => {
       try {
         const response = await fetch("/api/feedbacks/pending-count", {
@@ -96,11 +96,47 @@ export default function FeedbackBoardPage({
         setPendingCount(null);
       }
     };
-
     loadPendingCount();
 
     return () => controller.abort();
   }, [isRoleLoading, isAdminUi, session?.access_token]);
+
+  // 로그인 시 본인이 작성한 게시물 중 "pending" 이나 "revised_pending"은 전체 데이터를 가져와 merge 하기
+  useEffect(() => {
+    if (!session?.access_token) {
+      setOwnerPendingFeedbacks([]);
+      return;
+    }
+    const controller = new AbortController();
+    const getPendingOwnerFeedback = async () => {
+      try {
+        const response = await fetch("/api/feedbacks/owner/revised-pending", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          signal: controller.signal,
+        });
+
+        const result: { data: RevisedPendingOwnerFeedback[] | null; error: string | null } =
+          await response.json().catch(() => ({}));
+
+        if (!response.ok || result.error) {
+          throw new Error(result.error ?? "Select failed Owner Pending Data");
+        }
+
+        if (controller.signal.aborted) return;
+        if (!result.data) return;
+        setOwnerPendingFeedbacks(result.data ?? []);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error(error);
+      }
+    };
+    getPendingOwnerFeedback();
+
+    return () => controller.abort();
+  }, [session?.access_token]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -144,7 +180,7 @@ export default function FeedbackBoardPage({
             승인됨
           </p>
           <strong className="mt-2 block text-2xl font-semibold text-foreground">
-            {feedbackData.length}
+            {approvedFeedbacksData.length}
           </strong>
         </div>
         {isAdminUi && (

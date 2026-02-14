@@ -206,8 +206,13 @@ export const compareUpdatedAtDesc = (a: WithUpdatedAt, b: WithUpdatedAt) => {
   return bTime - aTime;
 };
 
-export const mergeAndSortByUpdatedAtDesc = <T extends WithUpdatedAt>(...arrays: T[][]): T[] => {
-  return arrays.flat().sort(compareUpdatedAtDesc);
+export const mergeAndSortByUpdatedAtDesc = <
+  TArrays extends ReadonlyArray<ReadonlyArray<WithUpdatedAt>>,
+>(
+  ...arrays: TArrays
+): Array<TArrays[number][number]> => {
+  const merged = arrays.flat() as Array<TArrays[number][number]>;
+  return merged.sort(compareUpdatedAtDesc);
 };
 
 export const mergeFeedbackList = (
@@ -215,10 +220,16 @@ export const mergeFeedbackList = (
   revisedPreview: RevisedPendingPreviewFeedback[],
   revisedMine: RevisedPendingOwnerFeedback[]
 ): FeedbackListItem[] => {
-  const map = new Map<string, FeedbackListItem>();
+  const mergedById = new Map<string, FeedbackListItem>();
 
-  [...approved, ...revisedPreview].forEach((publicItem) => map.set(publicItem.id, publicItem));
-  revisedMine.forEach((ownerItem) => map.set(ownerItem.id, ownerItem)); // 내 글은 preview 덮어쓰기
+  [...approved, ...revisedPreview].forEach((publicItem) => {
+    mergedById.set(publicItem.id, publicItem);
+  });
 
-  return Array.from(map.values()).sort(compareUpdatedAtDesc);
+  revisedMine.forEach((ownerItem) => {
+    // 같은 id가 있으면 preview를 owner full 데이터로 덮어쓴다.
+    mergedById.set(ownerItem.id, ownerItem);
+  });
+
+  return Array.from(mergedById.values()).sort(compareUpdatedAtDesc);
 };

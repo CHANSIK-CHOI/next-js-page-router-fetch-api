@@ -28,7 +28,7 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
             {formatDateTime(data.updated_at)}
           </span>
         </div>
-        {data.rating && (
+        {!isPreview && (
           <span className="text-sm font-semibold text-amber-500">{renderStars(data.rating)}</span>
         )}
       </div>
@@ -63,7 +63,7 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
               "blur-sm select-none": isPreview,
             })}
           >
-            {data.summary}
+            {isPreview ? "수정된 내용은 승인 후 공개됩니다." : data.summary}
           </p>
           {isPreview && (
             <p className="text-xs font-semibold text-amber-600 dark:text-amber-300">

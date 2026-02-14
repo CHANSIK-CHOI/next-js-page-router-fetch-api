@@ -131,7 +131,7 @@ export type RevisedPendingPreviewFeedback = Pick<FeedbackBase, PreviewKeys> & {
 };
 
 export type RevisedPendingOwnerFeedback = FeedbackBase & {
-  status: "revised_pending";
+  status: "revised_pending" | "pending";
   isPreview: false;
   summary: string;
   strengths: string | null;

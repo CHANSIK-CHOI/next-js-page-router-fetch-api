@@ -104,7 +104,7 @@ export default function AdminFeedbackPage({
                 </span>
               </div>
               <span className="text-sm font-semibold text-amber-500">
-                {renderStars(item.rating)}
+                {renderStars(item.rating ?? 0)}
               </span>
             </div>
 
