@@ -41,7 +41,7 @@ export type SingUpForm = {
   reviewed_by?: string; // 승인 담당자
 */
 
-type FeedbackBase = {
+export type FeedbackBase = {
   id: string;
   author_id: string;
   display_name: string;
@@ -55,6 +55,16 @@ type FeedbackBase = {
   updated_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
+};
+
+export type FeedbackRow = FeedbackBase & {
+  summary: string;
+  strengths: string | null;
+  questions: string | null;
+  suggestions: string | null;
+  rating: number;
+  tags: string[];
+  status: "pending" | "approved" | "rejected" | "revised_pending";
 };
 
 export type ApprovedFeedback = FeedbackBase & {

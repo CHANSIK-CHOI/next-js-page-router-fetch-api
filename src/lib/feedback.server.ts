@@ -1,4 +1,10 @@
-import type { ApprovedFeedback, RevisedPendingPreviewFeedback } from "@/types";
+import type {
+  ApprovedFeedback,
+  FeedbackBase,
+  FeedbackRow,
+  RevisedPendingPreviewFeedback,
+  SupabaseError,
+} from "@/types";
 import { getSupabaseServer } from "@/lib/supabase.server";
 import { APPROVED_PUBLIC_COLUMNS, PREVIEWCOLUMN } from "@/constants";
 
@@ -56,4 +62,44 @@ export const getRevisedPendingPreviewApi = async (): Promise<RevisedPendingPrevi
       isPreview: true,
     };
   });
+};
+
+export const getFeedbacksIdsApi = async (): Promise<FeedbackBase["id"][]> => {
+  const supabaseServer = getSupabaseServer();
+  if (!supabaseServer) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  const { data, error }: { data: Pick<FeedbackBase, "id">[] | null; error: SupabaseError } =
+    await supabaseServer.from("feedbacks").select("id");
+
+  if (error || !data) {
+    throw new Error("Failed fetch getFeedbacksIdsApi");
+  }
+
+  return data.map((item) => item.id);
+};
+
+export const getDetailFeedbacksApi = async (
+  id: FeedbackBase["id"]
+): Promise<FeedbackRow | null> => {
+  const supabaseServer = getSupabaseServer();
+  if (!supabaseServer) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  const {
+    data,
+    error,
+  }: { data: FeedbackRow | null; error: SupabaseError } = await supabaseServer
+    .from("feedbacks")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error("Failed fetch getDetailFeedbacksApi");
+  }
+
+  return data;
 };
