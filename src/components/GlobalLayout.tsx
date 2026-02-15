@@ -1,12 +1,39 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import AuthActions from "./AuthActions";
-import { DialogProvider } from "@/components/ui";
+import { DialogProvider, Switch } from "@/components/ui";
 import SessionProvider from "./SessionProvider";
+import { useTheme } from "next-themes";
+
+type StackBadge = {
+  label: string;
+  iconSrc?: string;
+  invertOnDark?: boolean;
+};
+
+const CORE_STACK_BADGES: StackBadge[] = [
+  { label: "Next.js Page Router", iconSrc: "/icons/nextjs.svg", invertOnDark: true },
+  { label: "Supabase", iconSrc: "/icons/supabase.svg" },
+  { label: "TypeScript" },
+  { label: "shadcn/ui" },
+  { label: "Tailwind CSS" },
+];
+
+const DELIVERY_BADGES: StackBadge[] = [
+  { label: "Vercel", iconSrc: "/icons/vercel.svg", invertOnDark: true },
+  { label: "GitHub", iconSrc: "/icons/github.svg", invertOnDark: true },
+];
 
 export default function GlobalLayout({ children }: { children: ReactNode }) {
   const [container, setContainer] = useState<HTMLElement | null>(null);
+  const [isThemeMounted, setIsThemeMounted] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDarkMode = resolvedTheme === "dark";
+
+  useEffect(() => {
+    setIsThemeMounted(true);
+  }, []);
 
   return (
     <DialogProvider container={container}>
@@ -41,7 +68,18 @@ export default function GlobalLayout({ children }: { children: ReactNode }) {
                 />
                 <span className="text-base tracking-tight sm:text-lg">홈으로 가기</span>
               </Link>
-              <AuthActions />
+              <div className="flex items-center gap-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-white/70 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
+                  <span>Dark</span>
+                  <Switch
+                    checked={isThemeMounted ? isDarkMode : false}
+                    disabled={!isThemeMounted}
+                    aria-label="다크 모드 전환"
+                    onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                  />
+                </div>
+                <AuthActions />
+              </div>
             </div>
           </header>
 
@@ -54,30 +92,71 @@ export default function GlobalLayout({ children }: { children: ReactNode }) {
                 />
                 <div className="relative z-10 flex flex-col gap-4">
                   <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary dark:bg-primary/20 dark:text-primary-foreground">
-                    Interview Feedback Board
+                    Project Specs
                   </span>
                   <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-                    인터뷰어 피드백을 기록하는
+                    Next.js + Supabase로 만든
                     <br />
-                    참여형 보드
+                    권한 기반 피드백 보드
                   </h1>
                   <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                    로그인한 방문자가 피드백을 남기고, 관리자가 승인·공개를 운영합니다.
-                    <br />
-                    권한 분리와 CRUD 흐름을 한 화면에서 보여주는 포트폴리오입니다.
+                    Auth, RLS, CRUD, 승인 워크플로우를 중심으로 구성했습니다.
                   </p>
                 </div>
                 <aside className="relative z-10 grid gap-3">
                   <div className="rounded-2xl border border-border/60 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
                     <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      핵심 기능
+                      Core Stack
+                    </span>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {CORE_STACK_BADGES.map((stack) => (
+                        <span
+                          key={stack.label}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 px-2.5 py-1 text-xs font-medium text-foreground dark:border-white/10 dark:bg-neutral-800/70"
+                        >
+                          {stack.iconSrc && (
+                            <Image
+                              src={stack.iconSrc}
+                              alt={`${stack.label} icon`}
+                              width={12}
+                              height={12}
+                              className={stack.invertOnDark ? "dark:invert" : undefined}
+                            />
+                          )}
+                          {stack.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Delivery
                     </span>
                     <strong className="mt-2 block text-lg font-semibold text-foreground">
-                      작성 · 검토 · 공개 흐름
+                      Vercel 배포 · GitHub 형상관리
                     </strong>
                     <span className="mt-1 block text-sm text-muted-foreground">
-                      Auth · RLS · 승인 대기 · 관리자 검토
+                      환경변수 기반 구성, API Route 기반 백엔드, 역할 분리 정책을 적용했습니다.
                     </span>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {DELIVERY_BADGES.map((item) => (
+                        <span
+                          key={item.label}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/80 px-2.5 py-1 text-xs font-medium text-foreground dark:border-white/10 dark:bg-neutral-800/70"
+                        >
+                          {item.iconSrc && (
+                            <Image
+                              src={item.iconSrc}
+                              alt={`${item.label} icon`}
+                              width={12}
+                              height={12}
+                              className={item.invertOnDark ? "dark:invert" : undefined}
+                            />
+                          )}
+                          {item.label}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </aside>
               </section>

@@ -2,6 +2,7 @@
 export { Button, buttonVariants } from "./radix-ui/button";
 export { default as Select } from "./radix-ui/select";
 export { default as AlertDialog } from "./radix-ui/alert-dialog";
+export { default as Switch } from "./radix-ui/switch";
 
 // custom ui & provider
 export { default as DialogProvider } from "./Dialog/DialogProvider";

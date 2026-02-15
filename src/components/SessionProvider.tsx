@@ -43,9 +43,10 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   }, [supabaseClient]);
 
   useEffect(() => {
-    const skip = sessionStorage.getItem("skipRoleSync");
-    if (skip === "1") {
-      sessionStorage.removeItem("skipRoleSync");
+    // 회원가입 후 첫 login은 skip
+    const isSignUpComplete = sessionStorage.getItem("signUpCompleteAndSkipRoleSync") === "1";
+    if (isSignUpComplete) {
+      sessionStorage.removeItem("signUpCompleteAndSkipRoleSync");
       setRole(null);
       setIsRoleLoading(false);
       return;
