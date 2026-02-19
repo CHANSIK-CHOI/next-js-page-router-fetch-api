@@ -88,10 +88,7 @@ export const getDetailFeedbacksApi = async (
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
   }
 
-  const {
-    data,
-    error,
-  }: { data: FeedbackRow | null; error: SupabaseError } = await supabaseServer
+  const { data, error }: { data: FeedbackRow | null; error: SupabaseError } = await supabaseServer
     .from("feedbacks")
     .select("*")
     .eq("id", id)

@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { SessionContext } from "./useSession";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase.client";
@@ -17,6 +17,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   const supabaseClient: SupabaseClient | null = getSupabaseClient();
   const [role, setRole] = useState<UserRole["role"] | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(false);
+  const syncedTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!supabaseClient) {
@@ -107,6 +108,38 @@ export default function SessionProvider({ children }: SessionProviderProps) {
         setIsRoleLoading(false);
       });
   }, [session?.user?.id, session?.access_token]);
+
+  useEffect(() => {
+    const syncSessionCookie = async () => {
+      if (!session?.access_token) {
+        syncedTokenRef.current = null;
+        await fetch("/api/auth/session", {
+          method: "DELETE",
+        });
+        return;
+      }
+
+      if (syncedTokenRef.current === session.access_token) return;
+
+      const response = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const payload: { error?: string | null } = await response.json().catch(() => ({}));
+      if (!response.ok || payload.error) {
+        throw new Error(payload.error ?? "Failed to sync session cookie");
+      }
+
+      syncedTokenRef.current = session.access_token;
+    };
+
+    syncSessionCookie().catch((error) => {
+      console.error(error);
+    });
+  }, [session?.access_token]);
 
   return (
     <SessionContext.Provider

@@ -1,70 +1,78 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button, useAlert } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { PLACEHOLDER_SRC } from "@/constants";
 import { formatDateTime, ratingStars } from "@/util";
-import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
-import { getDetailFeedbacksApi, getFeedbacksIdsApi } from "@/lib/feedback.server";
-import { useRouter } from "next/router";
-import type { FeedbackRow } from "@/types";
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
+import { getDetailFeedbacksApi } from "@/lib/feedback.server";
+import type { FeedbackRow, SupabaseError, UserRole } from "@/types";
+import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
 
-export const getStaticPaths = async () => {
-  try {
-    const feedbacksIds = await getFeedbacksIdsApi();
-    return {
-      paths: feedbacksIds.map((id) => ({ params: { id: String(id) } })),
-      fallback: true,
-    };
-  } catch (err) {
-    console.error(err);
-    return { paths: [], fallback: true };
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
+  const id = context.params?.id;
+  if (typeof id !== "string") {
+    return { notFound: true };
   }
-};
 
-export const getStaticProps = async (context: GetStaticPropsContext) => {
-  const id = context.params!.id;
   try {
-    const detailFeedbacksData: FeedbackRow | null =
-      typeof id === "string" ? await getDetailFeedbacksApi(id) : null;
+    const detailFeedbacksData: FeedbackRow | null = await getDetailFeedbacksApi(id);
+    if (!detailFeedbacksData) {
+      return { notFound: true };
+    }
+
+    // 승인되지 않은 상세 페이지는 작성자 또는 관리자만 접근 허용
+    if (detailFeedbacksData.status !== "approved") {
+      const accessToken = context.req.cookies["sb-access-token"];
+      console.log("accessToken ------------> ", accessToken);
+      if (!accessToken) {
+        return { redirect: { destination: "/", permanent: false } };
+        // permanent: false : 임시 리다이렉트(보통 307/302 성격), 브라우저/검색엔진이 영구 캐시하지 않음
+      }
+
+      const supabaseServer = getSupabaseServerByAccessToken(accessToken);
+      if (!supabaseServer) {
+        return { redirect: { destination: "/", permanent: false } };
+      }
+
+      const { data: authData, error: authError } = await supabaseServer.auth.getUser();
+      if (authError || !authData.user) {
+        return { redirect: { destination: "/", permanent: false } };
+      }
+
+      const isAuthor = authData.user.id === detailFeedbacksData.author_id;
+      if (isAuthor) {
+        return {
+          props: { detailFeedbacksData },
+        };
+      }
+
+      const {
+        data: roleData,
+        error: roleError,
+      }: { data: Pick<UserRole, "role"> | null; error: SupabaseError } = await supabaseServer
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authData.user.id)
+        .maybeSingle();
+
+      if (roleError || roleData?.role !== "admin") {
+        return { redirect: { destination: "/", permanent: false } };
+      }
+    }
+
     return {
-      props: { detailFeedbacksData, alertMessage: null },
+      props: { detailFeedbacksData },
     };
   } catch (error) {
     console.error(error);
-
-    return {
-      props: {
-        detailFeedbacksData: null,
-        alertMessage: "데이터를 정상적으로 불러올 수 없습니다.",
-      },
-    };
+    return { notFound: true };
   }
 };
 
 export default function FeedbackDetailPage({
   detailFeedbacksData,
-  alertMessage,
-}: InferGetStaticPropsType<typeof getStaticProps>) {
-  const router = useRouter();
-  const hasAlertedRef = useRef(false);
-  const { openAlert } = useAlert();
-
-  useEffect(() => {
-    if (alertMessage && !hasAlertedRef.current) {
-      openAlert({
-        description: alertMessage,
-      });
-      hasAlertedRef.current = true;
-    }
-  }, [alertMessage, openAlert]);
-
-  if (router.isFallback) {
-    return <div>Loading ...</div>;
-  }
-
-  if (!detailFeedbacksData) return "문제가 발생했습니다. 다시 시도하세요.";
-
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <div className="flex flex-col gap-6">
       <section className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
@@ -174,7 +182,10 @@ export default function FeedbackDetailPage({
             승인 담당자: <span className="text-foreground">{detailFeedbacksData.reviewed_by}</span>
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            마지막 수정: <span className="text-foreground">{detailFeedbacksData.updated_at}</span>
+            마지막 수정:{" "}
+            <span className="text-foreground">
+              {formatDateTime(detailFeedbacksData.updated_at)}
+            </span>
           </p>
         </div>
       </section>
