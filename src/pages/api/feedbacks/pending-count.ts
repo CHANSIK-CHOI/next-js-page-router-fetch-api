@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
-import type { SupabaseError, UserRole } from "@/types";
+import { getAuthContextByAccessToken } from "@/lib/auth.server";
 import { getAccessToken } from "@/util";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -16,40 +15,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ count: null, error: "Missing access token" });
   }
 
-  const supabaseServer = getSupabaseServerByAccessToken(accessToken);
-  if (!supabaseServer) {
-    return res
-      .status(500)
-      .json({ count: null, error: "Missing SUPABASE_URL or SUPABASE_ANON_KEY" });
-  }
-
   try {
-    const { data: authData, error: authError } = await supabaseServer.auth.getUser();
-    if (authError || !authData.user) {
-      return res.status(401).json({ count: null, error: authError?.message ?? "Unauthorized" });
+    const { context, error: authError, status: authStatus } =
+      await getAuthContextByAccessToken(accessToken);
+    if (authError || !context) {
+      return res.status(authStatus).json({ count: null, error: authError ?? "Unauthorized" });
     }
 
-    const {
-      data: roleData,
-      error: roleError,
-    }: { data: Pick<UserRole, "user_id" | "role"> | null; error: SupabaseError } =
-      await supabaseServer
-        .from("user_roles")
-        .select("user_id, role")
-        .eq("user_id", authData.user.id)
-        .maybeSingle();
-    if (roleError) {
-      return res
-        .status(500)
-        .json({ count: null, error: roleError?.message ?? "Select failed Role Data" });
-    }
-
-    if (!roleData?.role || roleData.role !== "admin") {
+    if (!context.isAdmin) {
       return res.status(403).json({ count: null, error: "Forbidden" });
     }
 
     // status = 'pending' | 'revised_pending' 개수만 조회
-    const { count, error: countError } = await supabaseServer
+    const { count, error: countError } = await context.supabaseServer
       .from("feedbacks")
       .select("id", { count: "exact", head: true })
       // 데이터는 가져오지 않고 “개수만” 세기 위한 Supabase 쿼리 옵션

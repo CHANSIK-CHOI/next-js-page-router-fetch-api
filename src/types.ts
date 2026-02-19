@@ -41,14 +41,13 @@ export type SingUpForm = {
   reviewed_by?: string; // 승인 담당자
 */
 
-export type FeedbackBase = {
+export type FeedbackPublicBase = {
   id: string;
   author_id: string;
   display_name: string;
   company_name: string | null;
   is_company_public: boolean;
   avatar_url: string | null;
-  email: string;
   is_public: boolean;
   revision_count: number;
   created_at: string;
@@ -57,7 +56,7 @@ export type FeedbackBase = {
   reviewed_by: string | null;
 };
 
-export type FeedbackRow = FeedbackBase & {
+export type FeedbackPublicRow = FeedbackPublicBase & {
   summary: string;
   strengths: string | null;
   questions: string | null;
@@ -67,7 +66,11 @@ export type FeedbackRow = FeedbackBase & {
   status: "pending" | "approved" | "rejected" | "revised_pending";
 };
 
-export type ApprovedFeedback = FeedbackBase & {
+export type FeedbackPrivateRow = FeedbackPublicRow & {
+  email: string;
+};
+
+export type ApprovedFeedback = FeedbackPublicBase & {
   status: "approved";
   isPreview: false;
   summary: string;
@@ -78,12 +81,12 @@ export type ApprovedFeedback = FeedbackBase & {
   tags: string[];
 };
 
-export type RevisedPendingPreviewFeedback = FeedbackBase & {
+export type RevisedPendingPreviewFeedback = FeedbackPublicBase & {
   status: "revised_pending";
   isPreview: true;
 };
 
-export type RevisedPendingOwnerFeedback = FeedbackBase & {
+export type RevisedPendingOwnerFeedback = FeedbackPublicBase & {
   status: "revised_pending" | "pending";
   isPreview: false;
   summary: string;
@@ -94,16 +97,15 @@ export type RevisedPendingOwnerFeedback = FeedbackBase & {
   tags: string[];
 };
 
-export type AdminReviewFeedback = FeedbackBase & {
-  status: "pending" | "approved" | "revised_pending" | "rejected";
+type AdminReviewBase = FeedbackPrivateRow & {
   isPreview: false;
-  summary: string;
-  strengths: string | null;
-  questions: string | null;
-  suggestions: string | null;
-  rating: number;
-  tags: string[];
 };
+
+// 관리자 화면에서 이메일을 실제로 써야 할 때 내부적으로 사용할 타입
+export type AdminReviewFeedbackWithEmail = AdminReviewBase;
+
+// 기본 정책: 클라이언트 전달 시 이메일 제외
+export type AdminReviewFeedback = Omit<AdminReviewBase, "email">;
 
 export type FeedbackListItem =
   | ApprovedFeedback

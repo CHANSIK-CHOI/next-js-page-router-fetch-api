@@ -8,6 +8,7 @@ import { useSession } from "@/components/useSession";
 import { formatDateTime, mergeFeedbackList, statusBadge, statusLabel } from "@/util";
 import { FeedbackBox } from "@/components";
 import { AdminReviewFeedback, RevisedPendingOwnerFeedback } from "@/types";
+import { useRouter } from "next/router";
 
 const MINE_STATUS_QUERY = new URLSearchParams({
   status: "pending,revised_pending",
@@ -43,6 +44,7 @@ export default function FeedbackBoardPage({
   revisedPendingPreviewData,
   alertMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
+  const router = useRouter();
   const hasAlertedRef = useRef(false);
   const { openAlert } = useAlert();
   const { session, isAdminUi, isRoleLoading } = useSession();
@@ -61,8 +63,6 @@ export default function FeedbackBoardPage({
       }),
     [approvedFeedbacksData, revisedPendingPreviewData, ownerPendingFeedbacks, adminReviewFeedbacks]
   );
-
-  console.log({ feedbackData });
 
   useEffect(() => {
     if (alertMessage && !hasAlertedRef.current) {
@@ -190,6 +190,20 @@ export default function FeedbackBoardPage({
     return () => controller.abort();
   }, [isRoleLoading, isAdminUi, session?.access_token]);
 
+  const handleAddFeedback = () => {
+    if (!session?.access_token) {
+      openAlert({
+        description: "피드백을 남기기 위해서는 로그인을 해야합니다.",
+        onOk: () => {
+          router.push("/login?next=/feedback/new");
+        },
+      });
+      return;
+    }
+
+    router.push("/feedback/new");
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <section className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
@@ -201,8 +215,9 @@ export default function FeedbackBoardPage({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline">
-              <Link href="/feedback/new">피드백 남기기</Link>
+            <Button variant="outline" onClick={handleAddFeedback}>
+              피드백 남기기
+              {/* <Link href="/feedback/new">피드백 남기기</Link> */}
             </Button>
             {!isRoleLoading && isAdminUi && (
               <Button asChild>

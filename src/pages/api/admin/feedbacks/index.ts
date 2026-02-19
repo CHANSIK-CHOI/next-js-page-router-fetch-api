@@ -1,16 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getAuthContextByAccessToken } from "@/lib/auth.server";
-import type { RevisedPendingOwnerFeedback } from "@/types";
 import { getAccessToken } from "@/util";
+import { getAuthContextByAccessToken } from "@/lib/auth.server";
+import type { AdminReviewFeedbackWithEmail, FeedbackPrivateRow, SupabaseError } from "@/types";
 
-const ALLOWED_STATUSES = ["pending", "revised_pending"] as const;
-type MineStatus = (typeof ALLOWED_STATUSES)[number];
+const ALLOWED_STATUSES = ["pending", "approved", "rejected", "revised_pending"] as const;
+type FeedbackStatus = (typeof ALLOWED_STATUSES)[number];
 
 const parseStatusQuery = (
   rawStatus: string | string[] | undefined
-): { statuses: MineStatus[] | null; error: string | null } => {
+): { statuses: FeedbackStatus[] | null; error: string | null } => {
   if (typeof rawStatus === "undefined") {
-    return { statuses: [...ALLOWED_STATUSES], error: null };
+    return { statuses: ["pending", "revised_pending", "rejected"], error: null };
   }
 
   const parsed = (Array.isArray(rawStatus) ? rawStatus : [rawStatus])
@@ -21,13 +21,14 @@ const parseStatusQuery = (
   if (parsed.length === 0) {
     return {
       statuses: null,
-      error: "Invalid status query. Use ?status=pending,revised_pending",
+      error: "Invalid status query. Use ?status=pending,revised_pending,rejected",
     };
   }
 
   const invalidStatuses = parsed.filter(
-    (status): status is string => !ALLOWED_STATUSES.includes(status as MineStatus)
+    (status): status is string => !ALLOWED_STATUSES.includes(status as FeedbackStatus)
   );
+
   if (invalidStatuses.length > 0) {
     return {
       statuses: null,
@@ -36,7 +37,7 @@ const parseStatusQuery = (
   }
 
   return {
-    statuses: Array.from(new Set(parsed)) as MineStatus[],
+    statuses: Array.from(new Set(parsed)) as FeedbackStatus[],
     error: null,
   };
 };
@@ -66,28 +67,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(authStatus).json({ data: null, error: authError ?? "Unauthorized" });
     }
 
-    if (context.isAdmin) {
-      return res.status(200).json({ data: null, error: null });
+    if (!context.isAdmin) {
+      return res.status(403).json({ data: null, error: "Forbidden" });
     }
 
-    const { data, error: dataError } = await context.supabaseServer
-      .from("feedbacks")
-      .select()
-      .eq("author_id", context.userId)
-      .in("status", statuses);
+    const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
+      await context.supabaseServer
+        .from("feedbacks")
+        .select("*")
+        .in("status", statuses)
+        .order("updated_at", { ascending: false });
 
-    if (dataError || !data) {
-      return res
-        .status(500)
-        .json({ data: null, error: dataError?.message ?? "Select failed Owner Pending Data" });
+    if (error || !data) {
+      return res.status(500).json({ data: null, error: error?.message ?? "Select failed" });
     }
 
-    const ownerFeedbacks: RevisedPendingOwnerFeedback[] = data.map((item) => ({
+    const adminFeedbacks: AdminReviewFeedbackWithEmail[] = data.map((item) => ({
       ...item,
       isPreview: false,
     }));
 
-    return res.status(200).json({ data: ownerFeedbacks, error: null });
+    return res.status(200).json({ data: adminFeedbacks, error: null });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     return res.status(500).json({ data: null, error: message });

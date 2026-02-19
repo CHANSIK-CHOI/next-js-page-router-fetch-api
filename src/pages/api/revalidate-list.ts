@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const secret = Array.isArray(req.query.secret) ? req.query.secret[0] : req.query.secret;
+  const headerSecret = req.headers["x-revalidate-secret"];
+  const secret = Array.isArray(headerSecret) ? headerSecret[0] : headerSecret;
   const expectedSecret = process.env.REVALIDATE_SECRET;
 
   if (req.method !== "POST") {
@@ -15,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     await res.revalidate("/feedback");
-    // Next.js의 revalidate 메서드로 / 경로의 ISR 캐시를 무효화함
+    // Next.js의 revalidate 메서드로 /feedback 경로의 ISR 캐시를 무효화함
     // 목록 페이지(/feedback)를 다음 요청 때 다시 생성하게 만드는 트리거
     return res.json({ revalidate: true });
   } catch (err) {

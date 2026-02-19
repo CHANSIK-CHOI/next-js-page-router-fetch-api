@@ -1,7 +1,7 @@
 import type {
   ApprovedFeedback,
-  FeedbackBase,
-  FeedbackRow,
+  FeedbackPublicBase,
+  FeedbackPublicRow,
   RevisedPendingPreviewFeedback,
   SupabaseError,
 } from "@/types";
@@ -30,7 +30,6 @@ export const getApprovedFeedbacksApi = async (): Promise<ApprovedFeedback[]> => 
   return data.map((item) => {
     return {
       ...item,
-      email: "",
       isPreview: false,
     };
   });
@@ -58,19 +57,18 @@ export const getRevisedPendingPreviewApi = async (): Promise<RevisedPendingPrevi
   return data.map((item) => {
     return {
       ...item,
-      email: "",
       isPreview: true,
     };
   });
 };
 
-export const getFeedbacksIdsApi = async (): Promise<FeedbackBase["id"][]> => {
+export const getFeedbacksIdsApi = async (): Promise<FeedbackPublicBase["id"][]> => {
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
   }
 
-  const { data, error }: { data: Pick<FeedbackBase, "id">[] | null; error: SupabaseError } =
+  const { data, error }: { data: Pick<FeedbackPublicBase, "id">[] | null; error: SupabaseError } =
     await supabaseServer.from("feedbacks").select("id");
 
   if (error || !data) {
@@ -81,18 +79,19 @@ export const getFeedbacksIdsApi = async (): Promise<FeedbackBase["id"][]> => {
 };
 
 export const getDetailFeedbacksApi = async (
-  id: FeedbackBase["id"]
-): Promise<FeedbackRow | null> => {
+  id: FeedbackPublicBase["id"]
+): Promise<FeedbackPublicRow | null> => {
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
   }
 
-  const { data, error }: { data: FeedbackRow | null; error: SupabaseError } = await supabaseServer
-    .from("feedbacks")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+  const { data, error }: { data: FeedbackPublicRow | null; error: SupabaseError } =
+    await supabaseServer
+      .from("feedbacks")
+      .select(APPROVED_PUBLIC_COLUMNS)
+      .eq("id", id)
+      .maybeSingle();
 
   if (error) {
     throw new Error("Failed fetch getDetailFeedbacksApi");

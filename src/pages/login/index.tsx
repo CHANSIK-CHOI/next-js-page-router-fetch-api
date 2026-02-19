@@ -26,6 +26,11 @@ export default function LoginPage() {
   const { openAlert } = useAlert();
   const { supabaseClient } = useSession();
   const router = useRouter();
+  const nextQuery = router.query.next;
+  const nextPath =
+    typeof nextQuery === "string" && nextQuery.startsWith("/") && !nextQuery.startsWith("//")
+      ? nextQuery
+      : "/";
   const {
     register,
     handleSubmit,
@@ -51,7 +56,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.replace("/");
+    router.replace(nextPath);
   };
 
   const inputBase =
@@ -134,7 +139,7 @@ export default function LoginPage() {
               또는
             </div>
 
-            <GithubLoginBtn />
+            <GithubLoginBtn nextPath={nextPath} />
           </div>
         </form>
 

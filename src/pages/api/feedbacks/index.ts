@@ -1,6 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSupabaseServer, getSupabaseServerByAccessToken } from "@/lib/supabase.server";
-import type { AdminReviewFeedback, FeedbackRow, SupabaseError, UserRole } from "@/types";
+import { getSupabaseServer } from "@/lib/supabase.server";
+import { getAuthContextByAccessToken } from "@/lib/auth.server";
+import { APPROVED_PUBLIC_COLUMNS } from "@/constants";
+import type {
+  AdminReviewFeedback,
+  ApprovedFeedback,
+  FeedbackPrivateRow,
+  SupabaseError,
+} from "@/types";
 import { getAccessToken } from "@/util";
 
 /*
@@ -51,40 +58,6 @@ const parseStatusQuery = (
   };
 };
 
-// 관리자 판별 (isAdminRole)
-const isAdminRole = async (
-  accessToken: string
-): Promise<{ isAdmin: boolean; error: string | null }> => {
-  // getSupabaseServerByAccessToken(accessToken)로 사용자 컨텍스트 클라이언트 생성
-  const supabaseServer = getSupabaseServerByAccessToken(accessToken);
-  if (!supabaseServer) {
-    return { isAdmin: false, error: "Missing SUPABASE_URL or SUPABASE_ANON_KEY" };
-  }
-
-  // auth.getUser()로 토큰 유효성 + 사용자 식별
-  const { data: authData, error: authError } = await supabaseServer.auth.getUser();
-  if (authError || !authData.user) {
-    return { isAdmin: false, error: authError?.message ?? "Unauthorized" };
-  }
-
-  // user_roles에서 role 조회 (roleData)
-  const {
-    data: roleData,
-    error: roleError,
-  }: { data: Pick<UserRole, "role"> | null; error: SupabaseError } = await supabaseServer
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", authData.user.id)
-    .maybeSingle();
-
-  if (roleError) {
-    return { isAdmin: false, error: roleError.message };
-  }
-
-  // roleData?.role === "admin"이면 admin
-  return { isAdmin: roleData?.role === "admin", error: null };
-};
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -112,10 +85,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .json({ data: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
       }
 
-      const { data, error }: { data: FeedbackRow[] | null; error: SupabaseError } =
+      type ApprovedPublicRow = Omit<ApprovedFeedback, "isPreview">;
+      const { data, error }: { data: ApprovedPublicRow[] | null; error: SupabaseError } =
         await supabaseServer
           .from("feedbacks")
-          .select("*")
+          .select(APPROVED_PUBLIC_COLUMNS)
           .in("status", statuses)
           .eq("is_public", true)
           .order("updated_at", { ascending: false });
@@ -124,7 +98,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({ data: null, error: error?.message ?? "Select failed" });
       }
 
-      return res.status(200).json({ data, error: null });
+      const publicFeedbacks: ApprovedFeedback[] = data.map((item) => ({
+        ...item,
+        isPreview: false,
+      }));
+
+      return res.status(200).json({ data: publicFeedbacks, error: null });
     }
 
     // 관리자 전용 조회 분기 (isRequiresAdmin)
@@ -133,23 +112,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ data: null, error: "Missing access token" });
     }
 
-    const { isAdmin, error: adminError } = await isAdminRole(accessToken);
-    if (adminError) {
-      return res.status(401).json({ data: null, error: adminError });
+    const {
+      context,
+      error: authError,
+      status: authStatus,
+    } = await getAuthContextByAccessToken(accessToken);
+    if (authError || !context) {
+      return res.status(authStatus).json({ data: null, error: authError ?? "Unauthorized" });
     }
-    if (!isAdmin) {
+
+    if (!context.isAdmin) {
       return res.status(403).json({ data: null, error: "Forbidden" });
     }
 
-    const supabaseServer = getSupabaseServerByAccessToken(accessToken);
-    if (!supabaseServer) {
-      return res
-        .status(500)
-        .json({ data: null, error: "Missing SUPABASE_URL or SUPABASE_ANON_KEY" });
-    }
-
-    const { data, error }: { data: FeedbackRow[] | null; error: SupabaseError } =
-      await supabaseServer
+    const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
+      await context.supabaseServer
         .from("feedbacks")
         .select("*")
         .in("status", statuses)
@@ -160,8 +137,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const adminReviewFeedbacks: AdminReviewFeedback[] = data.map((item) => {
+      const { email, ...withoutEmail } = item;
+      void email;
       return {
-        ...item,
+        ...withoutEmail,
         isPreview: false,
       };
     });

@@ -3,11 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui";
 import { PLACEHOLDER_SRC } from "@/constants";
-import { formatDateTime, ratingStars } from "@/util";
+import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/util";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getDetailFeedbacksApi } from "@/lib/feedback.server";
-import type { FeedbackRow, SupabaseError, UserRole } from "@/types";
-import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
+import type { FeedbackPublicRow, UserRole } from "@/types";
+import { getAuthContextByAccessToken } from "@/lib/auth.server";
 
 const HOME_REDIRECT = { redirect: { destination: "/", permanent: false } } as const;
 
@@ -19,7 +19,7 @@ type ViewerAccess = {
 };
 
 const getViewerAccess = async (
-  context: GetServerSidePropsContext,
+  accessToken: string | undefined,
   authorId: string
 ): Promise<ViewerAccess> => {
   const fallback: ViewerAccess = {
@@ -29,34 +29,16 @@ const getViewerAccess = async (
     isAdmin: false,
   };
 
-  const accessToken = context.req.cookies["sb-access-token"];
   if (!accessToken) return fallback;
 
-  const supabaseServer = getSupabaseServerByAccessToken(accessToken);
-  if (!supabaseServer) return fallback;
-
-  const { data: authData, error: authError } = await supabaseServer.auth.getUser();
-  if (authError || !authData.user) return fallback;
-
-  const userId = authData.user.id;
-  const isAuthor = userId === authorId;
-
-  const {
-    data: roleData,
-    error: roleError,
-  }: { data: Pick<UserRole, "role"> | null; error: SupabaseError } = await supabaseServer
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  const role = roleError ? null : (roleData?.role ?? null);
+  const { context } = await getAuthContextByAccessToken(accessToken);
+  if (!context) return fallback;
 
   return {
-    userId,
-    isAuthor,
-    role,
-    isAdmin: role === "admin",
+    userId: context.userId,
+    isAuthor: context.userId === authorId,
+    role: context.role,
+    isAdmin: context.isAdmin,
   };
 };
 
@@ -67,12 +49,13 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
   }
 
   try {
-    const detailFeedbacksData: FeedbackRow | null = await getDetailFeedbacksApi(id);
+    const detailFeedbacksData: FeedbackPublicRow | null = await getDetailFeedbacksApi(id);
     if (!detailFeedbacksData) {
       return { notFound: true };
     }
 
-    const viewer = await getViewerAccess(context, detailFeedbacksData.author_id);
+    const accessToken = context.req.cookies["sb-access-token"];
+    const viewer = await getViewerAccess(accessToken, detailFeedbacksData.author_id);
 
     // approved가 아니면 작성자/관리자만 접근 허용
     if (detailFeedbacksData.status !== "approved" && !viewer.isAuthor && !viewer.isAdmin) {
@@ -133,8 +116,10 @@ export default function FeedbackDetailPage({
 
       <section className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-300">
-            승인됨
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(detailFeedbacksData.status)}`}
+          >
+            {statusLabel(detailFeedbacksData.status)}
           </span>
           <span className="text-sm font-semibold text-amber-500">
             {ratingStars(detailFeedbacksData.rating)}
