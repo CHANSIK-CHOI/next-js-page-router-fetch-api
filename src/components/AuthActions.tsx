@@ -1,18 +1,25 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
 import { useSession } from "./useSession";
 
 export default function AuthActions() {
   const { session, supabaseClient } = useSession();
+  const router = useRouter();
 
   const handleLogout = async () => {
     if (!supabaseClient) return;
-    const { error } = await supabaseClient.auth.signOut({ scope: "global" });
-
-    if (error?.name === "AuthSessionMissingError") {
-      await supabaseClient.auth.signOut({ scope: "local" });
+    try {
+      const { error } = await supabaseClient.auth.signOut({ scope: "global" });
+      if (error?.name === "AuthSessionMissingError") {
+        await supabaseClient.auth.signOut({ scope: "local" });
+      }
+    } finally {
+      // 로그아웃 직후 서버 쿠키를 즉시 정리해서 SSR 권한 체크를 바로 반영한다.
+      await fetch("/api/auth/session", { method: "DELETE" });
+      await router.replace("/");
     }
   };
 
