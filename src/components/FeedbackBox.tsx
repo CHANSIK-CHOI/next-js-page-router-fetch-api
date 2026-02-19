@@ -24,7 +24,7 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
             {statusLabel(data.status)}
           </span>
           <span className="text-xs text-muted-foreground">
-            {data.created_at !== data.updated_at ? "등록" : "마지막 수정"} :{" "}
+            {data.created_at !== data.updated_at ? "마지막 수정" : "등록"} :{" "}
             {formatDateTime(data.updated_at)}
           </span>
         </div>

@@ -15,7 +15,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [isInitSessionComplete, setIsInitSessionComplete] = useState(false);
   const supabaseClient: SupabaseClient | null = getSupabaseClient();
-  const [role, setRole] = useState<UserRole["role"] | null>(null);
+  const [isAdminUi, setIsAdminUi] = useState(false);
   const [isRoleLoading, setIsRoleLoading] = useState(false);
   const syncedTokenRef = useRef<string | null>(null);
 
@@ -48,13 +48,13 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     const isSignUpComplete = sessionStorage.getItem("signUpCompleteAndSkipRoleSync") === "1";
     if (isSignUpComplete) {
       sessionStorage.removeItem("signUpCompleteAndSkipRoleSync");
-      setRole(null);
+      setIsAdminUi(false);
       setIsRoleLoading(false);
       return;
     }
 
     if (!session?.user?.id || !session.access_token) {
-      setRole(null);
+      setIsAdminUi(false);
       setIsRoleLoading(false);
       return;
     }
@@ -65,7 +65,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     if (cached) {
       try {
         const { role, ts } = JSON.parse(cached) as { role?: UserRole["role"] | null; ts?: number };
-        setRole(role ?? null);
+        setIsAdminUi(role === "admin");
         setIsRoleLoading(false);
 
         const isFresh = typeof ts === "number" && Date.now() - ts < CACHE_TTL;
@@ -95,14 +95,14 @@ export default function SessionProvider({ children }: SessionProviderProps) {
         throw new Error(message);
       }
 
-      setRole(payload.role);
+      setIsAdminUi(payload.role === "admin");
       sessionStorage.setItem(cacheKey, JSON.stringify({ role: payload.role, ts: Date.now() }));
     };
 
     syncUserRole()
       .catch((error) => {
         console.error(error);
-        setRole(null);
+        setIsAdminUi(false);
       })
       .finally(() => {
         setIsRoleLoading(false);
@@ -143,7 +143,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
 
   return (
     <SessionContext.Provider
-      value={{ session, supabaseClient, isInitSessionComplete, role, isRoleLoading }}
+      value={{ session, supabaseClient, isInitSessionComplete, isAdminUi, isRoleLoading }}
     >
       {children}
     </SessionContext.Provider>

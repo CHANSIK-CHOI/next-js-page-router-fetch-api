@@ -3,8 +3,8 @@ import { Button } from "@/components/ui";
 import { useSession } from "@/components/useSession";
 
 export default function MainPage() {
-  const { session, role, isRoleLoading } = useSession();
-  const isAdmin = role === "admin";
+  const { session, isAdminUi, isRoleLoading } = useSession();
+  const roleLabel = isRoleLoading ? "확인 중..." : isAdminUi ? "admin" : "reviewer";
   const userName =
     (typeof session?.user?.user_metadata?.name === "string" &&
       session.user.user_metadata.name.trim()) ||
@@ -37,7 +37,7 @@ export default function MainPage() {
               <Link href="/login">로그인</Link>
             </Button>
           )}
-          {!isRoleLoading && isAdmin && (
+          {!isRoleLoading && isAdminUi && (
             <Button asChild variant="outline">
               <Link href="/admin/feedback">관리자 검토 큐</Link>
             </Button>
@@ -60,9 +60,7 @@ export default function MainPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Permission Model
           </p>
-          <p className="mt-2 text-lg font-semibold text-foreground">
-            {isRoleLoading ? "확인 중..." : role ?? "reviewer"}
-          </p>
+          <p className="mt-2 text-lg font-semibold text-foreground">{roleLabel}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             역할 기반으로 관리자 UI와 개인 데이터 노출이 분기됩니다.
           </p>

@@ -1,4 +1,5 @@
 import type {
+  AdminReviewFeedback,
   ApprovedFeedback,
   RevisedPendingPreviewFeedback,
   RevisedPendingOwnerFeedback,
@@ -37,12 +38,16 @@ export const statusBadge = (status: string) => {
   if (status === "revised_pending") {
     return "bg-amber-500/15 text-amber-600 dark:text-amber-300";
   }
+  if (status === "rejected") {
+    return "bg-rose-500/15 text-rose-600 dark:text-rose-300";
+  }
   return "bg-slate-500/15 text-slate-600 dark:text-slate-300";
 };
 
 export const statusLabel = (status: string) => {
   if (status === "approved") return "승인됨";
   if (status === "revised_pending") return "승인 대기(수정됨)";
+  if (status === "rejected") return "반려됨";
   return "승인 대기";
 };
 
@@ -69,21 +74,34 @@ export const compareUpdatedAtDesc = (a: WithUpdatedAt, b: WithUpdatedAt) => {
   return bTime - aTime;
 };
 
-export const mergeFeedbackList = (
-  approved: ApprovedFeedback[],
-  revisedPreview: RevisedPendingPreviewFeedback[],
-  revisedMine: RevisedPendingOwnerFeedback[]
-): FeedbackListItem[] => {
+export const mergeFeedbackList = ({
+  approved,
+  revisedPreview,
+  revisedMine,
+  adminReview,
+}: {
+  approved: ApprovedFeedback[];
+  revisedPreview: RevisedPendingPreviewFeedback[];
+  revisedMine: RevisedPendingOwnerFeedback[];
+  adminReview: AdminReviewFeedback[];
+}): FeedbackListItem[] => {
   const mergedById = new Map<string, FeedbackListItem>();
 
   [...approved, ...revisedPreview].forEach((publicItem) => {
     mergedById.set(publicItem.id, publicItem);
   });
 
-  revisedMine.forEach((ownerItem) => {
-    // 같은 id가 있으면 preview를 owner full 데이터로 덮어쓴다.
-    mergedById.set(ownerItem.id, ownerItem);
-  });
+  if (adminReview.length === 0) {
+    revisedMine.forEach((ownerItem) => {
+      // 같은 id가 있으면 preview를 owner full 데이터로 덮어쓴다.
+      mergedById.set(ownerItem.id, ownerItem);
+    });
+  } else {
+    adminReview.forEach((adminItem) => {
+      // 같은 id가 있으면 preview를 owner full 데이터로 덮어쓴다.
+      mergedById.set(adminItem.id, adminItem);
+    });
+  }
 
   return Array.from(mergedById.values()).sort(compareUpdatedAtDesc);
 };

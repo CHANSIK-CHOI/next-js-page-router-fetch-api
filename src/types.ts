@@ -94,10 +94,22 @@ export type RevisedPendingOwnerFeedback = FeedbackBase & {
   tags: string[];
 };
 
+export type AdminReviewFeedback = FeedbackBase & {
+  status: "pending" | "approved" | "revised_pending" | "rejected";
+  isPreview: false;
+  summary: string;
+  strengths: string | null;
+  questions: string | null;
+  suggestions: string | null;
+  rating: number;
+  tags: string[];
+};
+
 export type FeedbackListItem =
   | ApprovedFeedback
   | RevisedPendingPreviewFeedback
-  | RevisedPendingOwnerFeedback;
+  | RevisedPendingOwnerFeedback
+  | AdminReviewFeedback;
 
 export type UserRole = {
   user_id: string; // Auth 유저의 UID
