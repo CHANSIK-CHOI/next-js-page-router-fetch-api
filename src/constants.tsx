@@ -1,6 +1,6 @@
 import type { LoginForm, SingUpForm } from "@/types";
 
-export const PLACEHOLDER_SRC = "https://placehold.co/100x100?text=Hello+World";
+export const PLACEHOLDER_SRC = "https://placehold.co/100x100.png?text=Hello+World";
 
 export const LOGIN_EMAIL_FORM: LoginForm = {
   login_email: "",

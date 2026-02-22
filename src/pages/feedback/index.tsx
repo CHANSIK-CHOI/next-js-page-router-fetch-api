@@ -5,7 +5,7 @@ import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/feed
 import { cn } from "@/lib/utils";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/useSession";
-import { formatDateTime, mergeFeedbackList, statusBadge, statusLabel } from "@/util";
+import { mergeFeedbackList } from "@/util";
 import { FeedbackBox } from "@/components";
 import { AdminReviewFeedback, RevisedPendingOwnerFeedback } from "@/types";
 import { useRouter } from "next/router";
@@ -116,7 +116,7 @@ export default function FeedbackBoardPage({
     return () => controller.abort();
   }, [isRoleLoading, isAdminUi, session?.access_token]);
 
-  // 로그인 시 본인이 작성한 게시물 중 "pending" 이나 "revised_pending"은 전체 데이터를 가져와 merge 하기
+  // 로그인 시 본인이 작성한 게시물 중 pending, revised_pending의 데이터를 가져와 list에 merge 하기
   useEffect(() => {
     if (!session?.access_token) {
       setOwnerPendingFeedbacks([]);
@@ -153,6 +153,7 @@ export default function FeedbackBoardPage({
     return () => controller.abort();
   }, [session?.access_token]);
 
+  // 로그인 시 admin role 유저일 때 게시물 중 pending, revised_pending, rejected의 데이터를 가져와 list에 merge 하기
   useEffect(() => {
     if (isRoleLoading || !isAdminUi || !session?.access_token) {
       setAdminReviewFeedbacks([]);
@@ -267,45 +268,6 @@ export default function FeedbackBoardPage({
           return <FeedbackBox data={item} key={item.id} />;
         })}
       </section>
-
-      {isAdminUi && (
-        <section className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-lg font-semibold text-foreground">관리자 검토 큐</h3>
-            <span className="text-sm text-muted-foreground">{adminReviewFeedbacks.length}건</span>
-          </div>
-
-          {adminReviewFeedbacks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">검토할 비승인 피드백이 없습니다.</p>
-          ) : (
-            <div className="grid gap-3">
-              {adminReviewFeedbacks.map((item) => (
-                <article
-                  key={`admin-review-${item.id}`}
-                  className="rounded-xl border border-border/60 bg-white/70 p-4 dark:border-white/10 dark:bg-neutral-900/60"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge(item.status)}`}
-                    >
-                      {statusLabel(item.status)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      마지막 수정: {formatDateTime(item.updated_at)}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-foreground">{item.summary}</p>
-                  <div className="mt-3">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/feedback/${item.id}`}>상세 보기</Link>
-                    </Button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
     </div>
   );
 }

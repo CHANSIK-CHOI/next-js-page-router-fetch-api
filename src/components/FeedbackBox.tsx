@@ -1,7 +1,14 @@
 import { PLACEHOLDER_SRC } from "@/constants";
 import { cn } from "@/lib/utils";
 import { FeedbackListItem } from "@/types";
-import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/util";
+import {
+  formatDateTime,
+  isSvgImageSrc,
+  normalizeExternalImageSrc,
+  ratingStars,
+  statusBadge,
+  statusLabel,
+} from "@/util";
 import Image from "next/image";
 import React from "react";
 import { Button } from "./ui";
@@ -13,6 +20,7 @@ type FeedbackBoxProps = {
 
 export default function FeedbackBox({ data }: FeedbackBoxProps) {
   const isPreview = data.isPreview;
+  const avatarSrc = normalizeExternalImageSrc(data.avatar_url || PLACEHOLDER_SRC);
 
   return (
     <article className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70">
@@ -37,11 +45,11 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
             <Image
-              src={data.avatar_url || PLACEHOLDER_SRC}
+              src={avatarSrc}
               alt={`${data.display_name} avatar`}
               width={40}
               height={40}
-              unoptimized={!data.avatar_url}
+              unoptimized={isSvgImageSrc(avatarSrc)}
               className="h-full w-full object-cover"
             />
           </div>

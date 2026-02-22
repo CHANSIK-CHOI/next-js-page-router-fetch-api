@@ -1,101 +1,76 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/router";
-import { Button, useAlert } from "@/components/ui";
-import { useSession } from "@/components/useSession";
+import { Button } from "@/components/ui";
 import { PLACEHOLDER_SRC } from "@/constants";
-import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/util";
-import type { AdminReviewFeedbackWithEmail } from "@/types";
+import {
+  formatDateTime,
+  isSvgImageSrc,
+  normalizeExternalImageSrc,
+  ratingStars,
+  statusBadge,
+  statusLabel,
+} from "@/util";
+import type { FeedbackPrivateRow, SupabaseError } from "@/types";
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
+import { getAuthContextByAccessToken } from "@/lib/auth.server";
 
 type ViewType = "all" | "pending";
 
-const STATUS_BY_VIEW: Record<ViewType, string> = {
-  all: "approved,pending,revised_pending,rejected",
-  pending: "pending,revised_pending",
-};
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
+  try {
+    const accessToken = context.req.cookies["sb-access-token"];
+    if (!accessToken) throw new Error("Access Token Error");
 
-export default function AdminFeedbackPage() {
-  const router = useRouter();
-  const { openAlert } = useAlert();
-  const { session, isAdminUi, isRoleLoading } = useSession();
-  const [viewType, setViewType] = useState<ViewType>("all");
-  const [feedbacks, setFeedbacks] = useState<AdminReviewFeedbackWithEmail[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const hasBlockedRef = useRef(false);
+    const { context: authContext, error: authError } =
+      await getAuthContextByAccessToken(accessToken);
+    if (authError || !authContext) throw new Error("Auth Context Error");
 
-  const statusQuery = useMemo(() => {
-    return new URLSearchParams({
-      status: STATUS_BY_VIEW[viewType],
-    }).toString();
-  }, [viewType]);
-
-  useEffect(() => {
-    if (isRoleLoading || isAdminUi || hasBlockedRef.current) return;
-
-    hasBlockedRef.current = true;
-    openAlert({
-      description: "관리자만 접근 가능한 페이지입니다.",
-      onOk: () => {
-        router.replace("/feedback");
-      },
-    });
-  }, [isRoleLoading, isAdminUi, openAlert, router]);
-
-  useEffect(() => {
-    if (isRoleLoading || !isAdminUi || !session?.access_token) {
-      setFeedbacks([]);
-      setLoadError(null);
-      setIsLoading(false);
-      return;
+    if (!authContext.isAdmin) {
+      return { notFound: true };
     }
 
-    const controller = new AbortController();
+    const {
+      data: feedbackData,
+      error,
+    }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
+      await authContext.supabaseServer
+        .from("feedbacks")
+        .select("*")
+        .order("updated_at", { ascending: false });
 
-    const loadFeedbacks = async () => {
-      setIsLoading(true);
-      setLoadError(null);
+    if (error || !feedbackData) {
+      return {
+        props: { feedbackData: [], alertMessage: "데이터를 정상적으로 불러올 수 없습니다." },
+      };
+    }
 
-      try {
-        const response = await fetch(`/api/admin/feedbacks?${statusQuery}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          signal: controller.signal,
-        });
-
-        const result: { data: AdminReviewFeedbackWithEmail[] | null; error: string | null } =
-          await response.json().catch(() => ({}));
-
-        if (!response.ok || result.error) {
-          throw new Error(result.error ?? "Failed to fetch admin feedbacks");
-        }
-
-        if (controller.signal.aborted) return;
-        setFeedbacks(result.data ?? []);
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        const message =
-          error instanceof Error ? error.message : "피드백 데이터를 불러오지 못했습니다.";
-        setLoadError(message);
-        setFeedbacks([]);
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
+    return {
+      props: { feedbackData },
     };
+  } catch (error) {
+    console.error(error);
+    return { notFound: true };
+  }
+};
 
-    loadFeedbacks();
+export default function AdminFeedbackPage({
+  feedbackData,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const [viewType, setViewType] = useState<ViewType>("all");
 
-    return () => controller.abort();
-  }, [isRoleLoading, isAdminUi, session?.access_token, statusQuery]);
+  const feedbackLists =
+    viewType === "pending"
+      ? feedbackData.filter(
+          (item) => item.status === "pending" || item.status === "revised_pending"
+        )
+      : feedbackData;
 
-  const pendingCount = feedbacks.filter((item) => item.status === "pending").length;
-  const revisedPendingCount = feedbacks.filter((item) => item.status === "revised_pending").length;
-  const rejectedCount = feedbacks.filter((item) => item.status === "rejected").length;
+  const pendingCount = feedbackData.filter((item) => item.status === "pending").length;
+  const revisedPendingCount = feedbackData.filter(
+    (item) => item.status === "revised_pending"
+  ).length;
+  const rejectedCount = feedbackData.filter((item) => item.status === "rejected").length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -138,7 +113,7 @@ export default function AdminFeedbackPage() {
             전체
           </p>
           <strong className="mt-2 block text-2xl font-semibold text-foreground">
-            {feedbacks.length}
+            {feedbackData.length}
           </strong>
         </div>
         <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
@@ -168,27 +143,16 @@ export default function AdminFeedbackPage() {
       </section>
 
       <section className="grid gap-4">
-        {isLoading && (
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-neutral-900/70">
-            데이터를 불러오는 중입니다...
-          </div>
-        )}
-
-        {!isLoading && loadError && (
-          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-6 text-sm text-rose-600 dark:text-rose-300">
-            {loadError}
-          </div>
-        )}
-
-        {!isLoading && !loadError && feedbacks.length === 0 && (
+        {feedbackLists.length === 0 && (
           <div className="rounded-2xl border border-border/60 bg-background/80 p-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-neutral-900/70">
             검토할 피드백이 없습니다.
           </div>
         )}
 
-        {!isLoading &&
-          !loadError &&
-          feedbacks.map((item) => (
+        {feedbackLists.map((item) => {
+          const avatarSrc = normalizeExternalImageSrc(item.avatar_url || PLACEHOLDER_SRC);
+
+          return (
             <article
               key={item.id}
               className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70"
@@ -213,11 +177,11 @@ export default function AdminFeedbackPage() {
                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                   <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
                     <Image
-                      src={item.avatar_url || PLACEHOLDER_SRC}
+                      src={avatarSrc}
                       alt={`${item.display_name} avatar`}
                       width={40}
                       height={40}
-                      unoptimized={!item.avatar_url}
+                      unoptimized={isSvgImageSrc(avatarSrc)}
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -257,7 +221,8 @@ export default function AdminFeedbackPage() {
                 </div>
               </div>
             </article>
-          ))}
+          );
+        })}
       </section>
     </div>
   );

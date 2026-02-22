@@ -56,13 +56,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { statuses, error: statusError } = parseStatusQuery(req.query.status);
+  console.log("statuses -----------> ", statuses);
+  console.log("statusError -----------> ", statusError);
   if (statusError || !statuses) {
     return res.status(400).json({ data: null, error: statusError ?? "Invalid status query" });
   }
 
   try {
-    const { context, error: authError, status: authStatus } =
-      await getAuthContextByAccessToken(accessToken);
+    const {
+      context,
+      error: authError,
+      status: authStatus,
+    } = await getAuthContextByAccessToken(accessToken);
     if (authError || !context) {
       return res.status(authStatus).json({ data: null, error: authError ?? "Unauthorized" });
     }

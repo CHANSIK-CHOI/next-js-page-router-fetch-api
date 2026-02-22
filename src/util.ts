@@ -55,6 +55,28 @@ export const ratingStars = (rating: number) => {
   return "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(rating);
 };
 
+const FILE_EXTENSION_PATTERN = /\.[a-z0-9]+$/i;
+
+export const normalizeExternalImageSrc = (src: string) => {
+  try {
+    const url = new URL(src);
+    if (url.hostname !== "placehold.co") return src;
+    if (FILE_EXTENSION_PATTERN.test(url.pathname)) return src;
+    url.pathname = `${url.pathname}.png`;
+    return url.toString();
+  } catch {
+    return src;
+  }
+};
+
+export const isSvgImageSrc = (src: string) => {
+  try {
+    return new URL(src).pathname.toLowerCase().endsWith(".svg");
+  } catch {
+    return src.toLowerCase().split("?")[0].endsWith(".svg");
+  }
+};
+
 type WithUpdatedAt = { updated_at?: string | null };
 
 export const compareUpdatedAtDesc = (a: WithUpdatedAt, b: WithUpdatedAt) => {

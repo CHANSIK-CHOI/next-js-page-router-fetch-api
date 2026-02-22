@@ -3,7 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui";
 import { PLACEHOLDER_SRC } from "@/constants";
-import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/util";
+import {
+  formatDateTime,
+  isSvgImageSrc,
+  normalizeExternalImageSrc,
+  ratingStars,
+  statusBadge,
+  statusLabel,
+} from "@/util";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getDetailFeedbacksApi } from "@/lib/feedback.server";
 import type { FeedbackPublicRow, UserRole } from "@/types";
@@ -75,6 +82,8 @@ export default function FeedbackDetailPage({
   detailFeedbacksData,
   viewer,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const avatarSrc = normalizeExternalImageSrc(detailFeedbacksData.avatar_url || PLACEHOLDER_SRC);
+
   return (
     <div className="flex flex-col gap-6">
       <section className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
@@ -91,11 +100,6 @@ export default function FeedbackDetailPage({
               {viewer.isAuthor && (
                 <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:text-blue-300">
                   작성자
-                </span>
-              )}
-              {viewer.role && (
-                <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-semibold text-violet-700 dark:text-violet-300">
-                  role: {viewer.role}
                 </span>
               )}
             </div>
@@ -133,11 +137,11 @@ export default function FeedbackDetailPage({
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
               <Image
-                src={detailFeedbacksData.avatar_url || PLACEHOLDER_SRC}
+                src={avatarSrc}
                 alt={`${detailFeedbacksData.display_name} avatar`}
                 width={48}
                 height={48}
-                unoptimized={!detailFeedbacksData.avatar_url}
+                unoptimized={isSvgImageSrc(avatarSrc)}
                 className="h-full w-full object-cover"
               />
             </div>
