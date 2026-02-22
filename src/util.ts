@@ -59,12 +59,19 @@ const FILE_EXTENSION_PATTERN = /\.[a-z0-9]+$/i;
 
 export const normalizeExternalImageSrc = (src: string) => {
   try {
-    const url = new URL(src);
-    if (url.hostname !== "placehold.co") return src;
-    if (FILE_EXTENSION_PATTERN.test(url.pathname)) return src;
-    url.pathname = `${url.pathname}.png`;
-    return url.toString();
+    const parsedUrl = new URL(src);
+
+    const isPlaceholdImage = parsedUrl.hostname === "placehold.co";
+    if (!isPlaceholdImage) return src;
+
+    const hasFileExtension = FILE_EXTENSION_PATTERN.test(parsedUrl.pathname);
+    if (hasFileExtension) return src;
+
+    // placehold.co URL without extension can fail in some rendering paths.
+    parsedUrl.pathname = `${parsedUrl.pathname}.png`;
+    return parsedUrl.toString();
   } catch {
+    // If src is not a valid URL, leave it as-is.
     return src;
   }
 };

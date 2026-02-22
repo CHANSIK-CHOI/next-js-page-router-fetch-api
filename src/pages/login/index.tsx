@@ -7,6 +7,7 @@ import { LoginForm } from "@/types";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
+import { replaceSafely } from "@/lib/router.client";
 
 const getLoginErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
@@ -56,7 +57,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.replace(nextPath);
+    await replaceSafely(router, nextPath);
   };
 
   const inputBase =

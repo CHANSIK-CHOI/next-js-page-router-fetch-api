@@ -4,6 +4,7 @@ import { Button, useAlert } from "@/components/ui";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
 import { useSession } from "@/components/useSession";
+import { replaceSafely } from "@/lib/router.client";
 
 type ResetPassword = {
   reset_password: string;
@@ -70,7 +71,7 @@ export default function PasswordResetPage() {
       description: "비밀번호가 변경되었습니다.\n다시 로그인해주세요.",
       onOk: () => {
         supabaseClient.auth.signOut();
-        router.replace("/login");
+        void replaceSafely(router, "/login");
       },
     });
   };

@@ -12,41 +12,12 @@ import {
   statusLabel,
 } from "@/util";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
-import { getDetailFeedbacksApi } from "@/lib/feedback.server";
-import type { FeedbackPublicRow, UserRole } from "@/types";
+import { getDetailFeedbacksApi, getEmailApi } from "@/lib/feedback.server";
+import type { FeedbackPublicRow } from "@/types";
 import { getAuthContextByAccessToken } from "@/lib/auth.server";
 
-const HOME_REDIRECT = { redirect: { destination: "/", permanent: false } } as const;
-
-type ViewerAccess = {
-  userId: string | null;
-  isAuthor: boolean;
-  role: UserRole["role"] | null;
-  isAdmin: boolean;
-};
-
-const getViewerAccess = async (
-  accessToken: string | undefined,
-  authorId: string
-): Promise<ViewerAccess> => {
-  const fallback: ViewerAccess = {
-    userId: null,
-    isAuthor: false,
-    role: null,
-    isAdmin: false,
-  };
-
-  if (!accessToken) return fallback;
-
-  const { context } = await getAuthContextByAccessToken(accessToken);
-  if (!context) return fallback;
-
-  return {
-    userId: context.userId,
-    isAuthor: context.userId === authorId,
-    role: context.role,
-    isAdmin: context.isAdmin,
-  };
+type FeedbackDetailData = FeedbackPublicRow & {
+  email?: string;
 };
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
@@ -57,20 +28,40 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 
   try {
     const detailFeedbacksData: FeedbackPublicRow | null = await getDetailFeedbacksApi(id);
-    if (!detailFeedbacksData) {
-      return { notFound: true };
-    }
+    if (!detailFeedbacksData) throw new Error("detailFeedbacksData is blank");
 
     const accessToken = context.req.cookies["sb-access-token"];
-    const viewer = await getViewerAccess(accessToken, detailFeedbacksData.author_id);
+    let isAuthor = false;
+    let isAdmin = false;
+    let mergedDetailData: FeedbackDetailData = detailFeedbacksData;
 
-    // approved가 아니면 작성자/관리자만 접근 허용
-    if (detailFeedbacksData.status !== "approved" && !viewer.isAuthor && !viewer.isAdmin) {
-      return HOME_REDIRECT;
+    if (!accessToken) {
+      if (detailFeedbacksData.status !== "approved") return { notFound: true };
+    } else {
+      const { context: authContext, error: authError } =
+        await getAuthContextByAccessToken(accessToken);
+      if (authError || !authContext) throw new Error("Auth Context Error");
+
+      isAdmin = authContext.isAdmin;
+      isAuthor = authContext.userId === detailFeedbacksData.author_id;
+
+      // approved가 아니면 작성자/관리자만 접근 허용
+      if (detailFeedbacksData.status !== "approved" && !isAuthor && !isAdmin)
+        return { notFound: true };
+
+      if (isAuthor || isAdmin) {
+        const email = await getEmailApi(id).catch(() => null);
+        if (email) {
+          mergedDetailData = {
+            ...detailFeedbacksData,
+            email,
+          };
+        }
+      }
     }
 
     return {
-      props: { detailFeedbacksData, viewer },
+      props: { detailFeedbacksData: mergedDetailData, isAuthor, isAdmin },
     };
   } catch (error) {
     console.error(error);
@@ -80,7 +71,8 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 
 export default function FeedbackDetailPage({
   detailFeedbacksData,
-  viewer,
+  isAuthor,
+  isAdmin,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const avatarSrc = normalizeExternalImageSrc(detailFeedbacksData.avatar_url || PLACEHOLDER_SRC);
 
@@ -96,8 +88,11 @@ export default function FeedbackDetailPage({
               {detailFeedbacksData.summary}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <p className="text-sm text-muted-foreground">ID: {detailFeedbacksData.id}</p>
-              {viewer.isAuthor && (
+              {(isAuthor || isAdmin) && (
+                <p className="text-sm text-muted-foreground">Email: {detailFeedbacksData.email}</p>
+              )}
+
+              {isAuthor && (
                 <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:text-blue-300">
                   작성자
                 </span>
@@ -106,13 +101,23 @@ export default function FeedbackDetailPage({
           </div>
           <div className="flex gap-2">
             <Button asChild variant="outline">
-              <Link href="/feedback">목록으로</Link>
+              <Link href="/feedback">목록으로 이동하기</Link>
             </Button>
-            {viewer.isAuthor && <Button type="button">수정 요청</Button>}
-            {viewer.isAdmin &&
+            {isAuthor && <Button type="button">수정하기</Button>}
+            {isAdmin && (
+              <Button type="button" variant="outline">
+                비공개
+              </Button>
+            )}
+            {isAdmin &&
               (detailFeedbacksData.status === "pending" ||
                 detailFeedbacksData.status === "revised_pending") && (
-                <Button type="button">승인하기</Button>
+                <>
+                  <Button type="button" variant="outline">
+                    반려
+                  </Button>
+                  <Button type="button">승인</Button>
+                </>
               )}
           </div>
         </div>
@@ -154,6 +159,17 @@ export default function FeedbackDetailPage({
               </span>
             )}
           </div>
+          {detailFeedbacksData.email && (
+            <p className="text-sm text-muted-foreground">
+              작성자 이메일:{" "}
+              <a
+                href={`mailto:${detailFeedbacksData.email}`}
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                {detailFeedbacksData.email}
+              </a>
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             {detailFeedbacksData.tags.map((tag) => (
               <span

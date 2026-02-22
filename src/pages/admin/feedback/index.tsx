@@ -1,21 +1,11 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui";
-import { PLACEHOLDER_SRC } from "@/constants";
-import {
-  formatDateTime,
-  isSvgImageSrc,
-  normalizeExternalImageSrc,
-  ratingStars,
-  statusBadge,
-  statusLabel,
-} from "@/util";
-import type { FeedbackPrivateRow, SupabaseError } from "@/types";
+import { Button, Select } from "@/components/ui";
+import { compareUpdatedAtDesc } from "@/util";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getAuthContextByAccessToken } from "@/lib/auth.server";
-
-type ViewType = "all" | "pending";
+import { getAdminAllFeedbacksApi } from "@/lib/feedback.server";
+import { AdminFeedbackBox } from "@/components";
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   try {
@@ -26,24 +16,11 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
       await getAuthContextByAccessToken(accessToken);
     if (authError || !authContext) throw new Error("Auth Context Error");
 
-    if (!authContext.isAdmin) {
-      return { notFound: true };
-    }
+    const { isAdmin } = authContext;
+    if (!isAdmin) return { notFound: true };
 
-    const {
-      data: feedbackData,
-      error,
-    }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
-      await authContext.supabaseServer
-        .from("feedbacks")
-        .select("*")
-        .order("updated_at", { ascending: false });
-
-    if (error || !feedbackData) {
-      return {
-        props: { feedbackData: [], alertMessage: "데이터를 정상적으로 불러올 수 없습니다." },
-      };
-    }
+    const feedbackData = await getAdminAllFeedbacksApi();
+    if (!feedbackData) throw new Error("feedbackData is blank");
 
     return {
       props: { feedbackData },
@@ -57,14 +34,21 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 export default function AdminFeedbackPage({
   feedbackData,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const [viewType, setViewType] = useState<ViewType>("all");
+  const [viewType, setViewType] = useState<"all" | "pending">("all");
+  const [sortType, setSortType] = useState<"updated_desc" | "updated_asc">("updated_desc");
 
-  const feedbackLists =
-    viewType === "pending"
-      ? feedbackData.filter(
-          (item) => item.status === "pending" || item.status === "revised_pending"
-        )
-      : feedbackData;
+  const feedbackLists = useMemo(() => {
+    const filteredData =
+      viewType === "pending"
+        ? feedbackData.filter(
+            (item) => item.status === "pending" || item.status === "revised_pending"
+          )
+        : feedbackData;
+
+    return [...filteredData].sort((a, b) =>
+      sortType === "updated_desc" ? compareUpdatedAtDesc(a, b) : compareUpdatedAtDesc(b, a)
+    );
+  }, [feedbackData, sortType, viewType]);
 
   const pendingCount = feedbackData.filter((item) => item.status === "pending").length;
   const revisedPendingCount = feedbackData.filter(
@@ -85,24 +69,34 @@ export default function AdminFeedbackPage({
               관리자 전용 목록입니다. 이메일 포함 전체 데이터를 확인할 수 있습니다.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <Button asChild variant="outline">
-              <Link href="/feedback">공개 보드</Link>
+              <Link href="/feedback">공개 목록으로 이동하기</Link>
             </Button>
-            <Button
-              type="button"
-              variant={viewType === "all" ? "default" : "outline"}
-              onClick={() => setViewType("all")}
+            <Select
+              value={viewType}
+              onValueChange={(value: "all" | "pending") => setViewType(value)}
             >
-              전체 보기
-            </Button>
-            <Button
-              type="button"
-              variant={viewType === "pending" ? "default" : "outline"}
-              onClick={() => setViewType("pending")}
+              <Select.Trigger className="w-[140px] bg-background">
+                <Select.Value placeholder="보기 선택" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="all">전체 보기</Select.Item>
+                <Select.Item value="pending">승인 대기만</Select.Item>
+              </Select.Content>
+            </Select>
+            <Select
+              value={sortType}
+              onValueChange={(value: "updated_desc" | "updated_asc") => setSortType(value)}
             >
-              승인 대기만
-            </Button>
+              <Select.Trigger className="w-[170px] bg-background">
+                <Select.Value placeholder="정렬 선택" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="updated_desc">최신 수정순</Select.Item>
+                <Select.Item value="updated_asc">오래된 수정순</Select.Item>
+              </Select.Content>
+            </Select>
           </div>
         </div>
       </section>
@@ -149,80 +143,9 @@ export default function AdminFeedbackPage({
           </div>
         )}
 
-        {feedbackLists.map((item) => {
-          const avatarSrc = normalizeExternalImageSrc(item.avatar_url || PLACEHOLDER_SRC);
-
-          return (
-            <article
-              key={item.id}
-              className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(item.status)}`}
-                  >
-                    {statusLabel(item.status)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    마지막 수정: {formatDateTime(item.updated_at)}
-                  </span>
-                </div>
-                <span className="text-sm font-semibold text-amber-500">
-                  {ratingStars(item.rating)}
-                </span>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
-                    <Image
-                      src={avatarSrc}
-                      alt={`${item.display_name} avatar`}
-                      width={40}
-                      height={40}
-                      unoptimized={isSvgImageSrc(avatarSrc)}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <span className="text-base font-semibold text-foreground">
-                    {item.display_name}
-                  </span>
-                  {item.is_company_public && item.company_name && (
-                    <span className="rounded-full border border-border/60 px-2.5 py-0.5 text-xs">
-                      {item.company_name}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">작성자 이메일: {item.email}</p>
-                <p className="text-base text-foreground">{item.summary}</p>
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/feedback/${item.id}`}>상세 보기</Link>
-                </Button>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" size="sm">
-                    비공개
-                  </Button>
-                  {item.status === "pending" || item.status === "revised_pending" ? (
-                    <>
-                      <Button type="button" variant="outline" size="sm">
-                        반려
-                      </Button>
-                      <Button type="button" size="sm">
-                        승인
-                      </Button>
-                    </>
-                  ) : (
-                    <></>
-                  )}
-                </div>
-              </div>
-            </article>
-          );
-        })}
+        {feedbackLists.map((item) => (
+          <AdminFeedbackBox data={item} key={item.id} />
+        ))}
       </section>
     </div>
   );

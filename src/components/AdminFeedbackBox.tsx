@@ -1,6 +1,8 @@
-import { PLACEHOLDER_SRC } from "@/constants";
-import { cn } from "@/lib/utils";
-import { FeedbackListItem } from "@/types";
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui";
+import { FeedbackPrivateRow } from "@/types";
 import {
   formatDateTime,
   isSvgImageSrc,
@@ -9,17 +11,12 @@ import {
   statusBadge,
   statusLabel,
 } from "@/util";
-import Image from "next/image";
-import React from "react";
-import { Button } from "./ui";
-import Link from "next/link";
+import { PLACEHOLDER_SRC } from "@/constants";
 
-type FeedbackBoxProps = {
-  data: FeedbackListItem;
+type AdminFeedbackBoxProps = {
+  data: FeedbackPrivateRow;
 };
-
-export default function FeedbackBox({ data }: FeedbackBoxProps) {
-  const isPreview = data.isPreview;
+export default function AdminFeedbackBox({ data }: AdminFeedbackBoxProps) {
   const avatarSrc = normalizeExternalImageSrc(data.avatar_url || PLACEHOLDER_SRC);
 
   return (
@@ -38,12 +35,10 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
             : {formatDateTime(data.updated_at)}
           </span>
         </div>
-        {!isPreview && (
-          <span className="text-sm font-semibold text-amber-500">{ratingStars(data.rating)}</span>
-        )}
+        <span className="text-sm font-semibold text-amber-500">{ratingStars(data.rating)}</span>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
             <Image
@@ -63,47 +58,29 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
           )}
           <span className="text-xs">수정 {data.revision_count}회</span>
         </div>
-        <div
-          className={cn("flex flex-col gap-3", {
-            "rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4": isPreview,
-          })}
-        >
-          <p
-            className={cn("text-base text-foreground", {
-              "blur-sm select-none": isPreview,
-            })}
-          >
-            {isPreview ? "수정된 내용은 승인 후 공개됩니다." : data.summary}
-          </p>
-          {isPreview && (
-            <p className="text-xs font-semibold text-amber-600 dark:text-amber-300">
-              이미 승인된 피드백이 수정된 경우 관리자의 승인을 한번 더 받아야 공개가 됩니다.
-            </p>
-          )}
-        </div>
-        <div
-          className={cn("flex flex-wrap gap-2", {
-            "blur-sm select-none": isPreview,
-          })}
-        >
-          {!isPreview &&
-            data.tags.map((tag) => (
-              <span
-                key={`${data.id}-${tag}`}
-                className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
-              >
-                #{tag}
-              </span>
-            ))}
-        </div>
+        <p className="text-sm text-muted-foreground">작성자 이메일: {data.email}</p>
+        <p className="text-base text-foreground">{data.summary}</p>
       </div>
 
-      <div className={cn("mt-4 flex flex-wrap items-center gap-3 justify-between")}>
-        {!isPreview && (
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/feedback/${data.id}`}>상세 보기</Link>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/feedback/${data.id}`}>상세 보기</Link>
+        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm">
+            비공개
           </Button>
-        )}
+          {(data.status === "pending" || data.status === "revised_pending") && (
+            <>
+              <Button type="button" variant="outline" size="sm">
+                반려
+              </Button>
+              <Button type="button" size="sm">
+                승인
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </article>
   );

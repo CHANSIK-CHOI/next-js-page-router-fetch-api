@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Button, useAlert } from "@/components/ui";
+import { Button, Select, useAlert } from "@/components/ui";
 import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/feedback.server";
 import { cn } from "@/lib/utils";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/useSession";
-import { mergeFeedbackList } from "@/util";
+import { compareUpdatedAtDesc, mergeFeedbackList } from "@/util";
 import { FeedbackBox } from "@/components";
 import { AdminReviewFeedback, RevisedPendingOwnerFeedback } from "@/types";
 import { useRouter } from "next/router";
+import { pushSafely } from "@/lib/router.client";
 
 const MINE_STATUS_QUERY = new URLSearchParams({
   status: "pending,revised_pending",
@@ -49,6 +50,7 @@ export default function FeedbackBoardPage({
   const { openAlert } = useAlert();
   const { session, isAdminUi, isRoleLoading } = useSession();
   const [pendingCount, setPendingCount] = useState<number | null>(null);
+  const [sortType, setSortType] = useState<"updated_desc" | "updated_asc">("updated_desc");
   const [ownerPendingFeedbacks, setOwnerPendingFeedbacks] = useState<RevisedPendingOwnerFeedback[]>(
     []
   );
@@ -63,6 +65,11 @@ export default function FeedbackBoardPage({
       }),
     [approvedFeedbacksData, revisedPendingPreviewData, ownerPendingFeedbacks, adminReviewFeedbacks]
   );
+  const sortedFeedbackData = useMemo(() => {
+    return [...feedbackData].sort((a, b) =>
+      sortType === "updated_desc" ? compareUpdatedAtDesc(a, b) : compareUpdatedAtDesc(b, a)
+    );
+  }, [feedbackData, sortType]);
 
   useEffect(() => {
     if (alertMessage && !hasAlertedRef.current) {
@@ -196,26 +203,38 @@ export default function FeedbackBoardPage({
       openAlert({
         description: "피드백을 남기기 위해서는 로그인을 해야합니다.",
         onOk: () => {
-          router.push("/login?next=/feedback/new");
+          void pushSafely(router, "/login?next=/feedback/new");
         },
       });
       return;
     }
 
-    router.push("/feedback/new");
+    void pushSafely(router, "/feedback/new");
   };
 
   return (
     <div className="flex flex-col gap-6">
       <section className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-semibold text-foreground">인터뷰어 피드백 보드</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               승인된 피드백은 공개 보드에 노출되고, 승인 대기 중인 피드백은 상태 배지가 표시됩니다.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Select
+              value={sortType}
+              onValueChange={(value: "updated_desc" | "updated_asc") => setSortType(value)}
+            >
+              <Select.Trigger className="w-[170px] bg-background">
+                <Select.Value placeholder="정렬 선택" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="updated_desc">최신 수정순</Select.Item>
+                <Select.Item value="updated_asc">오래된 수정순</Select.Item>
+              </Select.Content>
+            </Select>
             <Button variant="outline" onClick={handleAddFeedback}>
               피드백 남기기
               {/* <Link href="/feedback/new">피드백 남기기</Link> */}
@@ -264,7 +283,7 @@ export default function FeedbackBoardPage({
       </section>
 
       <section className="grid gap-4">
-        {feedbackData.map((item) => {
+        {sortedFeedbackData.map((item) => {
           return <FeedbackBox data={item} key={item.id} />;
         })}
       </section>

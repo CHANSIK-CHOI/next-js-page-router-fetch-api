@@ -1,5 +1,6 @@
 import type {
   ApprovedFeedback,
+  FeedbackPrivateRow,
   FeedbackPublicBase,
   FeedbackPublicRow,
   RevisedPendingPreviewFeedback,
@@ -99,3 +100,36 @@ export const getDetailFeedbacksApi = async (
 
   return data;
 };
+
+export const getEmailApi = async (id: FeedbackPublicBase["id"]): Promise<string | null> => {
+  const supabaseServer = getSupabaseServer();
+  if (!supabaseServer) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  const { data, error }: { data: { email: string } | null; error: SupabaseError } =
+    await supabaseServer.from("feedbacks").select("email").eq("id", id).maybeSingle();
+  if (error) {
+    throw new Error("Failed fetch getEmailApi");
+  }
+
+  return data?.email ?? null;
+};
+
+export const getAdminAllFeedbacksApi = async (): Promise<FeedbackPrivateRow[] | null> => {
+  const supabaseServer = getSupabaseServer();
+  if (!supabaseServer) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
+    await supabaseServer.from("feedbacks").select("*").order("updated_at", { ascending: false });
+
+  if (error) {
+    throw new Error("Failed fetch getAdminAllFeedbacksApi");
+  }
+
+  return data;
+};
+
+// export const getEmailApi = async () : Promise<FeedbackPublicBase[""]>

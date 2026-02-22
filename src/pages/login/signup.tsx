@@ -7,6 +7,7 @@ import { EMAIL_PATTERN, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
+import { replaceSafely } from "@/lib/router.client";
 
 const getSignupErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
@@ -86,7 +87,7 @@ export default function SignupPage() {
       openAlert({
         description: "회원가입이 완료되었습니다. 로그인해주세요.",
         onOk: () => {
-          router.replace("/login");
+          void replaceSafely(router, "/login");
         },
       });
       return;
@@ -95,7 +96,7 @@ export default function SignupPage() {
     openAlert({
       description: "이메일로 인증 링크가 전송되었습니다. 확인 후 로그인 해주세요.",
       onOk: () => {
-        router.replace("/login");
+        void replaceSafely(router, "/login");
       },
     });
   };
