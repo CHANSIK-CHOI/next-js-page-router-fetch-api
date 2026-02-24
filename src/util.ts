@@ -6,7 +6,6 @@ import type {
   FeedbackListItem,
 } from "@/types";
 import { User } from "@supabase/supabase-js";
-import { PLACEHOLDER_SRC } from "./constants";
 
 export const formatPhoneNumber = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);

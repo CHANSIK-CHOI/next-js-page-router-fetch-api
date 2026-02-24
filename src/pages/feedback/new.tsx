@@ -46,7 +46,7 @@ export default function FeedbackNewPage() {
       },
       { keepDirtyValues: true }
     );
-  }, [sessionUserName, sessionAvatar]);
+  }, [getValues, reset, sessionUserName, sessionAvatar]);
 
   const avatarValue = useWatch({ control, name: "avatar" });
   const isCompanyPublic = useWatch({
@@ -243,6 +243,7 @@ export default function FeedbackNewPage() {
                   value={value}
                   className="sr-only"
                   {...register("rating", {
+                    setValueAs: (v) => Number(v),
                     validate: (v) => v > 0 || "평점을 선택해주세요.",
                   })}
                 />
