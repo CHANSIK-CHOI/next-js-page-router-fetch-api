@@ -68,7 +68,7 @@ export default function AdminFeedbackBox({ data }: AdminFeedbackBoxProps) {
         </Button>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm">
-            비공개
+            삭제
           </Button>
           {(data.status === "pending" || data.status === "revised_pending") && (
             <>

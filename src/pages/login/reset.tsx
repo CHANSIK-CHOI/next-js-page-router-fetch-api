@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
 import { useSession } from "@/components/useSession";
 import { replaceSafely } from "@/lib/router.client";
+import { inputBaseStyle } from "@/constants";
 
 type ResetPassword = {
   reset_password: string;
@@ -76,9 +77,6 @@ export default function PasswordResetPage() {
     });
   };
 
-  const inputBase =
-    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring read-only:cursor-not-allowed read-only:bg-muted/40 read-only:text-muted-foreground dark:border-white/10 dark:read-only:bg-white/5";
-
   return (
     <div className="mx-auto w-full max-w-xl">
       <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 p-7 shadow-lg dark:border-white/10 dark:bg-neutral-900/70">
@@ -101,7 +99,7 @@ export default function PasswordResetPage() {
             </label>
             <input
               id="reset_email"
-              className={inputBase}
+              className={inputBaseStyle}
               type="email"
               placeholder="someone@email.com"
               readOnly
@@ -117,7 +115,7 @@ export default function PasswordResetPage() {
               새 비밀번호
             </label>
             <input
-              className={inputBase}
+              className={inputBaseStyle}
               type="password"
               placeholder="8자 이상 입력하세요"
               {...register("reset_password", {

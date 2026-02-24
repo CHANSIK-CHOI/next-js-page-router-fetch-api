@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm } from "react-hook-form";
-import { EMAIL_PATTERN, LOGIN_EMAIL_FORM } from "@/constants";
+import { EMAIL_PATTERN, inputBaseStyle, LOGIN_EMAIL_FORM } from "@/constants";
 import { LoginForm } from "@/types";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
@@ -60,9 +60,6 @@ export default function LoginPage() {
     await replaceSafely(router, nextPath);
   };
 
-  const inputBase =
-    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10";
-
   return (
     <div className="mx-auto w-full max-w-xl">
       <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 p-7 shadow-lg dark:border-white/10 dark:bg-neutral-900/70">
@@ -84,7 +81,7 @@ export default function LoginPage() {
               이메일
             </label>
             <input
-              className={inputBase}
+              className={inputBaseStyle}
               type="email"
               placeholder="someone@email.com"
               {...register("login_email", {
@@ -106,7 +103,7 @@ export default function LoginPage() {
               비밀번호
             </label>
             <input
-              className={inputBase}
+              className={inputBaseStyle}
               type="password"
               placeholder="비밀번호를 입력하세요"
               {...register("login_password", {

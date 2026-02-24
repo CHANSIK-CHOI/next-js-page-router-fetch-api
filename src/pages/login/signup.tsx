@@ -3,7 +3,7 @@ import Link from "next/link";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { SingUpForm } from "@/types";
-import { EMAIL_PATTERN, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
+import { EMAIL_PATTERN, inputBaseStyle, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
@@ -106,9 +106,6 @@ export default function SignupPage() {
     alert("입력값을 확인해주세요.");
   };
 
-  const inputBase =
-    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10";
-
   return (
     <div className="mx-auto w-full max-w-xl">
       <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 p-7 shadow-lg dark:border-white/10 dark:bg-neutral-900/70">
@@ -133,7 +130,7 @@ export default function SignupPage() {
               이름 (선택)
             </label>
             <input
-              className={inputBase}
+              className={inputBaseStyle}
               type="text"
               placeholder="홍길동"
               {...register("signup_name", {
@@ -147,7 +144,7 @@ export default function SignupPage() {
               휴대폰 번호 (선택)
             </label>
             <input
-              className={inputBase}
+              className={inputBaseStyle}
               type="tel"
               placeholder="하이픈 없이 입력해주세요"
               {...register("signup_phone", {
@@ -174,7 +171,7 @@ export default function SignupPage() {
               이메일
             </label>
             <input
-              className={inputBase}
+              className={inputBaseStyle}
               type="email"
               placeholder="someone@email.com"
               {...register("signup_email", {
@@ -199,7 +196,7 @@ export default function SignupPage() {
               비밀번호
             </label>
             <input
-              className={inputBase}
+              className={inputBaseStyle}
               type="password"
               placeholder="비밀번호를 입력하세요"
               {...register("signup_password", {

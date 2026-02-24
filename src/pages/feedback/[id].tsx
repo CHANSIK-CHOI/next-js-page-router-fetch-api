@@ -88,8 +88,16 @@ export default function FeedbackDetailPage({
               {detailFeedbacksData.summary}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              {(isAuthor || isAdmin) && (
-                <p className="text-sm text-muted-foreground">Email: {detailFeedbacksData.email}</p>
+              {(isAuthor || isAdmin) && detailFeedbacksData.email && (
+                <p className="text-sm text-muted-foreground">
+                  Email:{" "}
+                  <a
+                    href={`mailto:${detailFeedbacksData.email}`}
+                    className="font-medium text-primary underline underline-offset-4"
+                  >
+                    {detailFeedbacksData.email}
+                  </a>
+                </p>
               )}
 
               {isAuthor && (
@@ -106,7 +114,7 @@ export default function FeedbackDetailPage({
             {isAuthor && <Button type="button">수정하기</Button>}
             {isAdmin && (
               <Button type="button" variant="outline">
-                비공개
+                삭제
               </Button>
             )}
             {isAdmin &&
@@ -159,7 +167,7 @@ export default function FeedbackDetailPage({
               </span>
             )}
           </div>
-          {detailFeedbacksData.email && (
+          {(isAuthor || isAdmin) && detailFeedbacksData.email && (
             <p className="text-sm text-muted-foreground">
               작성자 이메일:{" "}
               <a

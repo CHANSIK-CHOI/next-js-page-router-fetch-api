@@ -38,7 +38,7 @@ export default function GlobalLayout({ children }: { children: ReactNode }) {
   return (
     <DialogProvider container={container}>
       <SessionProvider>
-        <div className="relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
+        <div className="relative flex min-h-screen flex-col overflow-clip bg-background text-foreground">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_8%_12%,rgba(160,160,160,0.18),transparent_55%),radial-gradient(circle_at_92%_12%,rgba(120,120,120,0.16),transparent_60%),radial-gradient(circle_at_20%_80%,rgba(90,90,90,0.12),transparent_60%),linear-gradient(160deg,rgba(255,255,255,0.85),rgba(235,235,235,0.95))] dark:bg-[radial-gradient(circle_at_12%_16%,rgba(160,160,160,0.12),transparent_55%),radial-gradient(circle_at_90%_20%,rgba(120,120,120,0.12),transparent_60%),radial-gradient(circle_at_20%_80%,rgba(90,90,90,0.1),transparent_60%),linear-gradient(160deg,rgba(10,10,10,0.98),rgba(24,24,24,0.98))]"

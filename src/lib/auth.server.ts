@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
 import type { SupabaseError, UserRole } from "@/types";
 
@@ -7,6 +7,7 @@ type AuthContext = {
   userId: string;
   role: UserRole["role"] | null;
   isAdmin: boolean;
+  authData: { user: User | null };
 };
 
 type AuthContextResult = {
@@ -61,6 +62,7 @@ export const getAuthContextByAccessToken = async (
       userId: authData.user.id,
       role,
       isAdmin: role === "admin",
+      authData,
     },
     error: null,
     status: 200,

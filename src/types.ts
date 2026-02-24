@@ -118,3 +118,16 @@ export type UserRole = {
   role: "admin" | "reviewer"; // 권한 역할
   created_at?: string; // 역할이 부여된 시각 기록
 };
+
+export type FeedbackNewFormValues = {
+  display_name: string;
+  company_name: string;
+  is_company_public: boolean;
+  avatar: string;
+  rating: number;
+  summary: string;
+  strengths: string;
+  questions: string;
+  suggestions: string;
+  tags: string[];
+};

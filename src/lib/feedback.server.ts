@@ -131,5 +131,3 @@ export const getAdminAllFeedbacksApi = async (): Promise<FeedbackPrivateRow[] | 
 
   return data;
 };
-
-// export const getEmailApi = async () : Promise<FeedbackPublicBase[""]>

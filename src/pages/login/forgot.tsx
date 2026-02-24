@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Button, useAlert } from "@/components/ui";
 import { useForm } from "react-hook-form";
-import { EMAIL_PATTERN } from "@/constants";
+import { EMAIL_PATTERN, inputBaseStyle } from "@/constants";
 import { useSession } from "@/components/useSession";
 
 type ForgotEmail = {
@@ -49,9 +49,6 @@ export default function Page() {
     });
   };
 
-  const inputBase =
-    "w-full rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10";
-
   return (
     <div className="mx-auto w-full max-w-xl">
       <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 p-7 shadow-lg dark:border-white/10 dark:bg-neutral-900/70">
@@ -75,7 +72,7 @@ export default function Page() {
               이메일
             </label>
             <input
-              className={inputBase}
+              className={inputBaseStyle}
               type="email"
               placeholder="someone@email.com"
               {...register("forgot_email", {

@@ -5,6 +5,8 @@ import type {
   RevisedPendingOwnerFeedback,
   FeedbackListItem,
 } from "@/types";
+import { User } from "@supabase/supabase-js";
+import { PLACEHOLDER_SRC } from "./constants";
 
 export const formatPhoneNumber = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -133,4 +135,30 @@ export const mergeFeedbackList = ({
   }
 
   return Array.from(mergedById.values()).sort(compareUpdatedAtDesc);
+};
+
+export const getUserName = (user: User | undefined) => {
+  const rawName =
+    user?.user_metadata?.name ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.user_name ||
+    user?.email?.split("@")[0];
+  const userName = rawName ? String(rawName) : "사용자";
+
+  return userName;
+};
+
+export const getAvatarUrl = (user: User | undefined) => {
+  const avatarUrl =
+    user?.user_metadata?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatar;
+
+  return avatarUrl;
+};
+
+export const readFileAsDataURL = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.readAsDataURL(file);
+  });
 };

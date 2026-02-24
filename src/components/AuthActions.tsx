@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
 import { useSession } from "./useSession";
 import { pushSafely, replaceSafely } from "@/lib/router.client";
+import { PLACEHOLDER_SRC } from "@/constants";
+import { getAvatarUrl, getUserName, normalizeExternalImageSrc } from "@/util";
 
 export default function AuthActions() {
   const { session, supabaseClient } = useSession();
@@ -34,15 +36,10 @@ export default function AuthActions() {
   };
 
   const user = session?.user;
-  const rawName =
-    user?.user_metadata?.name ||
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.user_name ||
-    user?.email?.split("@")[0];
-  const userName = rawName ? String(rawName) : "사용자";
-  const avatarUrl =
-    user?.user_metadata?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatar;
+  const userName = getUserName(user);
+  const avatarUrl = getAvatarUrl(user);
 
+  const avatarSrc = normalizeExternalImageSrc(avatarUrl || PLACEHOLDER_SRC);
   return (
     <div className="flex items-center gap-3">
       {!session?.access_token ? (
@@ -60,18 +57,15 @@ export default function AuthActions() {
         <>
           <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-white/70 px-3 py-1.5 text-sm shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
             <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted text-xs font-semibold text-primary">
-              {avatarUrl ? (
-                <Image
-                  className="h-full w-full object-cover"
-                  src={avatarUrl}
-                  alt={`${userName} avatar`}
-                  width={50}
-                  height={50}
-                  unoptimized={!avatarUrl}
-                />
-              ) : (
-                <span className="uppercase">{userName.slice(0, 1)}</span>
-              )}
+              <Image
+                className="h-full w-full object-cover"
+                src={avatarSrc}
+                alt={`${userName} avatar`}
+                width={50}
+                height={50}
+                unoptimized={!avatarUrl}
+              />
+              {/* <span className="uppercase">{userName.slice(0, 1)}</span> */}
             </span>
             <span className="text-sm font-medium text-foreground">{userName} 님</span>
           </div>
