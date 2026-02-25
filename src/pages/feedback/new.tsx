@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useForm, useWatch } from "react-hook-form";
 import { useSession } from "@/components";
-import { Button } from "@/components/ui";
+import { Button, useAlert } from "@/components/ui";
 import {
   chipButtonBaseStyle,
   inputBaseStyle,
@@ -12,10 +12,17 @@ import {
   TAG_OTIONS,
 } from "@/constants";
 import { cn } from "@/lib/utils";
-import { getAvatarUrl, getUserName, normalizeExternalImageSrc, readFileAsDataURL } from "@/util";
+import {
+  getAvatarUrl,
+  getUserCompany,
+  getUserName,
+  normalizeExternalImageSrc,
+  readFileAsDataURL,
+} from "@/util";
 import { FeedbackNewFormValues } from "@/types";
 
 export default function FeedbackNewPage() {
+  const { openAlert } = useAlert();
   const { session } = useSession();
   const user = session?.user;
 
@@ -36,6 +43,7 @@ export default function FeedbackNewPage() {
 
   const sessionUserName = getUserName(user);
   const sessionAvatar = normalizeExternalImageSrc(getAvatarUrl(user) || PLACEHOLDER_SRC);
+  const { sessionCompanyName, sessionIsCompanyPublic } = getUserCompany(user);
 
   useEffect(() => {
     reset(
@@ -43,10 +51,19 @@ export default function FeedbackNewPage() {
         ...getValues(),
         display_name: sessionUserName,
         avatar: sessionAvatar,
+        is_company_public: sessionIsCompanyPublic,
+        company_name: sessionCompanyName,
       },
       { keepDirtyValues: true }
     );
-  }, [getValues, reset, sessionUserName, sessionAvatar]);
+  }, [
+    getValues,
+    reset,
+    sessionUserName,
+    sessionAvatar,
+    sessionCompanyName,
+    sessionIsCompanyPublic,
+  ]);
 
   const avatarValue = useWatch({ control, name: "avatar" });
   const isCompanyPublic = useWatch({
@@ -62,6 +79,14 @@ export default function FeedbackNewPage() {
   const handleChangeImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      openAlert({
+        description: "프로필 이미지는 2MB 이하만 업로드할 수 있습니다.",
+      });
+      event.target.value = "";
+      return;
+    }
 
     const base64 = await readFileAsDataURL(file);
     setValue("avatar", base64, { shouldDirty: true, shouldValidate: true });
@@ -151,7 +176,7 @@ export default function FeedbackNewPage() {
                     프로필 삭제
                   </Button>
                 )}
-                {sessionAvatar !== avatarSrc && (
+                {sessionAvatar !== PLACEHOLDER_SRC && sessionAvatar !== avatarSrc && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -211,7 +236,7 @@ export default function FeedbackNewPage() {
                     onChange: (e) => {
                       const checked = e.target.checked;
                       if (!checked) {
-                        setValue("company_name", "", { shouldDirty: true });
+                        // setValue("company_name", "", { shouldDirty: true });
                         clearErrors("company_name");
                       } else {
                         void trigger("company_name");

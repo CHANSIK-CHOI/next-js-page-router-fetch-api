@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
 import { useSession } from "./useSession";
@@ -69,6 +70,9 @@ export default function AuthActions() {
             </span>
             <span className="text-sm font-medium text-foreground">{userName} 님</span>
           </div>
+          <Button asChild variant="outline" size="sm" className="rounded-full">
+            <Link href="/my">마이페이지</Link>
+          </Button>
           <Button variant="outline" size="sm" className="rounded-full" onClick={handleLogout}>
             로그아웃
           </Button>

@@ -154,10 +154,40 @@ export const getAvatarUrl = (user: User | undefined) => {
   return avatarUrl;
 };
 
+export const getUserCompany = (user: User | undefined) => {
+  const companyName = user?.user_metadata.company_name;
+  const sessionCompanyName = companyName ? companyName : "";
+  const isCompanyPublic = user?.user_metadata.is_company_public;
+  const sessionIsCompanyPublic = Boolean(isCompanyPublic) ? isCompanyPublic : false;
+  return { sessionCompanyName, sessionIsCompanyPublic };
+};
+
 export const readFileAsDataURL = (file: File): Promise<string> => {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
     reader.readAsDataURL(file);
   });
+};
+
+export const getAuthProviders = (user: User | null | undefined) => {
+  console.log({ user });
+  // identities : 현재 유저의 로그인 계정 연결 목록
+  const identityProviders = (user?.identities ?? [])
+    .map((identity) => identity.provider)
+    .filter((provider): provider is string => typeof provider === "string");
+
+  const metadataProviders = Array.isArray(user?.app_metadata?.providers)
+    ? user.app_metadata.providers.filter(
+        (provider): provider is string => typeof provider === "string"
+      )
+    : [];
+
+  const primaryProvider =
+    typeof user?.app_metadata?.provider === "string" ? [user.app_metadata.provider] : [];
+
+  return Array.from(new Set([...identityProviders, ...metadataProviders, ...primaryProvider]));
+  // 스프레드로 합치고
+  // new Set : 중복을 제거하는 역할
+  // Array.from : Set을 다시 배열로 바꾸는 역할
 };

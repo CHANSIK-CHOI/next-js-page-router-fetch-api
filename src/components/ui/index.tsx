@@ -14,3 +14,4 @@ export { default as ConfirmProvider } from "./Confirm/ConfirmProvider";
 // hook
 export { useDialog } from "./Dialog/useDialog";
 export { useAlert } from "./Alert/useAlert";
+export { useConfirm } from "./Confirm/useConfirm";
