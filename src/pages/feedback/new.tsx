@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useForm, useWatch } from "react-hook-form";
 import { useSession } from "@/components";
-import { Button, useAlert } from "@/components/ui";
+import { Button } from "@/components/ui";
 import {
   chipButtonBaseStyle,
   inputBaseStyle,
@@ -17,19 +17,16 @@ import {
   getUserCompany,
   getUserName,
   normalizeExternalImageSrc,
-  readFileAsDataURL,
 } from "@/util";
 import { FeedbackNewFormValues } from "@/types";
 
 export default function FeedbackNewPage() {
-  const { openAlert } = useAlert();
   const { session } = useSession();
   const user = session?.user;
 
   const {
     register,
     handleSubmit,
-    setValue,
     getValues,
     control,
     reset,
@@ -73,33 +70,8 @@ export default function FeedbackNewPage() {
   const ratingValue = useWatch({ control, name: "rating" });
   const tagsValue = useWatch({ control, name: "tags" });
 
-  const avatarSrc = normalizeExternalImageSrc(avatarValue || PLACEHOLDER_SRC);
-  const hasAvatar = avatarSrc !== PLACEHOLDER_SRC;
-
-  const handleChangeImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      openAlert({
-        description: "프로필 이미지는 2MB 이하만 업로드할 수 있습니다.",
-      });
-      event.target.value = "";
-      return;
-    }
-
-    const base64 = await readFileAsDataURL(file);
-    setValue("avatar", base64, { shouldDirty: true, shouldValidate: true });
-    event.target.value = "";
-  };
-
-  const handleRemoveImage = () => {
-    setValue("avatar", PLACEHOLDER_SRC, { shouldDirty: true, shouldValidate: true });
-  };
-
-  const handleResetImage = () => {
-    setValue("avatar", sessionAvatar, { shouldDirty: true, shouldValidate: true });
-  };
+  const avatarSrc = normalizeExternalImageSrc(avatarValue || sessionAvatar || PLACEHOLDER_SRC);
+  const isPlaceholderAvatar = avatarSrc === PLACEHOLDER_SRC;
 
   const onSubmit = (values: FeedbackNewFormValues) => {
     console.log("feedback new values:", values);
@@ -152,44 +124,12 @@ export default function FeedbackNewPage() {
                   unoptimized={avatarSrc.startsWith("data:")}
                 />
               </div>
-              <div className="flex w-full flex-col gap-2">
-                <Button asChild variant="outline" size="sm" className="w-full cursor-pointer">
-                  <label htmlFor="avatarUpload">
-                    {hasAvatar ? "프로필 변경" : "프로필 업로드"}
-                  </label>
-                </Button>
-                <input
-                  id="avatarUpload"
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={handleChangeImage}
-                />
-                {hasAvatar && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="w-full"
-                    onClick={handleRemoveImage}
-                  >
-                    프로필 삭제
-                  </Button>
-                )}
-                {sessionAvatar !== PLACEHOLDER_SRC && sessionAvatar !== avatarSrc && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="w-full"
-                    onClick={handleResetImage}
-                  >
-                    프로필 초기화
-                  </Button>
-                )}
-
-                <p className="text-center text-xs text-muted-foreground">JPG/PNG, 2MB 이하</p>
-              </div>
+              <input type="hidden" {...register("avatar")} />
+              <p className="text-center text-xs text-muted-foreground">
+                {isPlaceholderAvatar
+                  ? "등록된 프로필 이미지가 없어 기본 이미지가 사용됩니다."
+                  : "마이페이지에 등록된 프로필 이미지를 사용합니다."}
+              </p>
             </div>
             <div className="grid gap-6">
               <label className="flex flex-col gap-2 text-sm font-semibold text-muted-foreground">

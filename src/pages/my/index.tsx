@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useForm, useWatch } from "react-hook-form";
@@ -6,6 +6,7 @@ import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components";
 import { replaceSafely } from "@/lib/router.client";
 import { useRouter } from "next/router";
+import { uploadAvatarToSupabase, validateAvatarFile } from "@/lib/avatarUpload";
 import { PHONE_PATTERN, inputBaseStyle, PLACEHOLDER_SRC } from "@/constants";
 import {
   formatPhoneNumber,
@@ -14,7 +15,6 @@ import {
   getUserCompany,
   getUserName,
   normalizeExternalImageSrc,
-  readFileAsDataURL,
 } from "@/util";
 
 type MyProfileForm = {
@@ -35,6 +35,9 @@ export default function MyPage() {
   const { openAlert } = useAlert();
   const { session, supabaseClient, isInitSessionComplete } = useSession();
   const router = useRouter();
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [pendingAvatarPreviewUrl, setPendingAvatarPreviewUrl] = useState<string | null>(null);
   const user = session?.user;
 
   const sessionUserName = getUserName(user);
@@ -96,42 +99,85 @@ export default function MyPage() {
     sessionIsCompanyPublic,
   ]);
 
+  useEffect(() => {
+    return () => {
+      if (pendingAvatarPreviewUrl) {
+        URL.revokeObjectURL(pendingAvatarPreviewUrl);
+      }
+    };
+  }, [pendingAvatarPreviewUrl]);
+
   const handleChangeImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (!session?.access_token) {
       openAlert({
-        description: "프로필 이미지는 2MB 이하만 업로드할 수 있습니다.",
+        description: "로그인 상태에서만 아바타를 업로드할 수 있습니다.",
       });
       event.target.value = "";
       return;
     }
 
-    const base64 = await readFileAsDataURL(file);
-    setValue("avatar", base64, { shouldDirty: true, shouldValidate: true });
+    try {
+      validateAvatarFile(file);
+    } catch (error) {
+      openAlert({
+        description:
+          error instanceof Error ? error.message : "아바타 업로드에 실패했습니다.",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setPendingAvatarFile(file);
+    setPendingAvatarPreviewUrl(previewUrl);
+    setValue("avatar", previewUrl, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
     event.target.value = "";
   };
 
   const handleRemoveImage = () => {
+    setPendingAvatarFile(null);
+    setPendingAvatarPreviewUrl(null);
     setValue("avatar", PLACEHOLDER_SRC, { shouldDirty: true, shouldValidate: true });
   };
 
   const handleResetImage = () => {
+    setPendingAvatarFile(null);
+    setPendingAvatarPreviewUrl(null);
     setValue("avatar", sessionAvatar, { shouldDirty: true, shouldValidate: true });
   };
 
   const onSubmit = async (values: MyProfileForm) => {
     if (isSubmitting) return;
-    if (!supabaseClient || !session?.user) return;
+    if (!supabaseClient || !session?.user || !session.access_token) return;
 
     console.log(values);
 
     const nextName = values.name.trim();
     const nextPhone = values.phone.trim();
-    const nextAvatar = normalizeExternalImageSrc(values.avatar || PLACEHOLDER_SRC);
+    let nextAvatar = normalizeExternalImageSrc(values.avatar || PLACEHOLDER_SRC);
     const nextCompanyName = values.company_name.trim();
     const nextIsCompanyPublic = values.is_company_public;
+
+    if (pendingAvatarFile) {
+      setIsUploadingAvatar(true);
+      try {
+        const { avatarUrl } = await uploadAvatarToSupabase(pendingAvatarFile, session.access_token);
+        nextAvatar = normalizeExternalImageSrc(avatarUrl);
+      } catch (error) {
+        openAlert({
+          description: error instanceof Error ? error.message : "아바타 업로드에 실패했습니다.",
+        });
+        return;
+      } finally {
+        setIsUploadingAvatar(false);
+      }
+    }
 
     const { error } = await supabaseClient.auth.updateUser({
       data: {
@@ -150,6 +196,11 @@ export default function MyPage() {
       });
       return;
     }
+
+    setPendingAvatarFile(null);
+    setPendingAvatarPreviewUrl(null);
+    setValue("avatar", nextAvatar, { shouldDirty: false, shouldValidate: true });
+
     openAlert({
       description: "내 정보가 저장되었습니다.",
       onOk: () => {
@@ -199,13 +250,17 @@ export default function MyPage() {
                 alt="사용자 아바타"
                 width={120}
                 height={120}
-                unoptimized={avatarSrc.startsWith("data:")}
+                unoptimized={avatarSrc.startsWith("data:") || avatarSrc.startsWith("blob:")}
               />
             </div>
             <div className="flex w-full flex-col gap-2">
               <Button asChild variant="outline" size="sm" className="w-full cursor-pointer">
                 <label htmlFor="myAvatarUpload">
-                  {hasAvatar ? "프로필 변경" : "프로필 업로드"}
+                  {isUploadingAvatar
+                    ? "업로드 중..."
+                    : hasAvatar
+                      ? "프로필 변경"
+                      : "프로필 업로드"}
                 </label>
               </Button>
               <input
@@ -213,6 +268,7 @@ export default function MyPage() {
                 type="file"
                 accept="image/*"
                 className="sr-only"
+                disabled={isSubmitting || isUploadingAvatar}
                 onChange={handleChangeImage}
               />
               <input type="hidden" {...register("avatar")} />
@@ -222,6 +278,7 @@ export default function MyPage() {
                   variant="ghost"
                   size="sm"
                   className="w-full"
+                  disabled={isUploadingAvatar}
                   onClick={handleRemoveImage}
                 >
                   프로필 삭제
@@ -233,6 +290,7 @@ export default function MyPage() {
                   variant="ghost"
                   size="sm"
                   className="w-full"
+                  disabled={isUploadingAvatar}
                   onClick={handleResetImage}
                 >
                   프로필 초기화
@@ -370,7 +428,7 @@ export default function MyPage() {
           </div>
 
           <div className="pt-2">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || isUploadingAvatar}>
               내 정보 수정하기
             </Button>
           </div>

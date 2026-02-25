@@ -1,9 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
-import { useForm, type FieldErrors } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { SingUpForm } from "@/types";
-import { EMAIL_PATTERN, inputBaseStyle, PHONE_PATTERN, SINGUP_EMAIL_FORM } from "@/constants";
+import { EMAIL_PATTERN, inputBaseStyle, SINGUP_EMAIL_FORM } from "@/constants";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
@@ -29,17 +29,6 @@ const getSignupErrorMessage = (message?: string) => {
   return "회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.";
 };
 
-const formatPhoneNumber = (value: string) => {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length === 11) {
-    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
-  }
-  if (digits.length === 10) {
-    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-  }
-  return value.trim();
-};
-
 export default function SignupPage() {
   const { openAlert } = useAlert();
   const { supabaseClient } = useSession();
@@ -59,17 +48,15 @@ export default function SignupPage() {
     if (!supabaseClient) return;
 
     const trimmedName = values.signup_name?.trim();
-    const trimmedPhone = values.signup_phone?.trim();
     const userMetadata: Record<string, string> = {};
 
     if (trimmedName) userMetadata.name = trimmedName;
-    if (trimmedPhone) userMetadata.phone = formatPhoneNumber(trimmedPhone);
 
     const { data, error } = await supabaseClient.auth.signUp({
       email: values.signup_email,
       password: values.signup_password,
       options: {
-        emailRedirectTo: `${window.location.origin}/login`,
+        emailRedirectTo: `${window.location.origin}/my`,
         data: userMetadata,
       },
     });
@@ -83,27 +70,21 @@ export default function SignupPage() {
 
     if (data.session) {
       sessionStorage.setItem("signUpCompleteAndSkipRoleSync", "1");
-      await supabaseClient.auth.signOut();
       openAlert({
-        description: "회원가입이 완료되었습니다. 로그인해주세요.",
+        description: "회원가입이 완료되었습니다.\n추가 정보를 입력해주세요.",
         onOk: () => {
-          void replaceSafely(router, "/login");
+          void replaceSafely(router, "/my");
         },
       });
       return;
     }
 
     openAlert({
-      description: "이메일로 인증 링크가 전송되었습니다. 확인 후 로그인 해주세요.",
+      description: "이메일 인증 후 추가 정보를 입력해주세요.",
       onOk: () => {
-        void replaceSafely(router, "/login");
+        void replaceSafely(router, "/login?next=/my");
       },
     });
-  };
-
-  const onError = (errors: FieldErrors<SingUpForm>) => {
-    console.error("Validation Errors:", errors);
-    alert("입력값을 확인해주세요.");
   };
 
   return (
@@ -121,10 +102,7 @@ export default function SignupPage() {
           <p className="mt-2 text-sm text-muted-foreground">필수 정보는 이메일과 비밀번호예요.</p>
         </div>
 
-        <form
-          className="relative z-10 mt-6 flex flex-col gap-4"
-          onSubmit={handleSubmit(onSubmit, onError)}
-        >
+        <form className="relative z-10 mt-6 flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold text-muted-foreground" htmlFor="signup_name">
               이름 (선택)
@@ -137,33 +115,6 @@ export default function SignupPage() {
                 setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
               })}
             />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-muted-foreground" htmlFor="signup_phone">
-              휴대폰 번호 (선택)
-            </label>
-            <input
-              className={inputBaseStyle}
-              type="tel"
-              placeholder="하이픈 없이 입력해주세요"
-              {...register("signup_phone", {
-                setValueAs: (value) =>
-                  typeof value === "string" ? formatPhoneNumber(value) : value,
-                onChange: (event) => {
-                  event.target.value = formatPhoneNumber(event.target.value);
-                },
-                validate: (value) => {
-                  if (!value) return true;
-                  return (
-                    PHONE_PATTERN.test(value.trim()) || "휴대폰 번호 형식이 올바르지 않습니다."
-                  );
-                },
-              })}
-            />
-            {errors.signup_phone && (
-              <span className="text-xs text-destructive">{errors.signup_phone.message}</span>
-            )}
           </div>
 
           <div className="flex flex-col gap-2">

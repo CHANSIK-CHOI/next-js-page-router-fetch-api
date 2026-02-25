@@ -137,7 +137,7 @@ export default function LoginPage() {
               또는
             </div>
 
-            <GithubLoginBtn nextPath={nextPath} />
+            <GithubLoginBtn />
           </div>
         </form>
 

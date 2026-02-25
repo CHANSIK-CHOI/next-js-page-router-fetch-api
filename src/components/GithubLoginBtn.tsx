@@ -3,23 +3,15 @@ import Image from "next/image";
 import { Button } from "@/components/ui";
 import { useSession } from "./useSession";
 
-type GithubLoginBtnProps = {
-  nextPath?: string;
-};
-
-export default function GithubLoginBtn({ nextPath = "/" }: GithubLoginBtnProps) {
+export default function GithubLoginBtn() {
   const { supabaseClient } = useSession();
-  const redirectPath =
-    typeof nextPath === "string" && nextPath.startsWith("/") && !nextPath.startsWith("//")
-      ? nextPath
-      : "/";
 
   const handleLoginGithub = async () => {
     if (!supabaseClient) return;
     await supabaseClient.auth.signInWithOAuth({
       provider: "github",
       options: {
-        redirectTo: `${window.location.origin}${redirectPath}`,
+        redirectTo: `${window.location.origin}/login/oauth-callback`,
       },
     });
   };
