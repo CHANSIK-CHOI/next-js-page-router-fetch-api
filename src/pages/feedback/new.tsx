@@ -13,10 +13,11 @@ import {
 } from "@/constants";
 import { cn } from "@/lib/utils";
 import {
+  getAvatarImageSrc,
   getAvatarUrl,
   getUserCompany,
   getUserName,
-  normalizeExternalImageSrc,
+  isPrivateAvatarApiSrc,
 } from "@/util";
 import { FeedbackNewFormValues } from "@/types";
 
@@ -39,7 +40,7 @@ export default function FeedbackNewPage() {
   });
 
   const sessionUserName = getUserName(user);
-  const sessionAvatar = normalizeExternalImageSrc(getAvatarUrl(user) || PLACEHOLDER_SRC);
+  const sessionAvatar = getAvatarImageSrc(getAvatarUrl(user));
   const { sessionCompanyName, sessionIsCompanyPublic } = getUserCompany(user);
 
   useEffect(() => {
@@ -70,11 +71,11 @@ export default function FeedbackNewPage() {
   const ratingValue = useWatch({ control, name: "rating" });
   const tagsValue = useWatch({ control, name: "tags" });
 
-  const avatarSrc = normalizeExternalImageSrc(avatarValue || sessionAvatar || PLACEHOLDER_SRC);
+  const avatarSrc = getAvatarImageSrc(avatarValue || sessionAvatar);
   const isPlaceholderAvatar = avatarSrc === PLACEHOLDER_SRC;
 
   const onSubmit = (values: FeedbackNewFormValues) => {
-    console.log("feedback new values:", values);
+    void values;
   };
 
   /*
@@ -121,7 +122,7 @@ export default function FeedbackNewPage() {
                   alt={`유저 프로필`}
                   width={120}
                   height={120}
-                  unoptimized={avatarSrc.startsWith("data:")}
+                  unoptimized={avatarSrc.startsWith("data:") || isPrivateAvatarApiSrc(avatarSrc)}
                 />
               </div>
               <input type="hidden" {...register("avatar")} />
@@ -176,7 +177,6 @@ export default function FeedbackNewPage() {
                     onChange: (e) => {
                       const checked = e.target.checked;
                       if (!checked) {
-                        // setValue("company_name", "", { shouldDirty: true });
                         clearErrors("company_name");
                       } else {
                         void trigger("company_name");

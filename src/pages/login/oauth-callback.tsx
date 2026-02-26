@@ -3,25 +3,7 @@ import { useRouter } from "next/router";
 import type { Session } from "@supabase/supabase-js";
 import { useSession } from "@/components/useSession";
 import { replaceSafely } from "@/lib/router.client";
-
-const FIRST_LOGIN_THRESHOLD_MS = 30 * 1000;
-
-const parseTime = (value: string | null | undefined) => {
-  if (!value) return null;
-  const time = new Date(value).getTime();
-  return Number.isNaN(time) ? null : time;
-};
-
-const isFirstSignInUser = (
-  createdAt: string | null | undefined,
-  lastSignInAt: string | null | undefined
-) => {
-  const createdTime = parseTime(createdAt);
-  const lastSignInTime = parseTime(lastSignInAt);
-
-  if (createdTime === null || lastSignInTime === null) return false;
-  return Math.abs(lastSignInTime - createdTime) <= FIRST_LOGIN_THRESHOLD_MS;
-};
+import type { UserRoleSyncResponse } from "@/types";
 
 export default function OAuthCallbackPage() {
   const router = useRouter();
@@ -37,11 +19,30 @@ export default function OAuthCallbackPage() {
       if (isUnmounted || isHandledRef.current || !session?.user) return;
       isHandledRef.current = true;
 
-      const firstSignInUser = isFirstSignInUser(
-        session.user.created_at,
-        session.user.last_sign_in_at
-      );
-      await replaceSafely(router, firstSignInUser ? "/my" : "/");
+      if (!session.access_token) {
+        await replaceSafely(router, "/login");
+        return;
+      }
+
+      const response = await fetch("/api/user-roles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      const payload = (await response.json().catch(() => null)) as UserRoleSyncResponse | null;
+
+      if (!response.ok || !payload || payload.error || !payload.role) {
+        await replaceSafely(router, "/login");
+        return;
+      }
+
+      const isNewUser = response.status === 201;
+      if (isNewUser) {
+        sessionStorage.setItem("signUpCompleteAndSkipRoleSync", "1");
+      }
+      await replaceSafely(router, isNewUser ? "/my" : "/");
     };
 
     void supabaseClient.auth

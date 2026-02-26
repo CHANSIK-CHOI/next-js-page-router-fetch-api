@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import type { User } from "@supabase/supabase-js";
 import { Button, useAlert, useConfirm } from "@/components/ui";
 import { useSession } from "@/components";
 import { replaceSafely } from "@/lib/router.client";

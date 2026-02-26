@@ -2,17 +2,32 @@ import { PostgrestError } from "@supabase/supabase-js";
 
 export type SupabaseError = PostgrestError | null;
 
+export type ApiErrorResponse = {
+  error: string;
+};
+
+export type AvatarUploadResult = {
+  avatarUrl: string;
+  bucket: string;
+  path: string;
+};
+
+export type AvatarUploadResponse = AvatarUploadResult | ApiErrorResponse;
+
 export type LoginForm = {
   login_email: string;
   login_password: string;
 };
 
-export type SingUpForm = {
+export type SignUpForm = {
   signup_name?: string;
   signup_phone?: string;
   signup_email: string;
   signup_password: string;
 };
+
+// Backward compatibility alias for existing imports.
+export type SingUpForm = SignUpForm;
 
 /*
   id: string; // UUID
@@ -117,6 +132,11 @@ export type UserRole = {
   user_id: string; // Auth 유저의 UID
   role: "admin" | "reviewer"; // 권한 역할
   created_at?: string; // 역할이 부여된 시각 기록
+};
+
+export type UserRoleSyncResponse = {
+  role: UserRole["role"] | null;
+  error: string | null;
 };
 
 export type FeedbackNewFormValues = {

@@ -44,6 +44,7 @@ export const getAuthContextByAccessToken = async (
     .from("user_roles")
     .select("role")
     .eq("user_id", authData.user.id)
+    .limit(1)
     .maybeSingle();
 
   if (roleError) {

@@ -1,9 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-const AVATAR_ROOT = "users";
-const AVATAR_FILENAME = "avatar";
-
-export const MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024;
+import type { AvatarUploadResult } from "@/types";
+import { buildAvatarDirectory, buildAvatarPath, buildAvatarProxyUrl } from "@/util";
 
 export type ReplaceUserAvatarParams = {
   supabaseServer: SupabaseClient;
@@ -13,16 +10,7 @@ export type ReplaceUserAvatarParams = {
   contentType: string;
 };
 
-export type ReplaceUserAvatarResult = {
-  bucket: string;
-  path: string;
-  avatarUrl: string;
-};
-
-const buildAvatarDirectory = (userId: string) => `${AVATAR_ROOT}/${userId}`;
-const buildAvatarPath = (userId: string) => `${buildAvatarDirectory(userId)}/${AVATAR_FILENAME}`;
-const buildAvatarProxyUrl = (userId: string) =>
-  `/api/avatar/${encodeURIComponent(userId)}?t=${Date.now()}`;
+export type ReplaceUserAvatarResult = AvatarUploadResult;
 
 const listUserAvatarPaths = async (
   supabaseServer: SupabaseClient,
@@ -36,6 +24,7 @@ const listUserAvatarPaths = async (
   });
 
   if (error) {
+    console.error("Failed to list user avatar objects", { bucket, directory, error });
     throw new Error("기존 아바타 목록을 확인하지 못했습니다.");
   }
 
@@ -57,6 +46,7 @@ export async function replaceUserAvatar({
   if (oldAvatarPaths.length > 0) {
     const { error: removeError } = await supabaseServer.storage.from(bucket).remove(oldAvatarPaths);
     if (removeError) {
+      console.error("Failed to remove previous avatar objects", { bucket, oldAvatarPaths, removeError });
       throw new Error("기존 아바타 삭제에 실패했습니다.");
     }
   }
@@ -68,6 +58,7 @@ export async function replaceUserAvatar({
   });
 
   if (uploadError) {
+    console.error("Failed to upload new avatar object", { bucket, uploadPath, uploadError });
     throw new Error("새 아바타 업로드에 실패했습니다.");
   }
 

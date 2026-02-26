@@ -30,7 +30,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ role: null, error: authError?.message ?? "Unauthorized" });
     }
 
-    // 데이터가 이미 있으면 기존 role 반환
+    // insert 우선 시도: 성공 시 신규(201), unique 충돌 시 기존 사용자(200)로 처리
+    const {
+      data: insertedRows,
+      error: insertError,
+    }: { data: UserRole[] | null; error: SupabaseError } = await supabaseServer
+      .from("user_roles")
+      .insert({
+        user_id: authData.user.id,
+        role: "reviewer",
+      })
+      .select();
+
+    if (!insertError && insertedRows && insertedRows[0]?.role) {
+      return res.status(201).json({ role: insertedRows[0].role, error: null });
+    }
+
+    // 동시 요청 등으로 unique 충돌이 나면 기존 role 조회
+    if (insertError?.code !== "23505") {
+      return res.status(500).json({ role: null, error: insertError?.message ?? "Insert failed" });
+    }
+
     const {
       data: existingRole,
       error: existingError,
@@ -39,30 +59,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .from("user_roles")
         .select("user_id, role")
         .eq("user_id", authData.user.id)
+        .limit(1)
         .maybeSingle();
+
     if (existingError) {
       return res
         .status(500)
         .json({ role: null, error: existingError?.message ?? "Select failed Existing Role" });
     }
 
-    if (existingRole?.role) {
-      return res.status(200).json({ role: existingRole?.role, error: null });
+    if (!existingRole?.role) {
+      return res.status(500).json({ role: null, error: "Role sync failed" });
     }
 
-    // 데이터가 없으면 새로 role 추가
-    const { data, error }: { data: UserRole[] | null; error: SupabaseError } = await supabaseServer
-      .from("user_roles")
-      .insert({
-        user_id: authData.user.id,
-        role: "reviewer",
-      })
-      .select();
-    if (error || !data || !data[0]) {
-      return res.status(500).json({ role: null, error: error?.message ?? "Insert failed" });
-    }
-
-    return res.status(201).json({ role: data[0].role, error: null });
+    return res.status(200).json({ role: existingRole.role, error: null });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
     return res.status(500).json({ role: null, error: message });

@@ -5,6 +5,7 @@ import type {
   RevisedPendingOwnerFeedback,
   FeedbackListItem,
 } from "@/types";
+import { PLACEHOLDER_SRC } from "@/constants";
 import { User } from "@supabase/supabase-js";
 
 export const formatPhoneNumber = (value: string) => {
@@ -85,6 +86,15 @@ export const isSvgImageSrc = (src: string) => {
   }
 };
 
+export const isPrivateAvatarApiSrc = (src: string) => {
+  try {
+    const parsedUrl = new URL(src, "http://localhost");
+    return parsedUrl.pathname.startsWith("/api/avatar/");
+  } catch {
+    return src.startsWith("/api/avatar/");
+  }
+};
+
 type WithUpdatedAt = { updated_at?: string | null };
 
 export const compareUpdatedAtDesc = (a: WithUpdatedAt, b: WithUpdatedAt) => {
@@ -154,6 +164,15 @@ export const getAvatarUrl = (user: User | undefined) => {
   return avatarUrl;
 };
 
+export const getAvatarImageSrc = (avatarUrl: string | null | undefined) => {
+  return normalizeExternalImageSrc(avatarUrl || PLACEHOLDER_SRC);
+};
+
+export const buildAvatarDirectory = (userId: string) => `users/${userId}`;
+export const buildAvatarPath = (userId: string) => `${buildAvatarDirectory(userId)}/avatar`;
+export const buildAvatarProxyUrl = (userId: string) =>
+  `/api/avatar/${encodeURIComponent(userId)}?t=${Date.now()}`;
+
 export const getUserCompany = (user: User | undefined) => {
   const companyName = user?.user_metadata.company_name;
   const sessionCompanyName = companyName ? companyName : "";
@@ -162,16 +181,7 @@ export const getUserCompany = (user: User | undefined) => {
   return { sessionCompanyName, sessionIsCompanyPublic };
 };
 
-export const readFileAsDataURL = (file: File): Promise<string> => {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.readAsDataURL(file);
-  });
-};
-
 export const getAuthProviders = (user: User | null | undefined) => {
-  console.log({ user });
   // identities : 현재 유저의 로그인 계정 연결 목록
   const identityProviders = (user?.identities ?? [])
     .map((identity) => identity.provider)

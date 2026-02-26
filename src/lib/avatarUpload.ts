@@ -1,16 +1,5 @@
-type AvatarUploadResult = {
-  avatarUrl: string;
-  bucket: string;
-  path: string;
-};
-
-type AvatarUploadFailure = {
-  error: string;
-};
-
-type AvatarUploadResponse = AvatarUploadResult | AvatarUploadFailure;
-
-export const MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024;
+import { MAX_AVATAR_FILE_SIZE } from "@/constants";
+import type { AvatarUploadResponse, AvatarUploadResult } from "@/types";
 
 export const validateAvatarFile = (file: File) => {
   if (!file.type.startsWith("image/")) {

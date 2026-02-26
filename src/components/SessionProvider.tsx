@@ -2,7 +2,7 @@ import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { SessionContext } from "./useSession";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase.client";
-import { UserRole } from "@/types";
+import type { UserRole, UserRoleSyncResponse } from "@/types";
 
 type SessionProviderProps = {
   children: ReactNode;
@@ -44,6 +44,11 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   }, [supabaseClient]);
 
   useEffect(() => {
+    if (typeof window !== "undefined" && window.location.pathname === "/login/oauth-callback") {
+      setIsRoleLoading(false);
+      return;
+    }
+
     // 회원가입 후 첫 login은 skip
     const isSignUpComplete = sessionStorage.getItem("signUpCompleteAndSkipRoleSync") === "1";
     if (isSignUpComplete) {
@@ -86,12 +91,10 @@ export default function SessionProvider({ children }: SessionProviderProps) {
         },
       });
 
-      const payload: { role: "admin" | "reviewer" | null; error: string | null } = await response
-        .json()
-        .catch(() => ({}));
+      const payload = (await response.json().catch(() => null)) as UserRoleSyncResponse | null;
 
-      if (!response.ok || payload.error || !payload.role) {
-        const message = payload.error ?? "Failed Post user roles";
+      if (!response.ok || !payload || payload.error || !payload.role) {
+        const message = payload?.error ?? "Failed Post user roles";
         throw new Error(message);
       }
 

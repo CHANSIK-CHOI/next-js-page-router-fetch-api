@@ -1,18 +1,22 @@
-import type { FeedbackNewFormValues, LoginForm, SingUpForm } from "@/types";
+import type { FeedbackNewFormValues, LoginForm, SignUpForm } from "@/types";
 
 export const PLACEHOLDER_SRC = "https://placehold.co/100x100.png?text=Hello+World";
+export const MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024;
 
 export const LOGIN_EMAIL_FORM: LoginForm = {
   login_email: "",
   login_password: "",
 };
 
-export const SINGUP_EMAIL_FORM: SingUpForm = {
+export const SIGNUP_EMAIL_FORM: SignUpForm = {
   signup_name: "",
   signup_phone: "",
   signup_email: "",
   signup_password: "",
 };
+
+// Backward compatibility alias for existing imports.
+export const SINGUP_EMAIL_FORM = SIGNUP_EMAIL_FORM;
 
 export const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const PHONE_PATTERN = /^01[016789]-?\d{3,4}-?\d{4}$/;

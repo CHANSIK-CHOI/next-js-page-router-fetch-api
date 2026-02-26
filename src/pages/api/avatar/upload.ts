@@ -1,22 +1,12 @@
 import { promises as fs } from "node:fs";
 import type { NextApiRequest, NextApiResponse } from "next";
 import formidable, { type File as FormidableFile } from "formidable";
+import { MAX_AVATAR_FILE_SIZE } from "@/constants";
 import { getAccessToken } from "@/util";
 import { getAuthContextByAccessToken } from "@/lib/auth.server";
 import { getSupabaseServer } from "@/lib/supabase.server";
-import { MAX_AVATAR_FILE_SIZE, replaceUserAvatar } from "@/lib/avatar.server";
-
-type AvatarUploadSuccess = {
-  bucket: string;
-  path: string;
-  avatarUrl: string;
-};
-
-type AvatarUploadFailure = {
-  error: string;
-};
-
-type AvatarUploadResponse = AvatarUploadSuccess | AvatarUploadFailure;
+import { replaceUserAvatar } from "@/lib/avatar.server";
+import type { AvatarUploadResponse } from "@/types";
 
 const AVATAR_BUCKET = process.env.SUPABASE_AVATAR_BUCKET;
 
@@ -121,6 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     return res.status(200).json(replacedAvatar);
   } catch (error) {
+    console.error("Avatar upload API failed", error);
     const message = error instanceof Error ? error.message : "아바타 업로드에 실패했습니다.";
     return res.status(500).json({ error: message });
   } finally {

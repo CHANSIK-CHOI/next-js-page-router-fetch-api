@@ -5,8 +5,7 @@ import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
 import { useSession } from "./useSession";
 import { pushSafely, replaceSafely } from "@/lib/router.client";
-import { PLACEHOLDER_SRC } from "@/constants";
-import { getAvatarUrl, getUserName, normalizeExternalImageSrc } from "@/util";
+import { getAvatarImageSrc, getAvatarUrl, getUserName, isPrivateAvatarApiSrc } from "@/util";
 
 export default function AuthActions() {
   const { session, supabaseClient } = useSession();
@@ -38,9 +37,7 @@ export default function AuthActions() {
 
   const user = session?.user;
   const userName = getUserName(user);
-  const avatarUrl = getAvatarUrl(user);
-
-  const avatarSrc = normalizeExternalImageSrc(avatarUrl || PLACEHOLDER_SRC);
+  const avatarSrc = getAvatarImageSrc(getAvatarUrl(user));
   return (
     <div className="flex items-center gap-3">
       {!session?.access_token ? (
@@ -64,7 +61,11 @@ export default function AuthActions() {
                 alt={`${userName} avatar`}
                 width={50}
                 height={50}
-                unoptimized={!avatarUrl}
+                unoptimized={
+                  avatarSrc.startsWith("data:") ||
+                  avatarSrc.startsWith("blob:") ||
+                  isPrivateAvatarApiSrc(avatarSrc)
+                }
               />
               {/* <span className="uppercase">{userName.slice(0, 1)}</span> */}
             </span>

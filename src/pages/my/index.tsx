@@ -10,11 +10,12 @@ import { uploadAvatarToSupabase, validateAvatarFile } from "@/lib/avatarUpload";
 import { PHONE_PATTERN, inputBaseStyle, PLACEHOLDER_SRC } from "@/constants";
 import {
   formatPhoneNumber,
+  getAvatarImageSrc,
   getAuthProviders,
   getAvatarUrl,
   getUserCompany,
   getUserName,
-  normalizeExternalImageSrc,
+  isPrivateAvatarApiSrc,
 } from "@/util";
 
 type MyProfileForm = {
@@ -43,7 +44,7 @@ export default function MyPage() {
   const sessionUserName = getUserName(user);
   const sessionPhone =
     typeof user?.user_metadata?.phone === "string" ? user.user_metadata.phone : "";
-  const sessionAvatar = normalizeExternalImageSrc(getAvatarUrl(user) || PLACEHOLDER_SRC);
+  const sessionAvatar = getAvatarImageSrc(getAvatarUrl(user));
   const { sessionCompanyName, sessionIsCompanyPublic } = getUserCompany(user);
   const providers = getAuthProviders(user);
 
@@ -68,7 +69,7 @@ export default function MyPage() {
   });
 
   const avatarValue = useWatch({ control, name: "avatar" });
-  const avatarSrc = normalizeExternalImageSrc(avatarValue || PLACEHOLDER_SRC);
+  const avatarSrc = getAvatarImageSrc(avatarValue);
   const hasAvatar = avatarSrc !== PLACEHOLDER_SRC;
 
   const isCompanyPublic = useWatch({
@@ -156,11 +157,9 @@ export default function MyPage() {
     if (isSubmitting) return;
     if (!supabaseClient || !session?.user || !session.access_token) return;
 
-    console.log(values);
-
     const nextName = values.name.trim();
     const nextPhone = values.phone.trim();
-    let nextAvatar = normalizeExternalImageSrc(values.avatar || PLACEHOLDER_SRC);
+    let nextAvatar = getAvatarImageSrc(values.avatar);
     const nextCompanyName = values.company_name.trim();
     const nextIsCompanyPublic = values.is_company_public;
 
@@ -168,7 +167,10 @@ export default function MyPage() {
       setIsUploadingAvatar(true);
       try {
         const { avatarUrl } = await uploadAvatarToSupabase(pendingAvatarFile, session.access_token);
-        nextAvatar = normalizeExternalImageSrc(avatarUrl);
+        nextAvatar = getAvatarImageSrc(avatarUrl);
+        setPendingAvatarFile(null);
+        setPendingAvatarPreviewUrl(null);
+        setValue("avatar", nextAvatar, { shouldDirty: true, shouldValidate: true });
       } catch (error) {
         openAlert({
           description: error instanceof Error ? error.message : "아바타 업로드에 실패했습니다.",
@@ -197,8 +199,6 @@ export default function MyPage() {
       return;
     }
 
-    setPendingAvatarFile(null);
-    setPendingAvatarPreviewUrl(null);
     setValue("avatar", nextAvatar, { shouldDirty: false, shouldValidate: true });
 
     openAlert({
@@ -250,7 +250,11 @@ export default function MyPage() {
                 alt="사용자 아바타"
                 width={120}
                 height={120}
-                unoptimized={avatarSrc.startsWith("data:") || avatarSrc.startsWith("blob:")}
+                unoptimized={
+                  avatarSrc.startsWith("data:") ||
+                  avatarSrc.startsWith("blob:") ||
+                  isPrivateAvatarApiSrc(avatarSrc)
+                }
               />
             </div>
             <div className="flex w-full flex-col gap-2">

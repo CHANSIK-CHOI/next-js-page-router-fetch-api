@@ -2,8 +2,8 @@ import React from "react";
 import Link from "next/link";
 import GithubLoginBtn from "@/components/GithubLoginBtn";
 import { useForm } from "react-hook-form";
-import { SingUpForm } from "@/types";
-import { EMAIL_PATTERN, inputBaseStyle, SINGUP_EMAIL_FORM } from "@/constants";
+import { SignUpForm } from "@/types";
+import { EMAIL_PATTERN, inputBaseStyle, SIGNUP_EMAIL_FORM } from "@/constants";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
@@ -38,12 +38,12 @@ export default function SignupPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SingUpForm>({
+  } = useForm<SignUpForm>({
     mode: "onSubmit",
-    defaultValues: SINGUP_EMAIL_FORM,
+    defaultValues: SIGNUP_EMAIL_FORM,
   });
 
-  const onSubmit = async (values: SingUpForm) => {
+  const onSubmit = async (values: SignUpForm) => {
     if (isSubmitting) return;
     if (!supabaseClient) return;
 

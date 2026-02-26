@@ -35,6 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from("user_roles")
       .select("user_id, role")
       .eq("user_id", authData.user.id)
+      .limit(1)
       .maybeSingle();
     if (existingError) {
       return res

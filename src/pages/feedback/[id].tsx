@@ -2,11 +2,11 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui";
-import { PLACEHOLDER_SRC } from "@/constants";
 import {
   formatDateTime,
+  getAvatarImageSrc,
+  isPrivateAvatarApiSrc,
   isSvgImageSrc,
-  normalizeExternalImageSrc,
   ratingStars,
   statusBadge,
   statusLabel,
@@ -74,7 +74,7 @@ export default function FeedbackDetailPage({
   isAuthor,
   isAdmin,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const avatarSrc = normalizeExternalImageSrc(detailFeedbacksData.avatar_url || PLACEHOLDER_SRC);
+  const avatarSrc = getAvatarImageSrc(detailFeedbacksData.avatar_url);
 
   return (
     <div className="flex flex-col gap-6">
@@ -154,7 +154,7 @@ export default function FeedbackDetailPage({
                 alt={`${detailFeedbacksData.display_name} avatar`}
                 width={48}
                 height={48}
-                unoptimized={isSvgImageSrc(avatarSrc)}
+                unoptimized={isSvgImageSrc(avatarSrc) || isPrivateAvatarApiSrc(avatarSrc)}
                 className="h-full w-full object-cover"
               />
             </div>
