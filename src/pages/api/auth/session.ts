@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
 import { getAccessToken } from "@/util";
 
+// 옵션: HttpOnly, SameSite=Lax, (prod에서 Secure), Path=/, Max-Age=3600
 const ACCESS_TOKEN_COOKIE = "sb-access-token";
 
 const buildCookie = (value: string, maxAge: number) =>

@@ -3,17 +3,19 @@ import { useRouter } from "next/router";
 import type { Session } from "@supabase/supabase-js";
 import { useSession } from "@/components/useSession";
 import { replaceSafely } from "@/lib/router.client";
-import type { UserRoleSyncResponse } from "@/types";
+import { syncUserRole } from "@/lib/userRole.client";
 
 export default function OAuthCallbackPage() {
   const router = useRouter();
   const { supabaseClient } = useSession();
   const isHandledRef = useRef(false);
+  // isHandledRef : getSession + onAuthStateChange + fallback에서 handleSession이 여러 번 불려도 실처리는 1번만 하게 막음.
 
   useEffect(() => {
     if (!supabaseClient) return;
 
     let isUnmounted = false;
+    // isUnmounted : 컴포넌트 언마운트 후 비동기 완료 시점에 라우팅/상태 변경 같은 후속 작업을 중단해서 안전하게 종료.
 
     const handleSession = async (session: Session | null) => {
       if (isUnmounted || isHandledRef.current || !session?.user) return;
@@ -24,21 +26,15 @@ export default function OAuthCallbackPage() {
         return;
       }
 
-      const response = await fetch("/api/user-roles", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-      const payload = (await response.json().catch(() => null)) as UserRoleSyncResponse | null;
-
-      if (!response.ok || !payload || payload.error || !payload.role) {
+      let roleSyncResult: { isNewUser: boolean };
+      try {
+        roleSyncResult = await syncUserRole(session.access_token);
+      } catch {
         await replaceSafely(router, "/login");
         return;
       }
 
-      const isNewUser = response.status === 201;
+      const { isNewUser } = roleSyncResult;
       if (isNewUser) {
         sessionStorage.setItem("signUpCompleteAndSkipRoleSync", "1");
       }
@@ -50,14 +46,17 @@ export default function OAuthCallbackPage() {
       .then(({ data }) => handleSession(data.session))
       .catch(() => undefined);
 
+    // OAuth 처리 중 세션이 나중에 생길 수 있어서 이벤트 구독 / INITIAL_SESSION/SIGNED_IN 때 handleSession()
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((event, session) => {
+      console.log("OAuthCallbackPage event", event);
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
         void handleSession(session);
       }
     });
 
+    // handleSession 으로 실패 시 setTimeout 으로 /login 으로 강제 이동 시킴
     const fallbackTimer = window.setTimeout(() => {
       if (isUnmounted || isHandledRef.current) return;
       isHandledRef.current = true;

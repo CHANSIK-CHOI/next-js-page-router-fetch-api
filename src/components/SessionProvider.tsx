@@ -2,7 +2,8 @@ import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { SessionContext } from "./useSession";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase.client";
-import type { UserRole, UserRoleSyncResponse } from "@/types";
+import { syncUserRole } from "@/lib/userRole.client";
+import type { UserRole } from "@/types";
 
 type SessionProviderProps = {
   children: ReactNode;
@@ -12,13 +13,14 @@ const CACHE_KEY = (id: string) => `role:${id}`;
 const CACHE_TTL = 5 * 60 * 1000; // 5분
 
 export default function SessionProvider({ children }: SessionProviderProps) {
+  const supabaseClient: SupabaseClient | null = getSupabaseClient();
   const [session, setSession] = useState<Session | null>(null);
   const [isInitSessionComplete, setIsInitSessionComplete] = useState(false);
-  const supabaseClient: SupabaseClient | null = getSupabaseClient();
   const [isAdminUi, setIsAdminUi] = useState(false);
   const [isRoleLoading, setIsRoleLoading] = useState(false);
   const syncedTokenRef = useRef<string | null>(null);
 
+  /* session 업데이트, session init 상태 업데이트 */
   useEffect(() => {
     if (!supabaseClient) {
       setIsInitSessionComplete(false);
@@ -43,13 +45,15 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     };
   }, [supabaseClient]);
 
+  /* 유저의 role 업데이트, role 부여 여부 업데이트 */
   useEffect(() => {
+    // /login/oauth-callback 페이지에서만 해당 로직 막음
     if (typeof window !== "undefined" && window.location.pathname === "/login/oauth-callback") {
       setIsRoleLoading(false);
       return;
     }
 
-    // 회원가입 후 첫 login은 skip
+    // 회원가입 후 첫 login은 skip -> 회원가입 후 자동 로그인 처리가 되기 떄문에 session이 감지가 됨 그 경우 스킵 처리 후 유저가 로그인을 직접 했을 때 아래 로직 수행
     const isSignUpComplete = sessionStorage.getItem("signUpCompleteAndSkipRoleSync") === "1";
     if (isSignUpComplete) {
       sessionStorage.removeItem("signUpCompleteAndSkipRoleSync");
@@ -64,12 +68,13 @@ export default function SessionProvider({ children }: SessionProviderProps) {
       return;
     }
 
+    // 케시 처리로 api 호출 횟수를 줄임
     const cacheKey = CACHE_KEY(session.user.id);
     const cached = sessionStorage.getItem(cacheKey);
 
     if (cached) {
       try {
-        const { role, ts } = JSON.parse(cached) as { role?: UserRole["role"] | null; ts?: number };
+        const { role, ts }: { role?: UserRole["role"] | null; ts?: number } = JSON.parse(cached);
         setIsAdminUi(role === "admin");
         setIsRoleLoading(false);
 
@@ -81,28 +86,14 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     }
 
     // 로그인 수단과 관계없이 세션 생성 시 user_roles를 동기화한다.
-    const syncUserRole = async () => {
+    const runRoleSync = async () => {
       setIsRoleLoading(true);
-      const response = await fetch("/api/user-roles", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      const payload = (await response.json().catch(() => null)) as UserRoleSyncResponse | null;
-
-      if (!response.ok || !payload || payload.error || !payload.role) {
-        const message = payload?.error ?? "Failed Post user roles";
-        throw new Error(message);
-      }
-
-      setIsAdminUi(payload.role === "admin");
-      sessionStorage.setItem(cacheKey, JSON.stringify({ role: payload.role, ts: Date.now() }));
+      const { role } = await syncUserRole(session.access_token);
+      setIsAdminUi(role === "admin");
+      sessionStorage.setItem(cacheKey, JSON.stringify({ role, ts: Date.now() }));
     };
 
-    syncUserRole()
+    runRoleSync()
       .catch((error) => {
         console.error(error);
         setIsAdminUi(false);
@@ -112,8 +103,10 @@ export default function SessionProvider({ children }: SessionProviderProps) {
       });
   }, [session?.user?.id, session?.access_token]);
 
+  /* 클라이언트 세션(access token)”을 “서버용 HttpOnly 쿠키”로 동기화 */
   useEffect(() => {
     const syncSessionCookie = async () => {
+      // 서버가 sb-access-token 쿠키를 만료(Max-Age=0)시켜 삭제
       if (!session?.access_token) {
         syncedTokenRef.current = null;
         await fetch("/api/auth/session", {
@@ -122,8 +115,10 @@ export default function SessionProvider({ children }: SessionProviderProps) {
         return;
       }
 
+      // 토큰이 있고, 이전에 동기화한 토큰과 같으면 요청 생략
       if (syncedTokenRef.current === session.access_token) return;
 
+      // 새 토큰이면 POST /api/auth/session 호출
       const response = await fetch("/api/auth/session", {
         method: "POST",
         headers: {

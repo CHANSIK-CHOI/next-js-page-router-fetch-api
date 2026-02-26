@@ -12,13 +12,7 @@ import {
   TAG_OTIONS,
 } from "@/constants";
 import { cn } from "@/lib/utils";
-import {
-  getAvatarImageSrc,
-  getAvatarUrl,
-  getUserCompany,
-  getUserName,
-  isPrivateAvatarApiSrc,
-} from "@/util";
+import { getAvatarUrl, getUserCompany, getUserName, isPrivateAvatarApiSrc } from "@/util";
 import { FeedbackNewFormValues } from "@/types";
 
 export default function FeedbackNewPage() {
@@ -40,7 +34,7 @@ export default function FeedbackNewPage() {
   });
 
   const sessionUserName = getUserName(user);
-  const sessionAvatar = getAvatarImageSrc(getAvatarUrl(user));
+  const sessionAvatar = getAvatarUrl(user);
   const { sessionCompanyName, sessionIsCompanyPublic } = getUserCompany(user);
 
   useEffect(() => {
@@ -71,7 +65,7 @@ export default function FeedbackNewPage() {
   const ratingValue = useWatch({ control, name: "rating" });
   const tagsValue = useWatch({ control, name: "tags" });
 
-  const avatarSrc = getAvatarImageSrc(avatarValue || sessionAvatar);
+  const avatarSrc = avatarValue || sessionAvatar || PLACEHOLDER_SRC;
   const isPlaceholderAvatar = avatarSrc === PLACEHOLDER_SRC;
 
   const onSubmit = (values: FeedbackNewFormValues) => {

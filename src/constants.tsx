@@ -10,7 +10,6 @@ export const LOGIN_EMAIL_FORM: LoginForm = {
 
 export const SIGNUP_EMAIL_FORM: SignUpForm = {
   signup_name: "",
-  signup_phone: "",
   signup_email: "",
   signup_password: "",
 };

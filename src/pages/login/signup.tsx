@@ -68,6 +68,7 @@ export default function SignupPage() {
       return;
     }
 
+    // 이메일 인증을 안하는 경우
     if (data.session) {
       sessionStorage.setItem("signUpCompleteAndSkipRoleSync", "1");
       openAlert({

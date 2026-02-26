@@ -26,6 +26,14 @@ export type SignUpForm = {
   signup_password: string;
 };
 
+export type MyProfileForm = {
+  company_name: string;
+  is_company_public: boolean;
+  name: string;
+  phone: string;
+  avatar: string;
+};
+
 // Backward compatibility alias for existing imports.
 export type SingUpForm = SignUpForm;
 

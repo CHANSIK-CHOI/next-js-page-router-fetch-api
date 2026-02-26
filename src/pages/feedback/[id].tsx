@@ -4,7 +4,6 @@ import Image from "next/image";
 import { Button } from "@/components/ui";
 import {
   formatDateTime,
-  getAvatarImageSrc,
   isPrivateAvatarApiSrc,
   isSvgImageSrc,
   ratingStars,
@@ -15,6 +14,7 @@ import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getDetailFeedbacksApi, getEmailApi } from "@/lib/feedback.server";
 import type { FeedbackPublicRow } from "@/types";
 import { getAuthContextByAccessToken } from "@/lib/auth.server";
+import { PLACEHOLDER_SRC } from "@/constants";
 
 type FeedbackDetailData = FeedbackPublicRow & {
   email?: string;
@@ -74,7 +74,7 @@ export default function FeedbackDetailPage({
   isAuthor,
   isAdmin,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const avatarSrc = getAvatarImageSrc(detailFeedbacksData.avatar_url);
+  const avatarSrc = detailFeedbacksData.avatar_url || PLACEHOLDER_SRC;
 
   return (
     <div className="flex flex-col gap-6">

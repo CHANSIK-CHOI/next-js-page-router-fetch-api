@@ -20,6 +20,7 @@ export async function uploadAvatarToSupabase(
 
   validateAvatarFile(file);
 
+  // FormData 생성 후 avatar 키로 파일 추가
   const formData = new FormData();
   formData.append("avatar", file);
 

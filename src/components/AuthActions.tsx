@@ -5,18 +5,21 @@ import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
 import { useSession } from "./useSession";
 import { pushSafely, replaceSafely } from "@/lib/router.client";
-import { getAvatarImageSrc, getAvatarUrl, getUserName, isPrivateAvatarApiSrc } from "@/util";
+import { getAvatarUrl, getUserName, isPrivateAvatarApiSrc } from "@/util";
 
 export default function AuthActions() {
   const { session, supabaseClient } = useSession();
   const router = useRouter();
-  const [isMovingLogin, setIsMovingLogin] = useState(false);
+  const [isLogging, setIsLogging] = useState(false);
 
   const handleLogout = async () => {
     if (!supabaseClient) return;
     try {
       const { error } = await supabaseClient.auth.signOut({ scope: "global" });
+      // signOut({ scope: "global" }) : 서버 쪽(리프레시 토큰 포함)까지 로그아웃하려는 시도입니다.
       if (error?.name === "AuthSessionMissingError") {
+        // 현재 탭에 세션이 이미 없으면 AuthSessionMissingError가 날 수 있음 예: 다른 탭에서 이미 로그아웃, 토큰 만료, 로컬 세션 손실
+        // signOut({ scope: "local" })를 한 번 더 호출해서 클라이언트 로컬 auth 상태라도 확실히 정리
         await supabaseClient.auth.signOut({ scope: "local" });
       }
     } finally {
@@ -25,19 +28,19 @@ export default function AuthActions() {
       await replaceSafely(router, "/");
     }
   };
-  const handleMoveLogin = async () => {
-    if (isMovingLogin) return;
-    setIsMovingLogin(true);
+  const handleClickLogin = async () => {
+    if (isLogging) return;
+    setIsLogging(true);
     try {
       await pushSafely(router, "/login");
     } finally {
-      setIsMovingLogin(false);
+      setIsLogging(false);
     }
   };
 
   const user = session?.user;
   const userName = getUserName(user);
-  const avatarSrc = getAvatarImageSrc(getAvatarUrl(user));
+  const avatarSrc = getAvatarUrl(user);
   return (
     <div className="flex items-center gap-3">
       {!session?.access_token ? (
@@ -46,8 +49,8 @@ export default function AuthActions() {
           variant="outline"
           size="sm"
           className="rounded-full"
-          onClick={handleMoveLogin}
-          disabled={isMovingLogin}
+          onClick={handleClickLogin}
+          disabled={isLogging}
         >
           로그인
         </Button>
@@ -67,7 +70,6 @@ export default function AuthActions() {
                   isPrivateAvatarApiSrc(avatarSrc)
                 }
               />
-              {/* <span className="uppercase">{userName.slice(0, 1)}</span> */}
             </span>
             <span className="text-sm font-medium text-foreground">{userName} 님</span>
           </div>

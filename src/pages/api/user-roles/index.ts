@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ role: null, error: authError?.message ?? "Unauthorized" });
     }
 
-    // insert 우선 시도: 성공 시 신규(201), unique 충돌 시 기존 사용자(200)로 처리
+    // insert() 우선 시도: 성공 시 신규(201), unique 충돌 시 기존 사용자(200)로 처리
     const {
       data: insertedRows,
       error: insertError,
@@ -59,8 +59,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .from("user_roles")
         .select("user_id, role")
         .eq("user_id", authData.user.id)
-        .limit(1)
-        .maybeSingle();
+        .limit(1) // 조회 결과 row 개수를 최대 1개로 제한
+        .maybeSingle(); // 0개면 null, 1개면 객체로 전달 받음
 
     if (existingError) {
       return res

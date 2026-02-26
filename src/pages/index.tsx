@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { useSession } from "@/components/useSession";
+import { getUserName } from "@/util";
 
 export default function MainPage() {
   const { session, isAdminUi, isRoleLoading } = useSession();
   const roleLabel = isRoleLoading ? "확인 중..." : isAdminUi ? "admin" : "reviewer";
-  const userName =
-    (typeof session?.user?.user_metadata?.name === "string" &&
-      session.user.user_metadata.name.trim()) ||
-    session?.user?.email?.split("@")[0] ||
-    "방문자";
+  const userName = getUserName(session?.user);
 
   return (
     <div className="grid gap-6">

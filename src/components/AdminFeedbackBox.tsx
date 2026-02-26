@@ -5,19 +5,19 @@ import { Button } from "@/components/ui";
 import { FeedbackPrivateRow } from "@/types";
 import {
   formatDateTime,
-  getAvatarImageSrc,
   isPrivateAvatarApiSrc,
   isSvgImageSrc,
   ratingStars,
   statusBadge,
   statusLabel,
 } from "@/util";
+import { PLACEHOLDER_SRC } from "@/constants";
 
 type AdminFeedbackBoxProps = {
   data: FeedbackPrivateRow;
 };
 export default function AdminFeedbackBox({ data }: AdminFeedbackBoxProps) {
-  const avatarSrc = getAvatarImageSrc(data.avatar_url);
+  const avatarSrc = data.avatar_url || PLACEHOLDER_SRC;
 
   return (
     <article className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70">

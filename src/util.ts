@@ -57,27 +57,6 @@ export const ratingStars = (rating: number) => {
   return "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(rating);
 };
 
-const FILE_EXTENSION_PATTERN = /\.[a-z0-9]+$/i;
-
-export const normalizeExternalImageSrc = (src: string) => {
-  try {
-    const parsedUrl = new URL(src);
-
-    const isPlaceholdImage = parsedUrl.hostname === "placehold.co";
-    if (!isPlaceholdImage) return src;
-
-    const hasFileExtension = FILE_EXTENSION_PATTERN.test(parsedUrl.pathname);
-    if (hasFileExtension) return src;
-
-    // placehold.co URL without extension can fail in some rendering paths.
-    parsedUrl.pathname = `${parsedUrl.pathname}.png`;
-    return parsedUrl.toString();
-  } catch {
-    // If src is not a valid URL, leave it as-is.
-    return src;
-  }
-};
-
 export const isSvgImageSrc = (src: string) => {
   try {
     return new URL(src).pathname.toLowerCase().endsWith(".svg");
@@ -159,13 +138,12 @@ export const getUserName = (user: User | undefined) => {
 
 export const getAvatarUrl = (user: User | undefined) => {
   const avatarUrl =
-    user?.user_metadata?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatar;
+    user?.user_metadata?.avatar_url ||
+    user?.user_metadata?.picture ||
+    user?.user_metadata?.avatar ||
+    PLACEHOLDER_SRC;
 
   return avatarUrl;
-};
-
-export const getAvatarImageSrc = (avatarUrl: string | null | undefined) => {
-  return normalizeExternalImageSrc(avatarUrl || PLACEHOLDER_SRC);
 };
 
 export const buildAvatarDirectory = (userId: string) => `users/${userId}`;

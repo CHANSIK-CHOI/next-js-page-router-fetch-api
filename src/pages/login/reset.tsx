@@ -18,8 +18,10 @@ export default function PasswordResetPage() {
   const [email, setEmail] = useState("");
   const [isRecovery, setIsRecovery] = useState(false);
 
+  /* 비밀번호 재설정 링크로 들어온 정상 진입인지 확인 코드 */
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Supabase reset 메일 링크는 보통 URL에 ?code=...를 붙여서 들어옴
     const hasCode = new URLSearchParams(window.location.search).has("code");
     if (hasCode) setIsRecovery(true);
   }, []);

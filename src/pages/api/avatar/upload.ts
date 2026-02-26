@@ -18,6 +18,13 @@ export const config = {
 
 const parseAvatarFile = (req: NextApiRequest): Promise<FormidableFile> =>
   new Promise((resolve, reject) => {
+    /*
+      formidable 옵션 설정
+      - multiples: false 파일 여러 개 금지
+      - allowEmptyFiles: false 빈 파일 금지
+      - maxFiles: 1 파일 1개만 허용
+      - maxFileSize 최대 용량 제한
+    */
     const form = formidable({
       multiples: false,
       allowEmptyFiles: false,
@@ -42,7 +49,10 @@ const parseAvatarFile = (req: NextApiRequest): Promise<FormidableFile> =>
     });
   });
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<AvatarUploadResponse>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<AvatarUploadResponse>
+) {
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method !== "POST") {
@@ -84,6 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       typeof error.httpCode === "number" &&
       error.httpCode === 413
     ) {
+      // 파일이 너무 큼(Payload Too Large)
       return res.status(413).json({ error: "프로필 이미지는 2MB 이하만 업로드할 수 있습니다." });
     }
 

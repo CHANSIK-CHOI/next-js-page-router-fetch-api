@@ -10,21 +10,13 @@ import { uploadAvatarToSupabase, validateAvatarFile } from "@/lib/avatarUpload";
 import { PHONE_PATTERN, inputBaseStyle, PLACEHOLDER_SRC } from "@/constants";
 import {
   formatPhoneNumber,
-  getAvatarImageSrc,
   getAuthProviders,
   getAvatarUrl,
   getUserCompany,
   getUserName,
   isPrivateAvatarApiSrc,
 } from "@/util";
-
-type MyProfileForm = {
-  company_name: string;
-  is_company_public: boolean;
-  name: string;
-  phone: string;
-  avatar: string;
-};
+import { MyProfileForm } from "@/types";
 
 const providerLabel = (provider: string) => {
   if (provider === "github") return "GitHub";
@@ -39,12 +31,12 @@ export default function MyPage() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [pendingAvatarPreviewUrl, setPendingAvatarPreviewUrl] = useState<string | null>(null);
-  const user = session?.user;
 
+  const user = session?.user;
   const sessionUserName = getUserName(user);
   const sessionPhone =
     typeof user?.user_metadata?.phone === "string" ? user.user_metadata.phone : "";
-  const sessionAvatar = getAvatarImageSrc(getAvatarUrl(user));
+  const sessionAvatar = getAvatarUrl(user);
   const { sessionCompanyName, sessionIsCompanyPublic } = getUserCompany(user);
   const providers = getAuthProviders(user);
 
@@ -69,7 +61,7 @@ export default function MyPage() {
   });
 
   const avatarValue = useWatch({ control, name: "avatar" });
-  const avatarSrc = getAvatarImageSrc(avatarValue);
+  const avatarSrc = avatarValue || PLACEHOLDER_SRC;
   const hasAvatar = avatarSrc !== PLACEHOLDER_SRC;
 
   const isCompanyPublic = useWatch({
@@ -113,10 +105,11 @@ export default function MyPage() {
     if (!file) return;
 
     if (!session?.access_token) {
-      openAlert({
-        description: "로그인 상태에서만 아바타를 업로드할 수 있습니다.",
-      });
+      // openAlert({
+      //   description: "로그인 상태에서만 아바타를 업로드할 수 있습니다.",
+      // });
       event.target.value = "";
+      void replaceSafely(router, "/login?next=/my");
       return;
     }
 
@@ -124,8 +117,7 @@ export default function MyPage() {
       validateAvatarFile(file);
     } catch (error) {
       openAlert({
-        description:
-          error instanceof Error ? error.message : "아바타 업로드에 실패했습니다.",
+        description: error instanceof Error ? error.message : "아바타 업로드에 실패했습니다.",
       });
       event.target.value = "";
       return;
@@ -159,7 +151,7 @@ export default function MyPage() {
 
     const nextName = values.name.trim();
     const nextPhone = values.phone.trim();
-    let nextAvatar = getAvatarImageSrc(values.avatar);
+    let nextAvatar = values.avatar || PLACEHOLDER_SRC;
     const nextCompanyName = values.company_name.trim();
     const nextIsCompanyPublic = values.is_company_public;
 
@@ -167,7 +159,7 @@ export default function MyPage() {
       setIsUploadingAvatar(true);
       try {
         const { avatarUrl } = await uploadAvatarToSupabase(pendingAvatarFile, session.access_token);
-        nextAvatar = getAvatarImageSrc(avatarUrl);
+        nextAvatar = avatarUrl || PLACEHOLDER_SRC;
         setPendingAvatarFile(null);
         setPendingAvatarPreviewUrl(null);
         setValue("avatar", nextAvatar, { shouldDirty: true, shouldValidate: true });
@@ -198,8 +190,6 @@ export default function MyPage() {
       });
       return;
     }
-
-    setValue("avatar", nextAvatar, { shouldDirty: false, shouldValidate: true });
 
     openAlert({
       description: "내 정보가 저장되었습니다.",
@@ -260,11 +250,7 @@ export default function MyPage() {
             <div className="flex w-full flex-col gap-2">
               <Button asChild variant="outline" size="sm" className="w-full cursor-pointer">
                 <label htmlFor="myAvatarUpload">
-                  {isUploadingAvatar
-                    ? "업로드 중..."
-                    : hasAvatar
-                      ? "프로필 변경"
-                      : "프로필 업로드"}
+                  {isUploadingAvatar ? "업로드 중..." : hasAvatar ? "프로필 변경" : "프로필 업로드"}
                 </label>
               </Button>
               <input

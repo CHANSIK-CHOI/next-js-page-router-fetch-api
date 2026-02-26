@@ -27,7 +27,12 @@ export default function LoginPage() {
   const { openAlert } = useAlert();
   const { supabaseClient } = useSession();
   const router = useRouter();
-  const nextQuery = router.query.next;
+  const nextQuery = router.query.next; // URL 쿼리의 next 값을 가져옴 (예: /login?next=/feedback/new)
+  /*
+    - 문자열이어야 함
+    - /로 시작해야 함 (사이트 내부 경로)
+    - //로 시작하면 안 됨 (외부 URL 우회 방지)
+  */
   const nextPath =
     typeof nextQuery === "string" && nextQuery.startsWith("/") && !nextQuery.startsWith("//")
       ? nextQuery
