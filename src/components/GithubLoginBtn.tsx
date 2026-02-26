@@ -9,9 +9,7 @@ export default function GithubLoginBtn() {
 
   const handleLoginGithub = async () => {
     if (!supabaseClient) {
-      openAlert({
-        description: "로그인 클라이언트를 초기화하지 못했습니다.",
-      });
+      console.error("Supabase 클라이언트를 초기화하지 못했습니다.");
       return;
     }
 
