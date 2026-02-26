@@ -1,18 +1,32 @@
 import React from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui";
+import { Button, useAlert } from "@/components/ui";
 import { useSession } from "./useSession";
 
 export default function GithubLoginBtn() {
   const { supabaseClient } = useSession();
+  const { openAlert } = useAlert();
 
   const handleLoginGithub = async () => {
-    if (!supabaseClient) return;
-    await supabaseClient.auth.signInWithOAuth({
+    if (!supabaseClient) {
+      openAlert({
+        description: "로그인 클라이언트를 초기화하지 못했습니다.",
+      });
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "github",
       options: {
         redirectTo: `${window.location.origin}/login/oauth-callback`,
       },
+    });
+
+    if (!error) return;
+
+    console.error("GitHub OAuth sign-in failed", error);
+    openAlert({
+      description: "GitHub 로그인에 실패했습니다.",
     });
   };
 
