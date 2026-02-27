@@ -2,7 +2,7 @@ import type { NextRouter } from "next/router";
 
 type NavigationMethod = "push" | "replace";
 
-const isNavigationCancelledError = (error: unknown) => {
+const checkNavigationCancelledError = (error: unknown) => {
   if (!error) return false;
 
   if (typeof error === "string") {
@@ -32,7 +32,7 @@ const navigateSafely = async (router: NextRouter, method: NavigationMethod, href
   try {
     return await router[method](href);
   } catch (error) {
-    if (isNavigationCancelledError(error)) return false;
+    if (checkNavigationCancelledError(error)) return false;
     throw error;
   }
 };

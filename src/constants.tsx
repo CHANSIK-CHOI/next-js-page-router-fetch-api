@@ -1,7 +1,5 @@
 import type { FeedbackNewFormValues, LoginForm, SignUpForm } from "@/types";
-
-export const PLACEHOLDER_SRC = "https://placehold.co/100x100.png?text=Hello+World";
-export const MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024;
+import { AVATAR_PLACEHOLDER_SRC } from "@/lib/avatar/constants";
 
 export const LOGIN_EMAIL_FORM: LoginForm = {
   login_email: "",
@@ -30,7 +28,7 @@ export const NEW_FEEDBACK_DEFAULT_VALUES: FeedbackNewFormValues = {
   display_name: "",
   company_name: "",
   is_company_public: false,
-  avatar: PLACEHOLDER_SRC,
+  avatar: AVATAR_PLACEHOLDER_SRC,
   rating: 0,
   summary: "",
   strengths: "",
@@ -45,7 +43,7 @@ export const inputBaseStyle =
 export const chipButtonBaseStyle =
   "rounded-full border border-border/60 px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:border-primary hover:text-primary";
 
-export const TAG_OTIONS = [
+export const TAG_OPTIONS = [
   "문제 해결력",
   "코드 가독성",
   "코드 구조",
@@ -66,3 +64,6 @@ export const TAG_OTIONS = [
   "보안 인식",
   "성장 가능성",
 ];
+
+// Backward compatibility alias for existing imports.
+export const TAG_OTIONS = TAG_OPTIONS;

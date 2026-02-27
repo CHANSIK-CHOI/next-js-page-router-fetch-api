@@ -25,7 +25,11 @@ export const getStaticProps = async () => {
     const revisedPendingPreviewData = await getRevisedPendingPreviewApi();
 
     return {
-      props: { approvedFeedbacksData, revisedPendingPreviewData, alertMessage: null },
+      props: {
+        approvedFeedbacksData,
+        revisedPendingPreviewData,
+        alertMessage: null,
+      },
     };
   } catch (error) {
     console.error(error);
@@ -46,7 +50,7 @@ export default function FeedbackBoardPage({
   alertMessage,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const router = useRouter();
-  const hasAlertedRef = useRef(false);
+  const isAlertedRef = useRef(false);
   const { openAlert } = useAlert();
   const { session, isAdminUi, isRoleLoading } = useSession();
   const [pendingCount, setPendingCount] = useState<number | null>(null);
@@ -72,11 +76,11 @@ export default function FeedbackBoardPage({
   }, [feedbackData, sortType]);
 
   useEffect(() => {
-    if (alertMessage && !hasAlertedRef.current) {
+    if (alertMessage && !isAlertedRef.current) {
       openAlert({
         description: alertMessage,
       });
-      hasAlertedRef.current = true;
+      isAlertedRef.current = true;
     }
   }, [alertMessage, openAlert]);
 

@@ -6,23 +6,19 @@ import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components";
 import { replaceSafely } from "@/lib/router.client";
 import { useRouter } from "next/router";
-import { uploadAvatarToSupabase, validateAvatarFile } from "@/lib/avatarUpload";
-import { PHONE_PATTERN, inputBaseStyle, PLACEHOLDER_SRC } from "@/constants";
+import { uploadAvatarToSupabase, validateAvatarFile } from "@/lib/avatar/client";
+import { AVATAR_PLACEHOLDER_SRC, AVATAR_UPLOAD_ACCEPT } from "@/lib/avatar/constants";
+import { getAvatarUrl } from "@/lib/avatar/profile";
+import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
+import { PHONE_PATTERN, inputBaseStyle } from "@/constants";
 import {
   formatPhoneNumber,
+  getAuthProviderLabel,
   getAuthProviders,
-  getAvatarUrl,
   getUserCompany,
   getUserName,
-  isPrivateAvatarApiSrc,
 } from "@/util";
 import { MyProfileForm } from "@/types";
-
-const providerLabel = (provider: string) => {
-  if (provider === "github") return "GitHub";
-  if (provider === "email") return "이메일";
-  return provider;
-};
 
 export default function MyPage() {
   const { openAlert } = useAlert();
@@ -61,8 +57,8 @@ export default function MyPage() {
   });
 
   const avatarValue = useWatch({ control, name: "avatar" });
-  const avatarSrc = avatarValue || PLACEHOLDER_SRC;
-  const hasAvatar = avatarSrc !== PLACEHOLDER_SRC;
+  const avatarSrc = avatarValue || AVATAR_PLACEHOLDER_SRC;
+  const isAvatarConfigured = avatarSrc !== AVATAR_PLACEHOLDER_SRC;
 
   const isCompanyPublic = useWatch({
     control,
@@ -100,14 +96,19 @@ export default function MyPage() {
     };
   }, [pendingAvatarPreviewUrl]);
 
+  const clearPendingAvatar = () => {
+    setPendingAvatarFile(null);
+    setPendingAvatarPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  };
+
   const handleChangeImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     if (!file) return;
 
     if (!session?.access_token) {
-      // openAlert({
-      //   description: "로그인 상태에서만 아바타를 업로드할 수 있습니다.",
-      // });
       event.target.value = "";
       void replaceSafely(router, "/login?next=/my");
       return;
@@ -125,7 +126,10 @@ export default function MyPage() {
 
     const previewUrl = URL.createObjectURL(file);
     setPendingAvatarFile(file);
-    setPendingAvatarPreviewUrl(previewUrl);
+    setPendingAvatarPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return previewUrl;
+    });
     setValue("avatar", previewUrl, {
       shouldDirty: true,
       shouldValidate: true,
@@ -134,14 +138,12 @@ export default function MyPage() {
   };
 
   const handleRemoveImage = () => {
-    setPendingAvatarFile(null);
-    setPendingAvatarPreviewUrl(null);
-    setValue("avatar", PLACEHOLDER_SRC, { shouldDirty: true, shouldValidate: true });
+    clearPendingAvatar();
+    setValue("avatar", AVATAR_PLACEHOLDER_SRC, { shouldDirty: true, shouldValidate: true });
   };
 
   const handleResetImage = () => {
-    setPendingAvatarFile(null);
-    setPendingAvatarPreviewUrl(null);
+    clearPendingAvatar();
     setValue("avatar", sessionAvatar, { shouldDirty: true, shouldValidate: true });
   };
 
@@ -151,7 +153,7 @@ export default function MyPage() {
 
     const nextName = values.name.trim();
     const nextPhone = values.phone.trim();
-    let nextAvatar = values.avatar || PLACEHOLDER_SRC;
+    let nextAvatar = values.avatar || AVATAR_PLACEHOLDER_SRC;
     const nextCompanyName = values.company_name.trim();
     const nextIsCompanyPublic = values.is_company_public;
 
@@ -159,9 +161,59 @@ export default function MyPage() {
       setIsUploadingAvatar(true);
       try {
         const { avatarUrl } = await uploadAvatarToSupabase(pendingAvatarFile, session.access_token);
-        nextAvatar = avatarUrl || PLACEHOLDER_SRC;
-        setPendingAvatarFile(null);
-        setPendingAvatarPreviewUrl(null);
+        /*
+          1. uploadAvatarToSupabase(클라이언트)
+          - 파일 기본 검증(validateAvatarFile): file.type, 용량(2MB) 체크
+          - FormData로 /api/avatar/upload에 전송
+          - 성공 응답이면 avatarUrl/bucket/path 반환, 실패면 에러 throw
+          
+          2. /api/avatar/upload(서버)
+          - formidable로 파일 파싱
+          - 용량 재검증
+          - MIME 문자열 정규화(getNormalizedAvatarMimeType)
+          - 실제 파일 바이트 시그니처 검사(detectAvatarMimeTypeFromBuffer)로 PNG/JPEG 진짜 여부 확인
+          - 검증 통과 시 replaceUserAvatar 실행:
+            * Supabase에 업로드
+            * 기존 오래된 아바타 정리
+            * replacedAvatar 객체(avatarUrl, bucket, path) 생성해서 응답
+          
+          즉 핵심은:
+          - 맞아, PNG/JPG 확인하고
+          - 맞으면 Supabase 업로드 후 필요한 정보 객체를 반환하는 흐름이 맞다.
+        */
+
+        /*
+          아바타 전체 흐름 파일:
+
+          1. 업로드 API: upload.ts
+          2. 이미지 조회 API: [userId].ts
+          3. 클라이언트 업로드 호출/검증: client.ts
+          4. 저장 처리(Supabase 업로드): storage.server.ts
+          5. 경로/URL 생성: path.ts
+          6. MIME 정규화/허용 검사: mime.ts
+          7. 시그니처 검사: signature.ts
+          8. 화면 연결(마이페이지): index.tsx
+        */
+
+        /*
+          로직 순서
+
+          1. index.tsx
+          2. client.ts (uploadAvatarToSupabase, validateAvatarFile)
+          3. upload.ts
+          4. mime.ts (MIME 정규화)
+          5. signature.ts (파일 시그니처 검사)
+          6. storage.server.ts (Supabase 업로드)
+          7. path.ts (uploadPath, avatarUrl 생성)
+          8. index.tsx로 응답 받아 avatar_url 업데이트
+          9. 화면 표시 시 ..."> 요청 발생
+          10. [userId].ts
+          11. path.ts (조회 경로 계산)
+          12. mime.ts (응답 MIME 보정)
+          13. 이미지 바이너리 응답 -> 화면 렌더링
+        */
+        nextAvatar = avatarUrl || AVATAR_PLACEHOLDER_SRC;
+        clearPendingAvatar();
         setValue("avatar", nextAvatar, { shouldDirty: true, shouldValidate: true });
       } catch (error) {
         openAlert({
@@ -243,26 +295,30 @@ export default function MyPage() {
                 unoptimized={
                   avatarSrc.startsWith("data:") ||
                   avatarSrc.startsWith("blob:") ||
-                  isPrivateAvatarApiSrc(avatarSrc)
+                  checkAvatarApiSrcPrivate(avatarSrc)
                 }
               />
             </div>
             <div className="flex w-full flex-col gap-2">
               <Button asChild variant="outline" size="sm" className="w-full cursor-pointer">
                 <label htmlFor="myAvatarUpload">
-                  {isUploadingAvatar ? "업로드 중..." : hasAvatar ? "프로필 변경" : "프로필 업로드"}
+                  {isUploadingAvatar
+                    ? "업로드 중..."
+                    : isAvatarConfigured
+                      ? "프로필 변경"
+                      : "프로필 업로드"}
                 </label>
               </Button>
               <input
                 id="myAvatarUpload"
                 type="file"
-                accept="image/*"
+                accept={AVATAR_UPLOAD_ACCEPT}
                 className="sr-only"
                 disabled={isSubmitting || isUploadingAvatar}
                 onChange={handleChangeImage}
               />
               <input type="hidden" {...register("avatar")} />
-              {hasAvatar && (
+              {isAvatarConfigured && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -274,7 +330,7 @@ export default function MyPage() {
                   프로필 삭제
                 </Button>
               )}
-              {sessionAvatar !== PLACEHOLDER_SRC && sessionAvatar !== avatarSrc && (
+              {sessionAvatar !== AVATAR_PLACEHOLDER_SRC && sessionAvatar !== avatarSrc && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -286,7 +342,9 @@ export default function MyPage() {
                   프로필 초기화
                 </Button>
               )}
-              <p className="text-center text-xs text-muted-foreground">JPG/PNG, 2MB 이하</p>
+              <p className="text-center text-xs text-muted-foreground">
+                JPG/PNG (SVG 불가), 2MB 이하
+              </p>
             </div>
           </div>
           <div>
@@ -298,7 +356,7 @@ export default function MyPage() {
                   key={provider}
                   className="rounded-full border border-border/60 px-2.5 py-0.5 text-xs text-muted-foreground"
                 >
-                  {providerLabel(provider)} 로그인
+                  {getAuthProviderLabel(provider)} 로그인
                 </span>
               ))}
             </div>

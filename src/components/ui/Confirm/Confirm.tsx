@@ -7,7 +7,7 @@ export type ConfirmProps = {
   description: string | ReactNode;
   actionText?: string;
   cancelText?: string;
-  open?: boolean;
+  isOpen?: boolean;
   onOk?: () => void;
   onCancel?: () => void;
   onMotionComplete?: (isOpen: boolean) => void;
@@ -18,7 +18,7 @@ export default function Confirm({
   description,
   actionText = "확인",
   cancelText = "취소",
-  open = false,
+  isOpen = false,
   onOk,
   onCancel,
   onMotionComplete,
@@ -27,12 +27,12 @@ export default function Confirm({
 
   const handleAnimationEnd = (event: React.AnimationEvent<HTMLElement>) => {
     const state = event.currentTarget.getAttribute("data-state");
-    const isOpen = state === "open";
-    onMotionComplete?.(isOpen);
+    const isDialogOpen = state === "open";
+    onMotionComplete?.(isDialogOpen);
   };
 
   return (
-    <AlertDialog open={open}>
+    <AlertDialog open={isOpen}>
       <AlertDialog.Content container={container} size="sm" onAnimationEnd={handleAnimationEnd}>
         <AlertDialog.Header>
           <AlertDialog.Title

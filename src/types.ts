@@ -6,14 +6,6 @@ export type ApiErrorResponse = {
   error: string;
 };
 
-export type AvatarUploadResult = {
-  avatarUrl: string;
-  bucket: string;
-  path: string;
-};
-
-export type AvatarUploadResponse = AvatarUploadResult | ApiErrorResponse;
-
 export type LoginForm = {
   login_email: string;
   login_password: string;

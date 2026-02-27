@@ -90,10 +90,11 @@ function buildRows({ items, authorId, reviewerId }) {
           ? 1
           : 0;
 
-    const needsReview = ["approved", "rejected", "revised_pending"].includes(status);
+    const isReviewRequired = ["approved", "rejected", "revised_pending"].includes(status);
     const reviewedAt =
-      item.reviewed_at ?? (needsReview ? new Date(baseTime - index * 500).toISOString() : null);
-    const reviewedBy = item.reviewed_by ?? (needsReview ? reviewerId ?? null : null);
+      item.reviewed_at ??
+      (isReviewRequired ? new Date(baseTime - index * 500).toISOString() : null);
+    const reviewedBy = item.reviewed_by ?? (isReviewRequired ? reviewerId ?? null : null);
 
     const resolvedAuthorId = item.author_id ?? authorId;
     if (!resolvedAuthorId) {

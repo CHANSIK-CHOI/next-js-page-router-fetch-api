@@ -1,45 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getAuthContextByAccessToken } from "@/lib/auth.server";
+import { parseStatusQuery } from "@/lib/statusQuery";
 import type { RevisedPendingOwnerFeedback } from "@/types";
 import { getAccessToken } from "@/util";
 
 const ALLOWED_STATUSES = ["pending", "revised_pending"] as const;
 type MineStatus = (typeof ALLOWED_STATUSES)[number];
-
-const parseStatusQuery = (
-  rawStatus: string | string[] | undefined
-): { statuses: MineStatus[] | null; error: string | null } => {
-  if (typeof rawStatus === "undefined") {
-    return { statuses: [...ALLOWED_STATUSES], error: null };
-  }
-
-  const parsed = (Array.isArray(rawStatus) ? rawStatus : [rawStatus])
-    .flatMap((value) => value.split(","))
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  if (parsed.length === 0) {
-    return {
-      statuses: null,
-      error: "Invalid status query. Use ?status=pending,revised_pending",
-    };
-  }
-
-  const invalidStatuses = parsed.filter(
-    (status): status is string => !ALLOWED_STATUSES.includes(status as MineStatus)
-  );
-  if (invalidStatuses.length > 0) {
-    return {
-      statuses: null,
-      error: `Unsupported status: ${invalidStatuses.join(", ")}`,
-    };
-  }
-
-  return {
-    statuses: Array.from(new Set(parsed)) as MineStatus[],
-    error: null,
-  };
-};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Cache-Control", "no-store");
@@ -54,7 +20,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ data: null, error: "Missing access token" });
   }
 
-  const { statuses, error: statusError } = parseStatusQuery(req.query.status);
+  const { statuses, error: statusError } = parseStatusQuery<MineStatus>({
+    rawStatus: req.query.status,
+    allowedStatuses: ALLOWED_STATUSES,
+    defaultStatuses: ALLOWED_STATUSES,
+    usageMessage: "Use ?status=pending,revised_pending",
+  });
   if (statusError || !statuses) {
     return res.status(400).json({ data: null, error: statusError ?? "Invalid status query" });
   }

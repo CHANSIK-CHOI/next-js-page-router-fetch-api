@@ -1,18 +1,18 @@
 import { cn } from "@/lib/utils";
 import { FeedbackListItem } from "@/types";
 import {
+  checkSvgImageSrc,
   formatDateTime,
-  isPrivateAvatarApiSrc,
-  isSvgImageSrc,
   ratingStars,
   statusBadge,
   statusLabel,
 } from "@/util";
+import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
 import Image from "next/image";
 import React from "react";
 import { Button } from "./ui";
 import Link from "next/link";
-import { PLACEHOLDER_SRC } from "@/constants";
+import { AVATAR_PLACEHOLDER_SRC } from "@/lib/avatar/constants";
 
 type FeedbackBoxProps = {
   data: FeedbackListItem;
@@ -20,7 +20,7 @@ type FeedbackBoxProps = {
 
 export default function FeedbackBox({ data }: FeedbackBoxProps) {
   const isPreview = data.isPreview;
-  const avatarSrc = data.avatar_url || PLACEHOLDER_SRC;
+  const avatarSrc = data.avatar_url || AVATAR_PLACEHOLDER_SRC;
 
   return (
     <article className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70">
@@ -51,7 +51,7 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
               alt={`${data.display_name} avatar`}
               width={40}
               height={40}
-              unoptimized={isSvgImageSrc(avatarSrc) || isPrivateAvatarApiSrc(avatarSrc)}
+              unoptimized={checkSvgImageSrc(avatarSrc) || checkAvatarApiSrcPrivate(avatarSrc)}
               className="h-full w-full object-cover"
             />
           </div>

@@ -6,7 +6,7 @@ export type AlertProps = {
   title?: string | ReactNode;
   description: string | ReactNode;
   actionText?: string;
-  open?: boolean;
+  isOpen?: boolean;
   onOk?: () => void;
   onMotionComplete?: (isOpen: boolean) => void;
 };
@@ -15,7 +15,7 @@ export default function Alert({
   title,
   description,
   actionText = "확인",
-  open = false,
+  isOpen = false,
   onOk,
   onMotionComplete,
 }: AlertProps) {
@@ -23,12 +23,12 @@ export default function Alert({
 
   const handleAnimationEnd = (event: React.AnimationEvent<HTMLElement>) => {
     const state = event.currentTarget.getAttribute("data-state");
-    const isOpen = state === "open";
-    onMotionComplete?.(isOpen);
+    const isDialogOpen = state === "open";
+    onMotionComplete?.(isDialogOpen);
   };
 
   return (
-    <AlertDialog open={open}>
+    <AlertDialog open={isOpen}>
       <AlertDialog.Content container={container} size="sm" onAnimationEnd={handleAnimationEnd}>
         <AlertDialog.Header>
           <AlertDialog.Title

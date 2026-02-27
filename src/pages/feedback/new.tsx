@@ -8,11 +8,13 @@ import {
   chipButtonBaseStyle,
   inputBaseStyle,
   NEW_FEEDBACK_DEFAULT_VALUES,
-  PLACEHOLDER_SRC,
-  TAG_OTIONS,
+  TAG_OPTIONS,
 } from "@/constants";
+import { AVATAR_PLACEHOLDER_SRC } from "@/lib/avatar/constants";
+import { getAvatarUrl } from "@/lib/avatar/profile";
+import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
 import { cn } from "@/lib/utils";
-import { getAvatarUrl, getUserCompany, getUserName, isPrivateAvatarApiSrc } from "@/util";
+import { getUserCompany, getUserName } from "@/util";
 import { FeedbackNewFormValues } from "@/types";
 
 export default function FeedbackNewPage() {
@@ -65,8 +67,8 @@ export default function FeedbackNewPage() {
   const ratingValue = useWatch({ control, name: "rating" });
   const tagsValue = useWatch({ control, name: "tags" });
 
-  const avatarSrc = avatarValue || sessionAvatar || PLACEHOLDER_SRC;
-  const isPlaceholderAvatar = avatarSrc === PLACEHOLDER_SRC;
+  const avatarSrc = avatarValue || sessionAvatar || AVATAR_PLACEHOLDER_SRC;
+  const isPlaceholderAvatar = avatarSrc === AVATAR_PLACEHOLDER_SRC;
 
   const onSubmit = (values: FeedbackNewFormValues) => {
     void values;
@@ -116,7 +118,7 @@ export default function FeedbackNewPage() {
                   alt={`유저 프로필`}
                   width={120}
                   height={120}
-                  unoptimized={avatarSrc.startsWith("data:") || isPrivateAvatarApiSrc(avatarSrc)}
+                  unoptimized={avatarSrc.startsWith("data:") || checkAvatarApiSrcPrivate(avatarSrc)}
                 />
               </div>
               <input type="hidden" {...register("avatar")} />
@@ -273,7 +275,7 @@ export default function FeedbackNewPage() {
           <h3 className="text-lg font-semibold text-foreground">키워드 선택</h3>
           <p className="mt-1 text-sm text-muted-foreground">해당되는 키워드를 골라주세요.</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            {TAG_OTIONS.map((tag) => {
+            {TAG_OPTIONS.map((tag) => {
               const isSelected = tagsValue.includes(tag);
               return (
                 <label

@@ -5,7 +5,6 @@ import type {
   RevisedPendingOwnerFeedback,
   FeedbackListItem,
 } from "@/types";
-import { PLACEHOLDER_SRC } from "@/constants";
 import { User } from "@supabase/supabase-js";
 
 export const formatPhoneNumber = (value: string) => {
@@ -57,20 +56,11 @@ export const ratingStars = (rating: number) => {
   return "★★★★★".slice(0, rating) + "☆☆☆☆☆".slice(rating);
 };
 
-export const isSvgImageSrc = (src: string) => {
+export const checkSvgImageSrc = (src: string) => {
   try {
     return new URL(src).pathname.toLowerCase().endsWith(".svg");
   } catch {
     return src.toLowerCase().split("?")[0].endsWith(".svg");
-  }
-};
-
-export const isPrivateAvatarApiSrc = (src: string) => {
-  try {
-    const parsedUrl = new URL(src, "http://localhost");
-    return parsedUrl.pathname.startsWith("/api/avatar/");
-  } catch {
-    return src.startsWith("/api/avatar/");
   }
 };
 
@@ -136,21 +126,6 @@ export const getUserName = (user: User | undefined) => {
   return userName;
 };
 
-export const getAvatarUrl = (user: User | undefined) => {
-  const avatarUrl =
-    user?.user_metadata?.avatar_url ||
-    user?.user_metadata?.picture ||
-    user?.user_metadata?.avatar ||
-    PLACEHOLDER_SRC;
-
-  return avatarUrl;
-};
-
-export const buildAvatarDirectory = (userId: string) => `users/${userId}`;
-export const buildAvatarPath = (userId: string) => `${buildAvatarDirectory(userId)}/avatar`;
-export const buildAvatarProxyUrl = (userId: string) =>
-  `/api/avatar/${encodeURIComponent(userId)}?t=${Date.now()}`;
-
 export const getUserCompany = (user: User | undefined) => {
   const companyName = user?.user_metadata.company_name;
   const sessionCompanyName = companyName ? companyName : "";
@@ -178,4 +153,10 @@ export const getAuthProviders = (user: User | null | undefined) => {
   // 스프레드로 합치고
   // new Set : 중복을 제거하는 역할
   // Array.from : Set을 다시 배열로 바꾸는 역할
+};
+
+export const getAuthProviderLabel = (provider: string) => {
+  if (provider === "github") return "GitHub";
+  if (provider === "email") return "이메일";
+  return provider;
 };

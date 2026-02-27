@@ -1,5 +1,13 @@
 import { useContext, createContext } from "react";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
+import type { UserRole } from "@/types";
+
+type ApplyRoleUiStateParams = {
+  userId: string;
+  role: UserRole["role"] | null;
+  isLoading?: boolean;
+  isCacheWriteEnabled?: boolean;
+};
 
 type SessionContextValue = {
   session: Session | null;
@@ -7,6 +15,7 @@ type SessionContextValue = {
   isInitSessionComplete: boolean;
   isAdminUi: boolean;
   isRoleLoading: boolean;
+  applyRoleUiState: (params: ApplyRoleUiStateParams) => void;
 };
 
 export const SessionContext = createContext<SessionContextValue | null>(null);

@@ -1,11 +1,15 @@
-import { MAX_AVATAR_FILE_SIZE } from "@/constants";
-import type { AvatarUploadResponse, AvatarUploadResult } from "@/types";
+import { AVATAR_MAX_FILE_SIZE } from "@/lib/avatar/constants";
+import { getNormalizedAvatarMimeType } from "@/lib/avatar/mime";
+import type { AvatarUploadResponse, AvatarUploadResult } from "@/types/avatar/upload";
 
 export const validateAvatarFile = (file: File) => {
-  if (!file.type.startsWith("image/")) {
-    throw new Error("이미지 파일만 업로드할 수 있습니다.");
+  const isAvatarMimeTypeAllowed = getNormalizedAvatarMimeType(file.type) !== null;
+
+  if (!isAvatarMimeTypeAllowed) {
+    throw new Error("프로필 이미지는 JPG/PNG 파일만 업로드할 수 있습니다. (SVG 불가)");
   }
-  if (file.size > MAX_AVATAR_FILE_SIZE) {
+
+  if (file.size > AVATAR_MAX_FILE_SIZE) {
     throw new Error("프로필 이미지는 2MB 이하만 업로드할 수 있습니다.");
   }
 };
@@ -20,7 +24,6 @@ export async function uploadAvatarToSupabase(
 
   validateAvatarFile(file);
 
-  // FormData 생성 후 avatar 키로 파일 추가
   const formData = new FormData();
   formData.append("avatar", file);
 
@@ -32,7 +35,8 @@ export async function uploadAvatarToSupabase(
     body: formData,
   });
 
-  const uploadBody = (await uploadRes.json().catch(() => null)) as AvatarUploadResponse | null;
+  const uploadBody: AvatarUploadResponse | null = await uploadRes.json().catch(() => null);
+
   if (!uploadRes.ok || !uploadBody || "error" in uploadBody) {
     const errorMessage =
       uploadBody && "error" in uploadBody ? uploadBody.error : "아바타 업로드에 실패했습니다.";

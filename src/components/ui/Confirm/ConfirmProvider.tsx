@@ -8,7 +8,7 @@ type ConfirmProviderProps = {
 
 type ConfirmData = ConfirmProps & {
   id: string;
-  resolve: (value: boolean) => void;
+  resolve: (isConfirmed: boolean) => void;
 };
 
 export default function ConfirmProvider({ children }: ConfirmProviderProps) {
@@ -18,10 +18,10 @@ export default function ConfirmProvider({ children }: ConfirmProviderProps) {
   const openConfirm = useCallback((props: ConfirmProps) => {
     return new Promise<boolean>((resolve) => {
       let settled = false;
-      const resolveOnce = (value: boolean) => {
+      const resolveOnce = (isConfirmed: boolean) => {
         if (settled) return;
         settled = true;
-        resolve(value);
+        resolve(isConfirmed);
       };
       const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       setConfirms((prev) => [...prev, { id, resolve: resolveOnce, ...props }]);
@@ -44,7 +44,7 @@ export default function ConfirmProvider({ children }: ConfirmProviderProps) {
           <Confirm
             key={id}
             {...rest}
-            open={isOpen}
+            isOpen={isOpen}
             onOk={() => {
               onOk?.();
               resolve(true);

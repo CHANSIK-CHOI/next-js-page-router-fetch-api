@@ -35,7 +35,7 @@ export default function AlertProvider({ children }: AlertProviderProps) {
           <Alert
             key={id}
             {...rest}
-            open={isOpen}
+            isOpen={isOpen}
             onOk={() => {
               onOk?.();
               setOpenAlerts((prev) => prev.filter((openId) => openId !== id));

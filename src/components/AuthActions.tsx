@@ -5,7 +5,9 @@ import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
 import { useSession } from "./useSession";
 import { pushSafely, replaceSafely } from "@/lib/router.client";
-import { getAvatarUrl, getUserName, isPrivateAvatarApiSrc } from "@/util";
+import { getAvatarUrl } from "@/lib/avatar/profile";
+import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
+import { getUserName } from "@/util";
 
 export default function AuthActions() {
   const { session, supabaseClient } = useSession();
@@ -67,7 +69,7 @@ export default function AuthActions() {
                 unoptimized={
                   avatarSrc.startsWith("data:") ||
                   avatarSrc.startsWith("blob:") ||
-                  isPrivateAvatarApiSrc(avatarSrc)
+                  checkAvatarApiSrcPrivate(avatarSrc)
                 }
               />
             </span>

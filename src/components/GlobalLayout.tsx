@@ -8,11 +8,11 @@ import { useTheme } from "next-themes";
 type StackBadge = {
   label: string;
   iconSrc?: string;
-  invertOnDark?: boolean;
+  isInvertedInDarkMode?: boolean;
 };
 
 const CORE_STACK_BADGES: StackBadge[] = [
-  { label: "Next.js Page Router", iconSrc: "/icons/nextjs.svg", invertOnDark: true },
+  { label: "Next.js Page Router", iconSrc: "/icons/nextjs.svg", isInvertedInDarkMode: true },
   { label: "Supabase", iconSrc: "/icons/supabase.svg" },
   { label: "TypeScript" },
   { label: "shadcn/ui" },
@@ -20,8 +20,8 @@ const CORE_STACK_BADGES: StackBadge[] = [
 ];
 
 const DELIVERY_BADGES: StackBadge[] = [
-  { label: "Vercel", iconSrc: "/icons/vercel.svg", invertOnDark: true },
-  { label: "GitHub", iconSrc: "/icons/github.svg", invertOnDark: true },
+  { label: "Vercel", iconSrc: "/icons/vercel.svg", isInvertedInDarkMode: true },
+  { label: "GitHub", iconSrc: "/icons/github.svg", isInvertedInDarkMode: true },
 ];
 
 export default function GlobalLayout({ children }: { children: ReactNode }) {
@@ -116,7 +116,7 @@ export default function GlobalLayout({ children }: { children: ReactNode }) {
                           alt={`${stack.label} icon`}
                           width={12}
                           height={12}
-                          className={stack.invertOnDark ? "dark:invert" : undefined}
+                          className={stack.isInvertedInDarkMode ? "dark:invert" : undefined}
                         />
                       )}
                       {stack.label}
@@ -146,7 +146,7 @@ export default function GlobalLayout({ children }: { children: ReactNode }) {
                           alt={`${item.label} icon`}
                           width={12}
                           height={12}
-                          className={item.invertOnDark ? "dark:invert" : undefined}
+                          className={item.isInvertedInDarkMode ? "dark:invert" : undefined}
                         />
                       )}
                       {item.label}

@@ -9,6 +9,7 @@ import type {
   SupabaseError,
 } from "@/types";
 import { getAccessToken } from "@/util";
+import { parseStatusQuery } from "@/lib/statusQuery";
 
 /*
   전체 역할 : 해당 API는 GET /api/feedbacks?status=...로 피드백 목록을 가져옴
@@ -19,45 +20,6 @@ import { getAccessToken } from "@/util";
 const ALLOWED_STATUSES = ["pending", "approved", "rejected", "revised_pending"] as const;
 type FeedbackStatus = (typeof ALLOWED_STATUSES)[number];
 
-// 상태 파싱/검증 (parseStatusQuery)
-const parseStatusQuery = (
-  rawStatus: string | string[] | undefined
-): { statuses: FeedbackStatus[] | null; error: string | null } => {
-  if (typeof rawStatus === "undefined") {
-    // 없으면 기본값 ["approved"]
-    return { statuses: ["approved"], error: null };
-  }
-
-  // parsed : "pending,revised_pending" 같은 CSV를 배열로 파싱
-  const parsed = (Array.isArray(rawStatus) ? rawStatus : [rawStatus])
-    .flatMap((value) => value.split(","))
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  if (parsed.length === 0) {
-    return {
-      statuses: null,
-      error: "Invalid status query. Use ?status=approved or ?status=pending,revised_pending",
-    };
-  }
-
-  // 허용 상태(ALLOWED_STATUSES)인지 검증
-  const invalidStatuses = parsed.filter(
-    (status): status is string => !ALLOWED_STATUSES.includes(status as FeedbackStatus)
-  );
-  if (invalidStatuses.length > 0) {
-    return {
-      statuses: null,
-      error: `Unsupported status: ${invalidStatuses.join(", ")}`,
-    };
-  }
-
-  return {
-    statuses: Array.from(new Set(parsed)) as FeedbackStatus[], // 중복 제거(new Set)
-    error: null,
-  };
-};
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -66,7 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ data: null, error: "Method Not Allowed" });
   }
 
-  const { statuses, error: statusError } = parseStatusQuery(req.query.status);
+  const { statuses, error: statusError } = parseStatusQuery<FeedbackStatus>({
+    rawStatus: req.query.status,
+    allowedStatuses: ALLOWED_STATUSES,
+    defaultStatuses: ["approved"],
+    usageMessage: "Use ?status=approved or ?status=pending,revised_pending",
+  });
   if (statusError || !statuses) {
     // status 쿼리가 이상하면 바로 400으로 막음
     return res.status(400).json({ data: null, error: statusError ?? "Invalid status query" });

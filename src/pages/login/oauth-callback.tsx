@@ -7,7 +7,7 @@ import { syncUserRole } from "@/lib/userRole.client";
 
 export default function OAuthCallbackPage() {
   const router = useRouter();
-  const { supabaseClient } = useSession();
+  const { supabaseClient, applyRoleUiState } = useSession();
   const isHandledRef = useRef(false);
   // isHandledRef : getSession + onAuthStateChange + fallback에서 handleSession이 여러 번 불려도 실처리는 1번만 하게 막음.
 
@@ -26,15 +26,29 @@ export default function OAuthCallbackPage() {
         return;
       }
 
-      let roleSyncResult: { isNewUser: boolean };
+      applyRoleUiState({
+        userId: session.user.id,
+        role: null,
+        isLoading: true,
+        isCacheWriteEnabled: false,
+      });
+
+      let roleSyncResult: { role: "admin" | "reviewer"; isNewUser: boolean };
       try {
         roleSyncResult = await syncUserRole(session.access_token);
       } catch {
+        applyRoleUiState({
+          userId: session.user.id,
+          role: null,
+          isLoading: false,
+          isCacheWriteEnabled: false,
+        });
         await replaceSafely(router, "/login");
         return;
       }
 
-      const { isNewUser } = roleSyncResult;
+      const { role, isNewUser } = roleSyncResult;
+      applyRoleUiState({ userId: session.user.id, role, isLoading: false });
       if (isNewUser) {
         sessionStorage.setItem("signUpCompleteAndSkipRoleSync", "1");
       }
@@ -50,7 +64,6 @@ export default function OAuthCallbackPage() {
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((event, session) => {
-      console.log("OAuthCallbackPage event", event);
       if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
         void handleSession(session);
       }
@@ -68,7 +81,7 @@ export default function OAuthCallbackPage() {
       window.clearTimeout(fallbackTimer);
       subscription.unsubscribe();
     };
-  }, [router, supabaseClient]);
+  }, [router, supabaseClient, applyRoleUiState]);
 
   return (
     <div className="mx-auto w-full max-w-xl">

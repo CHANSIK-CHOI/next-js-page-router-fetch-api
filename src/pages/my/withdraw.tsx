@@ -6,21 +6,15 @@ import { useSession } from "@/components";
 import { replaceSafely } from "@/lib/router.client";
 import { useRouter } from "next/router";
 import { inputBaseStyle } from "@/constants";
-import { getAuthProviders } from "@/util";
+import { getAuthProviderLabel, getAuthProviders } from "@/util";
 
 type WithdrawForm = {
   confirm_text: string;
   password: string;
-  agreement: boolean;
+  isAgreementChecked: boolean;
 };
 
 const WITHDRAW_CONFIRM_TEXT = "회원탈퇴";
-
-const providerLabel = (provider: string) => {
-  if (provider === "github") return "GitHub";
-  if (provider === "email") return "이메일";
-  return provider;
-};
 
 export default function WithdrawPage() {
   const { openAlert } = useAlert();
@@ -30,8 +24,8 @@ export default function WithdrawPage() {
   const user = session?.user;
   const providers = getAuthProviders(user);
 
-  const hasEmailProvider = providers.includes("email");
-  const hasGithubProvider = providers.includes("github");
+  const isEmailProviderLinked = providers.includes("email");
+  const isGithubProviderLinked = providers.includes("github");
 
   const {
     register,
@@ -42,7 +36,7 @@ export default function WithdrawPage() {
     defaultValues: {
       confirm_text: "",
       password: "",
-      agreement: false,
+      isAgreementChecked: false,
     },
   });
 
@@ -55,7 +49,7 @@ export default function WithdrawPage() {
   const onSubmit = async (values: WithdrawForm) => {
     if (isSubmitting) return;
 
-    const confirmed = await openConfirm({
+    const isConfirmed = await openConfirm({
       title: "회원 탈퇴 확인",
       description:
         "탈퇴하면 계정 데이터가 삭제되며 복구할 수 없습니다.\n정말로 회원 탈퇴를 진행하시겠어요?",
@@ -63,7 +57,7 @@ export default function WithdrawPage() {
       cancelText: "취소",
     });
 
-    if (!confirmed) return;
+    if (!isConfirmed) return;
 
     void values;
     openAlert({
@@ -95,7 +89,7 @@ export default function WithdrawPage() {
               key={provider}
               className="rounded-full border border-destructive/30 px-2.5 py-0.5 text-xs text-muted-foreground"
             >
-              {providerLabel(provider)} 로그인
+              {getAuthProviderLabel(provider)} 로그인
             </span>
           ))}
         </div>
@@ -104,10 +98,10 @@ export default function WithdrawPage() {
       <section className="mt-6 rounded-2xl border border-border/60 bg-background/80 p-7 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
         <div className="rounded-xl border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground dark:border-white/10">
           <p>계정: {user.email ?? "-"}</p>
-          {hasEmailProvider && (
+          {isEmailProviderLinked && (
             <p className="mt-2">이메일 로그인 계정은 비밀번호 확인이 필요합니다.</p>
           )}
-          {hasGithubProvider && (
+          {isGithubProviderLinked && (
             <p className="mt-2">
               GitHub 로그인 계정은 연동 계정 기준으로 탈퇴되며, 동일 메일로 재가입 시 새 계정으로
               취급됩니다.
@@ -142,20 +136,20 @@ export default function WithdrawPage() {
               className="text-xs font-semibold text-muted-foreground"
               htmlFor="withdraw_password"
             >
-              비밀번호 확인 {hasEmailProvider ? "(필수)" : "(선택)"}
+              비밀번호 확인 {isEmailProviderLinked ? "(필수)" : "(선택)"}
             </label>
             <input
               id="withdraw_password"
               className={inputBaseStyle}
               type="password"
               placeholder={
-                hasEmailProvider
+                isEmailProviderLinked
                   ? "현재 비밀번호를 입력해주세요."
                   : "GitHub 로그인은 비워둘 수 있습니다."
               }
               {...register("password", {
                 validate: (value) => {
-                  if (!hasEmailProvider) return true;
+                  if (!isEmailProviderLinked) return true;
                   return (
                     value.trim().length > 0 || "이메일 로그인 계정은 비밀번호 입력이 필요합니다."
                   );
@@ -171,14 +165,14 @@ export default function WithdrawPage() {
             <input
               type="checkbox"
               className="mt-0.5 h-4 w-4 accent-destructive"
-              {...register("agreement", {
+              {...register("isAgreementChecked", {
                 validate: (value) => value || "주의사항을 확인하고 동의해주세요.",
               })}
             />
             <span>탈퇴 시 내 계정 데이터가 삭제되고 복구할 수 없다는 점에 동의합니다.</span>
           </label>
-          {errors.agreement && (
-            <span className="text-xs text-destructive">{errors.agreement.message}</span>
+          {errors.isAgreementChecked && (
+            <span className="text-xs text-destructive">{errors.isAgreementChecked.message}</span>
           )}
 
           <div className="flex gap-2 pt-2">

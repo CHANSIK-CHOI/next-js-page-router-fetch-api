@@ -22,8 +22,8 @@ export default function PasswordResetPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     // Supabase reset 메일 링크는 보통 URL에 ?code=...를 붙여서 들어옴
-    const hasCode = new URLSearchParams(window.location.search).has("code");
-    if (hasCode) setIsRecovery(true);
+    const isCodeIncluded = new URLSearchParams(window.location.search).has("code");
+    if (isCodeIncluded) setIsRecovery(true);
   }, []);
 
   useEffect(() => {

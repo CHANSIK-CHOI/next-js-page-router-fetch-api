@@ -3,18 +3,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui";
 import {
+  checkSvgImageSrc,
   formatDateTime,
-  isPrivateAvatarApiSrc,
-  isSvgImageSrc,
   ratingStars,
   statusBadge,
   statusLabel,
 } from "@/util";
+import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getDetailFeedbacksApi, getEmailApi } from "@/lib/feedback.server";
 import type { FeedbackPublicRow } from "@/types";
 import { getAuthContextByAccessToken } from "@/lib/auth.server";
-import { PLACEHOLDER_SRC } from "@/constants";
+import { AVATAR_PLACEHOLDER_SRC } from "@/lib/avatar/constants";
 
 type FeedbackDetailData = FeedbackPublicRow & {
   email?: string;
@@ -74,7 +74,7 @@ export default function FeedbackDetailPage({
   isAuthor,
   isAdmin,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const avatarSrc = detailFeedbacksData.avatar_url || PLACEHOLDER_SRC;
+  const avatarSrc = detailFeedbacksData.avatar_url || AVATAR_PLACEHOLDER_SRC;
 
   return (
     <div className="flex flex-col gap-6">
@@ -154,7 +154,7 @@ export default function FeedbackDetailPage({
                 alt={`${detailFeedbacksData.display_name} avatar`}
                 width={48}
                 height={48}
-                unoptimized={isSvgImageSrc(avatarSrc) || isPrivateAvatarApiSrc(avatarSrc)}
+                unoptimized={checkSvgImageSrc(avatarSrc) || checkAvatarApiSrcPrivate(avatarSrc)}
                 className="h-full w-full object-cover"
               />
             </div>

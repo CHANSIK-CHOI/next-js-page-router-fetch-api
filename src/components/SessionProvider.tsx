@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { SessionContext } from "./useSession";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase.client";
@@ -19,6 +19,29 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   const [isAdminUi, setIsAdminUi] = useState(false);
   const [isRoleLoading, setIsRoleLoading] = useState(false);
   const syncedTokenRef = useRef<string | null>(null);
+
+  const applyRoleUiState = useCallback(
+    ({
+      userId,
+      role,
+      isLoading = false,
+      isCacheWriteEnabled = true,
+    }: {
+      userId: string;
+      role: UserRole["role"] | null;
+      isLoading?: boolean;
+      isCacheWriteEnabled?: boolean;
+    }) => {
+      setIsAdminUi(role === "admin");
+      setIsRoleLoading(isLoading);
+
+      if (isCacheWriteEnabled) {
+        const cacheKey = CACHE_KEY(userId);
+        sessionStorage.setItem(cacheKey, JSON.stringify({ role, ts: Date.now() }));
+      }
+    },
+    []
+  );
 
   /* session 업데이트, session init 상태 업데이트 */
   useEffect(() => {
@@ -75,8 +98,12 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     if (cached) {
       try {
         const { role, ts }: { role?: UserRole["role"] | null; ts?: number } = JSON.parse(cached);
-        setIsAdminUi(role === "admin");
-        setIsRoleLoading(false);
+        applyRoleUiState({
+          userId: session.user.id,
+          role: role ?? null,
+          isLoading: false,
+          isCacheWriteEnabled: false,
+        });
 
         const isFresh = typeof ts === "number" && Date.now() - ts < CACHE_TTL;
         if (isFresh) return;
@@ -89,19 +116,15 @@ export default function SessionProvider({ children }: SessionProviderProps) {
     const runRoleSync = async () => {
       setIsRoleLoading(true);
       const { role } = await syncUserRole(session.access_token);
-      setIsAdminUi(role === "admin");
-      sessionStorage.setItem(cacheKey, JSON.stringify({ role, ts: Date.now() }));
+      applyRoleUiState({ userId: session.user.id, role });
     };
 
-    runRoleSync()
-      .catch((error) => {
-        console.error(error);
-        setIsAdminUi(false);
-      })
-      .finally(() => {
-        setIsRoleLoading(false);
-      });
-  }, [session?.user?.id, session?.access_token]);
+    runRoleSync().catch((error) => {
+      console.error(error);
+      setIsAdminUi(false);
+      setIsRoleLoading(false);
+    });
+  }, [session?.user?.id, session?.access_token, applyRoleUiState]);
 
   /* 클라이언트 세션(access token)”을 “서버용 HttpOnly 쿠키”로 동기화 */
   useEffect(() => {
@@ -141,7 +164,14 @@ export default function SessionProvider({ children }: SessionProviderProps) {
 
   return (
     <SessionContext.Provider
-      value={{ session, supabaseClient, isInitSessionComplete, isAdminUi, isRoleLoading }}
+      value={{
+        session,
+        supabaseClient,
+        isInitSessionComplete,
+        isAdminUi,
+        isRoleLoading,
+        applyRoleUiState,
+      }}
     >
       {children}
     </SessionContext.Provider>

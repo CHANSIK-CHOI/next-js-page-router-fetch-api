@@ -69,7 +69,7 @@ async function main() {
   const serviceKey = requireEnv(process.env.SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY");
   const bucket = process.env.SUPABASE_AVATAR_BUCKET ?? "avartarStorage";
   const prefix = process.env.RESET_PREFIX ?? "";
-  const dryRun = process.argv.includes("--dry-run") || process.env.DRY_RUN === "1";
+  const isDryRun = process.argv.includes("--dry-run") || process.env.DRY_RUN === "1";
 
   const supabase = createClient(supabaseUrl, serviceKey);
   const paths = await listAllPaths(supabase, bucket, prefix);
@@ -79,7 +79,7 @@ async function main() {
     return;
   }
 
-  if (dryRun) {
+  if (isDryRun) {
     console.log(`[DRY RUN] ${paths.length} files would be deleted`);
     for (const p of paths) console.log(p);
     return;
