@@ -2,19 +2,13 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui";
-import {
-  checkSvgImageSrc,
-  formatDateTime,
-  ratingStars,
-  statusBadge,
-  statusLabel,
-} from "@/util";
-import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
+import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/lib/feedback/presentation";
+import { checkAvatarApiSrcPrivate, checkSvgImageSrc } from "@/lib/avatar/path";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
-import { getDetailFeedbacksApi, getEmailApi } from "@/lib/feedback.server";
+import { getDetailFeedbacksApi, getEmailApi } from "@/lib/feedback/server";
 import type { FeedbackPublicRow } from "@/types";
-import { getAuthContextByAccessToken } from "@/lib/auth.server";
-import { AVATAR_PLACEHOLDER_SRC } from "@/lib/avatar/constants";
+import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
 
 type FeedbackDetailData = FeedbackPublicRow & {
   email?: string;

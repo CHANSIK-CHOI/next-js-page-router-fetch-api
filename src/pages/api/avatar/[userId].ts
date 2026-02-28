@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { AVATAR_PLACEHOLDER_SRC } from "@/lib/avatar/constants";
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
 import { getNormalizedAvatarMimeType } from "@/lib/avatar/mime";
 import { buildAvatarPath } from "@/lib/avatar/path";
-import { getSupabaseServer } from "@/lib/supabase.server";
+import { getSupabaseServer } from "@/lib/supabase/server";
 
 const AVATAR_BUCKET = process.env.SUPABASE_AVATAR_BUCKET;
 const USER_ID_PATTERN = /^[a-zA-Z0-9-]+$/;
@@ -17,10 +17,10 @@ const respondWithPlaceholder = (res: NextApiResponse) => {
   /*
     public
     - 이 응답은 브라우저뿐 아니라 CDN/프록시 같은 공유 캐시에도 저장 가능
-    
+
     max-age=60
     - 브라우저 캐시는 60초 동안 신선한 응답으로 사용
-    
+
     s-maxage=300
     - 공유 캐시(CDN 등)는 300초(5분) 동안 사용
     - 보통 공유 캐시에서는 s-maxage가 max-age보다 우선
@@ -75,18 +75,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   /*
     const fileBuffer = Buffer.from(await data.arrayBuffer());
     - Supabase에서 받은 파일(data)을 바이너리 Buffer로 변환
-    
+
     res.setHeader("X-Content-Type-Options", "nosniff");
     - 브라우저가 MIME 타입을 추측(sniff)하지 못하게 막음
     - 보안상 안전한 헤더
-    
+
     res.setHeader("Content-Type", mimeType);
     - 이 응답이 image/png 또는 image/jpeg임을 명시
-    
+
     res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
     - 캐시 정책 설정
     - 브라우저 60초, 공유 캐시(CDN) 300초
-    
+
     return res.status(200).send(fileBuffer);
     - 상태코드 200(성공)으로 실제 이미지 바이트를 응답 본문에 전송
   */

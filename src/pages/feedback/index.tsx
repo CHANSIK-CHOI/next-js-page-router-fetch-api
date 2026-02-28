@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Button, Select, useAlert } from "@/components/ui";
-import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/feedback.server";
-import { cn } from "@/lib/utils";
+import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/feedback/server";
+import { cn } from "@/lib/shared/cn";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/useSession";
-import { compareUpdatedAtDesc, mergeFeedbackList } from "@/util";
+import { compareUpdatedAtDesc, mergeFeedbackList } from "@/lib/feedback/list";
 import { FeedbackBox } from "@/components";
 import { AdminReviewFeedback, RevisedPendingOwnerFeedback } from "@/types";
 import { useRouter } from "next/router";
-import { pushSafely } from "@/lib/router.client";
+import { pushSafely } from "@/lib/navigation/client";
 
 const MINE_STATUS_QUERY = new URLSearchParams({
   status: "pending,revised_pending",

@@ -4,20 +4,16 @@ import Link from "next/link";
 import { useForm, useWatch } from "react-hook-form";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components";
-import { replaceSafely } from "@/lib/router.client";
+import { replaceSafely } from "@/lib/navigation/client";
 import { useRouter } from "next/router";
 import { uploadAvatarToSupabase, validateAvatarFile } from "@/lib/avatar/client";
-import { AVATAR_PLACEHOLDER_SRC, AVATAR_UPLOAD_ACCEPT } from "@/lib/avatar/constants";
+import { AVATAR_PLACEHOLDER_SRC, AVATAR_UPLOAD_ACCEPT } from "@/constants/avatar";
 import { getAvatarUrl } from "@/lib/avatar/profile";
 import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
 import { PHONE_PATTERN, inputBaseStyle } from "@/constants";
-import {
-  formatPhoneNumber,
-  getAuthProviderLabel,
-  getAuthProviders,
-  getUserCompany,
-  getUserName,
-} from "@/util";
+import { getAuthProviderLabel, getAuthProviders } from "@/lib/auth/provider";
+import { formatPhoneNumber } from "@/lib/shared/format";
+import { getUserCompany, getUserName } from "@/lib/user/profile";
 import { MyProfileForm } from "@/types";
 
 export default function MyPage() {
@@ -166,7 +162,7 @@ export default function MyPage() {
           - 파일 기본 검증(validateAvatarFile): file.type, 용량(2MB) 체크
           - FormData로 /api/avatar/upload에 전송
           - 성공 응답이면 avatarUrl/bucket/path 반환, 실패면 에러 throw
-          
+
           2. /api/avatar/upload(서버)
           - formidable로 파일 파싱
           - 용량 재검증
@@ -176,7 +172,7 @@ export default function MyPage() {
             * Supabase에 업로드
             * 기존 오래된 아바타 정리
             * replacedAvatar 객체(avatarUrl, bucket, path) 생성해서 응답
-          
+
           즉 핵심은:
           - 맞아, PNG/JPG 확인하고
           - 맞으면 Supabase 업로드 후 필요한 정보 객체를 반환하는 흐름이 맞다.

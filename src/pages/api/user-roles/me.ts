@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
+import { getSupabaseServerByAccessToken } from "@/lib/supabase/server";
 import type { SupabaseError, UserRole } from "@/types";
-import { getAccessToken } from "@/util";
+import { getAccessToken } from "@/lib/auth/token";
 
 // GET: 현재 로그인 유저의 role만 반환
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

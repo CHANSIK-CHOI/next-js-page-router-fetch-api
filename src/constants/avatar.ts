@@ -1,4 +1,4 @@
-import type { AvatarMimeType } from "@/types/avatar/mime";
+import type { AvatarMimeType } from "@/types/avatar";
 
 export const AVATAR_PLACEHOLDER_SRC = "https://placehold.co/100x100.png?text=Hello+World";
 export const AVATAR_MAX_FILE_SIZE = 2 * 1024 * 1024;

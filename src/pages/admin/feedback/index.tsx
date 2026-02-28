@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { Button, Select } from "@/components/ui";
-import { compareUpdatedAtDesc } from "@/util";
+import { compareUpdatedAtDesc } from "@/lib/feedback/list";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
-import { getAuthContextByAccessToken } from "@/lib/auth.server";
-import { getAdminAllFeedbacksApi } from "@/lib/feedback.server";
+import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { getAdminAllFeedbacksApi } from "@/lib/feedback/server";
 import { AdminFeedbackBox } from "@/components";
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {

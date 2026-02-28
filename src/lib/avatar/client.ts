@@ -1,6 +1,6 @@
-import { AVATAR_MAX_FILE_SIZE } from "@/lib/avatar/constants";
+import { AVATAR_MAX_FILE_SIZE } from "@/constants/avatar";
 import { getNormalizedAvatarMimeType } from "@/lib/avatar/mime";
-import type { AvatarUploadResponse, AvatarUploadResult } from "@/types/avatar/upload";
+import type { AvatarUploadResponse, AvatarUploadResult } from "@/types/avatar";
 
 export const validateAvatarFile = (file: File) => {
   const isAvatarMimeTypeAllowed = getNormalizedAvatarMimeType(file.type) !== null;

@@ -1,8 +1,8 @@
 import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { SessionContext } from "./useSession";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
-import { getSupabaseClient } from "@/lib/supabase.client";
-import { syncUserRole } from "@/lib/userRole.client";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import { syncUserRole } from "@/lib/user-role/client";
 import type { UserRole } from "@/types";
 
 type SessionProviderProps = {

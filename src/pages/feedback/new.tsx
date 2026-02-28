@@ -10,11 +10,11 @@ import {
   NEW_FEEDBACK_DEFAULT_VALUES,
   TAG_OPTIONS,
 } from "@/constants";
-import { AVATAR_PLACEHOLDER_SRC } from "@/lib/avatar/constants";
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
 import { getAvatarUrl } from "@/lib/avatar/profile";
 import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
-import { cn } from "@/lib/utils";
-import { getUserCompany, getUserName } from "@/util";
+import { cn } from "@/lib/shared/cn";
+import { getUserCompany, getUserName } from "@/lib/user/profile";
 import { FeedbackNewFormValues } from "@/types";
 
 export default function FeedbackNewPage() {

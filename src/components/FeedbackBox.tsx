@@ -1,18 +1,12 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/cn";
 import { FeedbackListItem } from "@/types";
-import {
-  checkSvgImageSrc,
-  formatDateTime,
-  ratingStars,
-  statusBadge,
-  statusLabel,
-} from "@/util";
-import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
+import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/lib/feedback/presentation";
+import { checkAvatarApiSrcPrivate, checkSvgImageSrc } from "@/lib/avatar/path";
 import Image from "next/image";
 import React from "react";
 import { Button } from "./ui";
 import Link from "next/link";
-import { AVATAR_PLACEHOLDER_SRC } from "@/lib/avatar/constants";
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
 
 type FeedbackBoxProps = {
   data: FeedbackListItem;

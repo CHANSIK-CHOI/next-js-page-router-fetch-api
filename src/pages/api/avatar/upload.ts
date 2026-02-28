@@ -1,14 +1,14 @@
 import { promises as fs } from "node:fs";
 import type { NextApiRequest, NextApiResponse } from "next";
 import formidable, { type File as FormidableFile } from "formidable";
-import { AVATAR_MAX_FILE_SIZE } from "@/lib/avatar/constants";
+import { AVATAR_MAX_FILE_SIZE } from "@/constants/avatar";
 import { getNormalizedAvatarMimeType } from "@/lib/avatar/mime";
 import { getDetectedAvatarMimeTypeFromBuffer } from "@/lib/avatar/signature";
 import { replaceUserAvatar } from "@/lib/avatar/storage.server";
-import type { AvatarUploadResponse } from "@/types/avatar/upload";
-import { getAccessToken } from "@/util";
-import { getAuthContextByAccessToken } from "@/lib/auth.server";
-import { getSupabaseServer } from "@/lib/supabase.server";
+import type { AvatarUploadResponse } from "@/types/avatar";
+import { getAccessToken } from "@/lib/auth/token";
+import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { getSupabaseServer } from "@/lib/supabase/server";
 
 const AVATAR_BUCKET = process.env.SUPABASE_AVATAR_BUCKET;
 
@@ -51,25 +51,25 @@ const AVATAR_BUCKET = process.env.SUPABASE_AVATAR_BUCKET;
   - HTTP request/response
   - headers, Content-Type, Authorization
   - request body와 stream
-  
+
   2. 브라우저 전송 API
   - FormData
   - fetch with file upload
   - Blob, File
-  
+
   3. 멀티파트 포맷
   - multipart/form-data
   - boundary, part, Content-Disposition
-  
+
   4. Node.js 서버 입력 처리
   - IncomingMessage(req 스트림)
   - buffer vs stream
   - 파일 업로드 파서(formidable, multer, busboy)
-  
+
   5. Next.js API Route/Route Handler
   - pages/api의 config.api.bodyParser
   - App Router에서의 업로드 처리 차이(request.formData())
-  
+
   6. 보안
   - MIME 검증/시그니처 검증
   - 파일 크기 제한
@@ -95,10 +95,9 @@ export const config = {
 /*
   - formidable은 기본적으로 업로드를 임시 디스크 파일로 받아서 메모리 폭주를 막고,
   - 파싱(요청 분해)과 내용 검증(바이트 검사)을 분리해 처리하기 좋기 때문이야.
-  
+
   즉, resolve된 파일과 디스크 파일은 중복이 아니라 파일 정보 객체 vs 실제 파일 데이터 차이야.
 */
-
 const parseAvatarFile = (req: NextApiRequest): Promise<FormidableFile> =>
   new Promise((resolve, reject) => {
     /*

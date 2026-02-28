@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSupabaseServer } from "@/lib/supabase.server";
-import { getAuthContextByAccessToken } from "@/lib/auth.server";
+import { getSupabaseServer } from "@/lib/supabase/server";
+import { getAuthContextByAccessToken } from "@/lib/auth/server";
 import { APPROVED_PUBLIC_COLUMNS } from "@/constants";
 import type {
   AdminReviewFeedback,
@@ -8,8 +8,8 @@ import type {
   FeedbackPrivateRow,
   SupabaseError,
 } from "@/types";
-import { getAccessToken } from "@/util";
-import { parseStatusQuery } from "@/lib/statusQuery";
+import { getAccessToken } from "@/lib/auth/token";
+import { parseStatusQuery } from "@/lib/status/query";
 
 /*
   전체 역할 : 해당 API는 GET /api/feedbacks?status=...로 피드백 목록을 가져옴

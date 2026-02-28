@@ -7,7 +7,7 @@ import { LoginForm } from "@/types";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
-import { replaceSafely } from "@/lib/router.client";
+import { replaceSafely } from "@/lib/navigation/client";
 
 const getLoginErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();

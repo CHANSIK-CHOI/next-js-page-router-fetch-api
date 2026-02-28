@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getAuthContextByAccessToken } from "@/lib/auth.server";
-import { getAccessToken } from "@/util";
+import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { getAccessToken } from "@/lib/auth/token";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Cache-Control", "no-store");

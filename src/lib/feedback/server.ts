@@ -6,7 +6,7 @@ import type {
   RevisedPendingPreviewFeedback,
   SupabaseError,
 } from "@/types";
-import { getSupabaseServer } from "@/lib/supabase.server";
+import { getSupabaseServer } from "@/lib/supabase/server";
 import { APPROVED_PUBLIC_COLUMNS, PREVIEWCOLUMN } from "@/constants";
 
 export const getApprovedFeedbacksApi = async (): Promise<ApprovedFeedback[]> => {

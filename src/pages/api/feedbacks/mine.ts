@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getAuthContextByAccessToken } from "@/lib/auth.server";
-import { parseStatusQuery } from "@/lib/statusQuery";
+import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { parseStatusQuery } from "@/lib/status/query";
 import type { RevisedPendingOwnerFeedback } from "@/types";
-import { getAccessToken } from "@/util";
+import { getAccessToken } from "@/lib/auth/token";
 
 const ALLOWED_STATUSES = ["pending", "revised_pending"] as const;
 type MineStatus = (typeof ALLOWED_STATUSES)[number];

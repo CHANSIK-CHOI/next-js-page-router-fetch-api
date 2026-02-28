@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getAccessToken } from "@/util";
-import { getAuthContextByAccessToken } from "@/lib/auth.server";
-import { parseStatusQuery } from "@/lib/statusQuery";
+import { getAccessToken } from "@/lib/auth/token";
+import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { parseStatusQuery } from "@/lib/status/query";
 import type { AdminReviewFeedbackWithEmail, FeedbackPrivateRow, SupabaseError } from "@/types";
 
 const ALLOWED_STATUSES = ["pending", "approved", "rejected", "revised_pending"] as const;

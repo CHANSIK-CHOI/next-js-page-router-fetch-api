@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
-import { getAccessToken } from "@/util";
+import { getSupabaseServerByAccessToken } from "@/lib/supabase/server";
+import { getAccessToken } from "@/lib/auth/token";
 
 // 옵션: HttpOnly, SameSite=Lax, (prod에서 Secure), Path=/, Max-Age=3600
 const ACCESS_TOKEN_COOKIE = "sb-access-token";

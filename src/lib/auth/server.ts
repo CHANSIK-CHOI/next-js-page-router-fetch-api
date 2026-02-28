@@ -1,5 +1,5 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { getSupabaseServerByAccessToken } from "@/lib/supabase.server";
+import { getSupabaseServerByAccessToken } from "@/lib/supabase/server";
 import type { SupabaseError, UserRole } from "@/types";
 
 type AuthContext = {

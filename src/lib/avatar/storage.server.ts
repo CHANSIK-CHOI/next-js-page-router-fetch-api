@@ -1,5 +1,5 @@
 import { buildAvatarPath, buildAvatarProxyUrl } from "@/lib/avatar/path";
-import type { ReplaceUserAvatarParams, ReplaceUserAvatarResult } from "@/types/avatar/storage";
+import type { ReplaceUserAvatarParams, ReplaceUserAvatarResult } from "@/types/avatar";
 
 export async function replaceUserAvatar({
   supabaseServer,
@@ -39,7 +39,7 @@ export async function replaceUserAvatar({
     - Supabase Storage 내부 파일 경로(키)
     - 예: users/123/avatar
     - 업로드할 때 storage.upload(uploadPath, ...)에 쓰는 값
-  
+
     buildAvatarProxyUrl(userId)
     - 브라우저가 실제로 요청할 앱 API URL
     - 예: /api/avatar/123?t=...

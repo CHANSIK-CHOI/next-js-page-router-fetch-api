@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSupabaseServer } from "@/lib/supabase.server";
+import { getSupabaseServer } from "@/lib/supabase/server";
 import type { SupabaseError, UserRole } from "@/types";
-import { getAccessToken } from "@/util";
+import { getAccessToken } from "@/lib/auth/token";
 
 // POST: role 없으면 reviewer로 생성(201), 있으면 기존 role 반환(200)
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

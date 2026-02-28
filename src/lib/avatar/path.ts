@@ -7,6 +7,14 @@ export const buildAvatarPath = (userId: string) => `${buildAvatarDirectory(userI
 export const buildAvatarProxyUrl = (userId: string) =>
   `${PRIVATE_AVATAR_API_PREFIX}${encodeURIComponent(userId)}?t=${Date.now()}`;
 
+export const checkSvgImageSrc = (src: string) => {
+  try {
+    return new URL(src).pathname.toLowerCase().endsWith(".svg");
+  } catch {
+    return src.toLowerCase().split("?")[0].endsWith(".svg");
+  }
+};
+
 export const checkAvatarApiSrcPrivate = (src: string) => {
   try {
     const parsedUrl = new URL(src, "http://localhost");

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { useSession } from "@/components/useSession";
-import { getUserName } from "@/util";
+import { getUserName } from "@/lib/user/profile";
 
 export default function MainPage() {
   const { session, isAdminUi, isRoleLoading } = useSession();

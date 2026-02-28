@@ -3,15 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui";
 import { FeedbackPrivateRow } from "@/types";
-import {
-  checkSvgImageSrc,
-  formatDateTime,
-  ratingStars,
-  statusBadge,
-  statusLabel,
-} from "@/util";
-import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
-import { AVATAR_PLACEHOLDER_SRC } from "@/lib/avatar/constants";
+import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/lib/feedback/presentation";
+import { checkAvatarApiSrcPrivate, checkSvgImageSrc } from "@/lib/avatar/path";
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
 
 type AdminFeedbackBoxProps = {
   data: FeedbackPrivateRow;

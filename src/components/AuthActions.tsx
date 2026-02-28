@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
 import { useSession } from "./useSession";
-import { pushSafely, replaceSafely } from "@/lib/router.client";
+import { pushSafely, replaceSafely } from "@/lib/navigation/client";
 import { getAvatarUrl } from "@/lib/avatar/profile";
 import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
-import { getUserName } from "@/util";
+import { getUserName } from "@/lib/user/profile";
 
 export default function AuthActions() {
   const { session, supabaseClient } = useSession();

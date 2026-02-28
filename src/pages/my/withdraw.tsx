@@ -3,10 +3,10 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { Button, useAlert, useConfirm } from "@/components/ui";
 import { useSession } from "@/components";
-import { replaceSafely } from "@/lib/router.client";
+import { replaceSafely } from "@/lib/navigation/client";
 import { useRouter } from "next/router";
 import { inputBaseStyle } from "@/constants";
-import { getAuthProviderLabel, getAuthProviders } from "@/util";
+import { getAuthProviderLabel, getAuthProviders } from "@/lib/auth/provider";
 
 type WithdrawForm = {
   confirm_text: string;

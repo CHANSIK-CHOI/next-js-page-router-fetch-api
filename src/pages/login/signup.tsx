@@ -7,7 +7,7 @@ import { EMAIL_PATTERN, inputBaseStyle, SIGNUP_EMAIL_FORM } from "@/constants";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/useSession";
-import { replaceSafely } from "@/lib/router.client";
+import { replaceSafely } from "@/lib/navigation/client";
 
 const getSignupErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();

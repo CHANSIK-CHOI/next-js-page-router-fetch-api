@@ -3,7 +3,7 @@
 import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from "react";
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/shared/cn";
 import { Button } from "@/components/ui";
 
 function AlertDialog({ ...props }: ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Root>) {
