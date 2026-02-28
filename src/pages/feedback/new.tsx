@@ -71,7 +71,7 @@ export default function FeedbackNewPage() {
   const isPlaceholderAvatar = avatarSrc === AVATAR_PLACEHOLDER_SRC;
 
   const onSubmit = (values: FeedbackNewFormValues) => {
-    void values;
+    console.log(values);
   };
 
   /*

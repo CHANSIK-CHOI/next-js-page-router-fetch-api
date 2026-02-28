@@ -171,7 +171,7 @@ export default function MyPage() {
           - formidable로 파일 파싱
           - 용량 재검증
           - MIME 문자열 정규화(getNormalizedAvatarMimeType)
-          - 실제 파일 바이트 시그니처 검사(detectAvatarMimeTypeFromBuffer)로 PNG/JPEG 진짜 여부 확인
+          - 실제 파일 바이트 시그니처 검사(getDetectedAvatarMimeTypeFromBuffer)로 PNG/JPEG 진짜 여부 확인
           - 검증 통과 시 replaceUserAvatar 실행:
             * Supabase에 업로드
             * 기존 오래된 아바타 정리
