@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getAccessToken } from "@/lib/auth/token";
-import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { getRequestAuthContext } from "@/lib/auth/request";
 import { parseStatusQuery } from "@/lib/status/query";
 import type { AdminReviewFeedbackWithEmail, FeedbackPrivateRow, SupabaseError } from "@/types";
 
@@ -15,11 +14,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ data: null, error: "Method Not Allowed" });
   }
 
-  const accessToken = getAccessToken(req.headers.authorization);
-  if (!accessToken) {
-    return res.status(401).json({ data: null, error: "Missing access token" });
-  }
-
   const { statuses, error: statusError } = parseStatusQuery<FeedbackStatus>({
     rawStatus: req.query.status,
     allowedStatuses: ALLOWED_STATUSES,
@@ -31,18 +25,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const {
-      context,
-      error: authError,
-      status: authStatus,
-    } = await getAuthContextByAccessToken(accessToken);
-    if (authError || !context) {
-      return res.status(authStatus).json({ data: null, error: authError ?? "Unauthorized" });
+    const auth = await getRequestAuthContext(req, { requireAdmin: true });
+    if (auth.error || !auth.context) {
+      return res.status(auth.status).json({ data: null, error: auth.error ?? "Unauthorized" });
     }
-
-    if (!context.isAdmin) {
-      return res.status(403).json({ data: null, error: "Forbidden" });
-    }
+    const { context } = auth;
 
     const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
       await context.supabaseServer

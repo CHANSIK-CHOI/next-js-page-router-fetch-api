@@ -1,4 +1,4 @@
-import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
+import { AVATAR_PLACEHOLDER_SRC } from "./avatar";
 import type { FeedbackNewFormValues } from "@/types/forms";
 
 export const APPROVED_PUBLIC_COLUMNS =

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import type { SupabaseError, UserRole } from "@/types";
-import { getAccessToken } from "@/lib/auth/token";
+import { getRequestAccessToken } from "@/lib/auth/request";
 
 // POST: role 없으면 reviewer로 생성(201), 있으면 기존 role 반환(200)
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -19,10 +19,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .json({ role: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
   }
 
-  const accessToken = getAccessToken(req.headers.authorization);
-  if (!accessToken) {
-    return res.status(401).json({ role: null, error: "Missing access token" });
+  const tokenResult = getRequestAccessToken(req);
+  if (tokenResult.error || !tokenResult.accessToken) {
+    return res.status(tokenResult.status).json({ role: null, error: tokenResult.error });
   }
+  const { accessToken } = tokenResult;
 
   try {
     const { data: authData, error: authError } = await supabaseServer.auth.getUser(accessToken);

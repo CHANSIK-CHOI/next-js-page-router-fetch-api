@@ -8,7 +8,7 @@ import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getDetailFeedbacksApi, getEmailApi } from "@/lib/feedback/server";
 import type { FeedbackPublicRow } from "@/types";
 import { getAuthContextByAccessToken } from "@/lib/auth/server";
-import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
 
 type FeedbackDetailData = FeedbackPublicRow & {
   email?: string;

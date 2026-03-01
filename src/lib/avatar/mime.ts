@@ -1,4 +1,4 @@
-import { AVATAR_ALLOWED_MIME_TYPES } from "@/constants/avatar";
+import { AVATAR_ALLOWED_MIME_TYPES } from "@/constants";
 import type { AvatarMimeType } from "@/types/avatar";
 
 const MIME_TYPE_ALIASES: Record<string, AvatarMimeType> = {

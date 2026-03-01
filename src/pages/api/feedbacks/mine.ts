@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { getRequestAuthContext } from "@/lib/auth/request";
 import { parseStatusQuery } from "@/lib/status/query";
 import type { RevisedPendingOwnerFeedback } from "@/types";
-import { getAccessToken } from "@/lib/auth/token";
 
 const ALLOWED_STATUSES = ["pending", "revised_pending"] as const;
 type MineStatus = (typeof ALLOWED_STATUSES)[number];
@@ -13,11 +12,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
     return res.status(405).json({ data: null, error: "Method Not Allowed" });
-  }
-
-  const accessToken = getAccessToken(req.headers.authorization);
-  if (!accessToken) {
-    return res.status(401).json({ data: null, error: "Missing access token" });
   }
 
   const { statuses, error: statusError } = parseStatusQuery<MineStatus>({
@@ -31,11 +25,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { context, error: authError, status: authStatus } =
-      await getAuthContextByAccessToken(accessToken);
-    if (authError || !context) {
-      return res.status(authStatus).json({ data: null, error: authError ?? "Unauthorized" });
+    const auth = await getRequestAuthContext(req);
+    if (auth.error || !auth.context) {
+      return res.status(auth.status).json({ data: null, error: auth.error ?? "Unauthorized" });
     }
+    const { context } = auth;
 
     if (context.isAdmin) {
       return res.status(200).json({ data: null, error: null });

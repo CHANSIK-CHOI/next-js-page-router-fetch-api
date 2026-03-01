@@ -1,4 +1,4 @@
-import { AVATAR_MAX_FILE_SIZE } from "@/constants/avatar";
+import { AVATAR_MAX_FILE_SIZE } from "@/constants";
 import { getNormalizedAvatarMimeType } from "@/lib/avatar/mime";
 import type { AvatarUploadResponse, AvatarUploadResult } from "@/types/avatar";
 

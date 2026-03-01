@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
 import { getNormalizedAvatarMimeType } from "@/lib/avatar/mime";
 import { buildAvatarPath } from "@/lib/avatar/path";
 import { getSupabaseServer } from "@/lib/supabase/server";

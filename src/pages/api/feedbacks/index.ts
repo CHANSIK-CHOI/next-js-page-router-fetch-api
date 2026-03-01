@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { getRequestAuthContext } from "@/lib/auth/request";
 import { APPROVED_PUBLIC_COLUMNS } from "@/constants";
 import type {
   AdminReviewFeedback,
@@ -8,7 +8,6 @@ import type {
   FeedbackPrivateRow,
   SupabaseError,
 } from "@/types";
-import { getAccessToken } from "@/lib/auth/token";
 import { parseStatusQuery } from "@/lib/status/query";
 
 /*
@@ -74,23 +73,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 관리자 전용 조회 분기 (isRequiresAdmin)
-    const accessToken = getAccessToken(req.headers.authorization);
-    if (!accessToken) {
-      return res.status(401).json({ data: null, error: "Missing access token" });
+    const auth = await getRequestAuthContext(req, { requireAdmin: true });
+    if (auth.error || !auth.context) {
+      return res.status(auth.status).json({ data: null, error: auth.error ?? "Unauthorized" });
     }
-
-    const {
-      context,
-      error: authError,
-      status: authStatus,
-    } = await getAuthContextByAccessToken(accessToken);
-    if (authError || !context) {
-      return res.status(authStatus).json({ data: null, error: authError ?? "Unauthorized" });
-    }
-
-    if (!context.isAdmin) {
-      return res.status(403).json({ data: null, error: "Forbidden" });
-    }
+    const { context } = auth;
 
     const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
       await context.supabaseServer

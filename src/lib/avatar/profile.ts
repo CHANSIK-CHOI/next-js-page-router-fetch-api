@@ -1,5 +1,5 @@
 import type { User } from "@supabase/supabase-js";
-import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
 
 export const getAvatarUrl = (user: User | undefined) => {
   const avatarUrl =

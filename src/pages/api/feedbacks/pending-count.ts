@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getAuthContextByAccessToken } from "@/lib/auth/server";
-import { getAccessToken } from "@/lib/auth/token";
+import { getRequestAuthContext } from "@/lib/auth/request";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Cache-Control", "no-store");
@@ -10,21 +9,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ count: null, error: "Method Not Allowed" });
   }
 
-  const accessToken = getAccessToken(req.headers.authorization);
-  if (!accessToken) {
-    return res.status(401).json({ count: null, error: "Missing access token" });
-  }
-
   try {
-    const { context, error: authError, status: authStatus } =
-      await getAuthContextByAccessToken(accessToken);
-    if (authError || !context) {
-      return res.status(authStatus).json({ count: null, error: authError ?? "Unauthorized" });
+    const auth = await getRequestAuthContext(req, { requireAdmin: true });
+    if (auth.error || !auth.context) {
+      return res.status(auth.status).json({ count: null, error: auth.error ?? "Unauthorized" });
     }
-
-    if (!context.isAdmin) {
-      return res.status(403).json({ count: null, error: "Forbidden" });
-    }
+    const { context } = auth;
 
     // status = 'pending' | 'revised_pending' 개수만 조회
     const { count, error: countError } = await context.supabaseServer

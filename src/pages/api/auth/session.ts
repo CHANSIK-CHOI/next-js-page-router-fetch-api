@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServerByAccessToken } from "@/lib/supabase/server";
-import { getAccessToken } from "@/lib/auth/token";
+import { getRequestAccessToken } from "@/lib/auth/request";
 
 // 옵션: HttpOnly, SameSite=Lax, (prod에서 Secure), Path=/, Max-Age=3600
 const ACCESS_TOKEN_COOKIE = "sb-access-token";
@@ -30,10 +30,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const accessToken = getAccessToken(req.headers.authorization);
-  if (!accessToken) {
-    return res.status(401).json({ error: "Missing access token" });
+  const tokenResult = getRequestAccessToken(req);
+  if (tokenResult.error || !tokenResult.accessToken) {
+    return res.status(tokenResult.status).json({ error: tokenResult.error ?? "Missing access token" });
   }
+  const { accessToken } = tokenResult;
 
   const supabaseServer = getSupabaseServerByAccessToken(accessToken);
   if (!supabaseServer) {

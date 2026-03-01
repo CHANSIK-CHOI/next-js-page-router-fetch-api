@@ -1,13 +1,12 @@
 import { promises as fs } from "node:fs";
 import type { NextApiRequest, NextApiResponse } from "next";
 import formidable, { type File as FormidableFile } from "formidable";
-import { AVATAR_MAX_FILE_SIZE } from "@/constants/avatar";
+import { AVATAR_MAX_FILE_SIZE } from "@/constants";
 import { getNormalizedAvatarMimeType } from "@/lib/avatar/mime";
 import { getDetectedAvatarMimeTypeFromBuffer } from "@/lib/avatar/signature";
 import { replaceUserAvatar } from "@/lib/avatar/storage.server";
 import type { AvatarUploadResponse } from "@/types/avatar";
-import { getAccessToken } from "@/lib/auth/token";
-import { getAuthContextByAccessToken } from "@/lib/auth/server";
+import { getRequestAuthContext } from "@/lib/auth/request";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 const AVATAR_BUCKET = process.env.SUPABASE_AVATAR_BUCKET;
@@ -153,19 +152,14 @@ export default async function handler(
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const accessToken = getAccessToken(req.headers.authorization);
-  if (!accessToken) {
-    return res.status(401).json({ error: "로그인이 필요합니다." });
+  const auth = await getRequestAuthContext(req, {
+    missingAccessTokenError: "로그인이 필요합니다.",
+    unauthorizedError: "로그인 상태를 확인해주세요.",
+  });
+  if (auth.error || !auth.context) {
+    return res.status(auth.status).json({ error: auth.error ?? "로그인 상태를 확인해주세요." });
   }
-
-  const {
-    context,
-    error: authError,
-    status: authStatus,
-  } = await getAuthContextByAccessToken(accessToken);
-  if (authError || !context) {
-    return res.status(authStatus).json({ error: "로그인 상태를 확인해주세요." });
-  }
+  const { context } = auth;
 
   if (!AVATAR_BUCKET) {
     return res.status(500).json({ error: "SUPABASE_AVATAR_BUCKET 환경변수가 필요합니다." });

@@ -6,7 +6,7 @@ import Image from "next/image";
 import React from "react";
 import { Button } from "./ui";
 import Link from "next/link";
-import { AVATAR_PLACEHOLDER_SRC } from "@/constants/avatar";
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
 
 type FeedbackBoxProps = {
   data: FeedbackListItem;
