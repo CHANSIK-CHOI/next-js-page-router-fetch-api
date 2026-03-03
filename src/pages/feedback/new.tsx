@@ -1,7 +1,11 @@
 import React, { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useSession } from "@/components/session";
-import { NEW_FEEDBACK_DEFAULT_VALUES } from "@/constants";
+import {
+  NEW_FEEDBACK_DEFAULT_VALUES,
+  NEW_FEEDBACK_ERROR_MESSAGES,
+  NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE,
+} from "@/constants";
 import { getUserCompany, getUserName, getAvatarUrl } from "@/lib/user/profile";
 import type { FeedbackNewFormValues } from "@/types";
 import {
@@ -15,17 +19,7 @@ import { useAlert } from "@/components/ui";
 import { replaceSafely } from "@/lib/navigation/client";
 import { useRouter } from "next/router";
 
-export const newFeedbackErrorMsg = {
-  nameSummary: "이름과 한줄평은 필수 입력 항목입니다.",
-  rating: "평점은 1점부터 5점 사이로 선택해주세요.",
-  tag: "키워드를 1개 이상 선택해주세요.",
-  company: "회사명을 공개하려면 회사명을 입력해주세요.",
-  email: "사용자 이메일을 확인할 수 없습니다.",
-};
-
-const DEFAULT_NEW_FEEDBACK_ERROR_DESCRIPTION =
-  "피드백 등록에 실패했습니다.\n잠시 후 다시 시도해주세요.";
-const newFeedbackErrorMessages = new Set(Object.values(newFeedbackErrorMsg));
+const newFeedbackErrorMessages = new Set<string>(Object.values(NEW_FEEDBACK_ERROR_MESSAGES));
 
 export default function FeedbackNewPage() {
   const { session } = useSession();
@@ -108,7 +102,7 @@ export default function FeedbackNewPage() {
       const description =
         error instanceof Error && newFeedbackErrorMessages.has(error.message)
           ? error.message
-          : DEFAULT_NEW_FEEDBACK_ERROR_DESCRIPTION;
+          : NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE;
       openAlert({
         description,
       });

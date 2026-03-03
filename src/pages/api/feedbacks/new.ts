@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getRequestAuthContext } from "@/lib/auth/request";
 import type { FeedbackNewFormValues } from "@/types";
-import { newFeedbackErrorMsg } from "@/pages/feedback/new";
+import { NEW_FEEDBACK_ERROR_MESSAGES, NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE } from "@/constants";
 
 type CreateFeedbackResponse = {
   data: { id: string } | null;
@@ -12,6 +12,12 @@ const toTrimmedString = (value: unknown) => (typeof value === "string" ? value.t
 const toNullableTrimmedString = (value: unknown) => {
   const normalized = toTrimmedString(value);
   return normalized.length > 0 ? normalized : null;
+};
+const toStrictBoolean = (value: unknown): boolean | null => {
+  if (value === true || value === false) return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return null;
 };
 
 export default async function handler(
@@ -36,7 +42,7 @@ export default async function handler(
 
     const body: Partial<FeedbackNewFormValues> = req.body ?? {};
     const rating = Number(body.rating);
-    const is_company_public = Boolean(body.is_company_public);
+    const is_company_public = toStrictBoolean(body.is_company_public);
     const display_name = toTrimmedString(body.display_name);
     const summary = toTrimmedString(body.summary);
     const company_name = toNullableTrimmedString(body.company_name);
@@ -57,24 +63,28 @@ export default async function handler(
       : [];
 
     if (!display_name || !summary) {
-      return res.status(400).json({ data: null, error: newFeedbackErrorMsg.nameSummary });
+      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.nameSummary });
     }
 
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      return res.status(400).json({ data: null, error: newFeedbackErrorMsg.rating });
+      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.rating });
     }
 
     if (tags.length === 0) {
-      return res.status(400).json({ data: null, error: newFeedbackErrorMsg.tag });
+      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.tag });
+    }
+
+    if (is_company_public === null) {
+      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.companyPublic });
     }
 
     if (is_company_public && !company_name) {
-      return res.status(400).json({ data: null, error: newFeedbackErrorMsg.company });
+      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.company });
     }
 
     const email = auth.context.authData.user?.email;
     if (!email) {
-      return res.status(400).json({ data: null, error: newFeedbackErrorMsg.email });
+      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.email });
     }
 
     const { data, error } = await auth.context.supabaseServer
@@ -102,12 +112,13 @@ export default async function handler(
       .single();
 
     if (error || !data) {
-      return res.status(500).json({ data: null, error: error?.message ?? "Insert failed" });
+      console.error("Create feedback insert failed", error);
+      return res.status(500).json({ data: null, error: NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE });
     }
 
     return res.status(201).json({ data, error: null });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return res.status(500).json({ data: null, error: message });
+    console.error("Create feedback handler failed", e);
+    return res.status(500).json({ data: null, error: NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE });
   }
 }

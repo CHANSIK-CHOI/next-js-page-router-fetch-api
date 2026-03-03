@@ -41,3 +41,15 @@ export const TAG_OPTIONS = [
   "보안 인식",
   "성장 가능성",
 ];
+
+export const NEW_FEEDBACK_ERROR_MESSAGES = {
+  nameSummary: "이름과 한줄평은 필수 입력 항목입니다.",
+  rating: "평점은 1점부터 5점 사이로 선택해주세요.",
+  tag: "키워드를 1개 이상 선택해주세요.",
+  companyPublic: "회사명 공개 여부 값이 올바르지 않습니다.",
+  company: "회사명을 공개하려면 회사명을 입력해주세요.",
+  email: "사용자 이메일을 확인할 수 없습니다.",
+} as const;
+
+export const NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE =
+  "피드백 등록에 실패했습니다.\n잠시 후 다시 시도해주세요.";
