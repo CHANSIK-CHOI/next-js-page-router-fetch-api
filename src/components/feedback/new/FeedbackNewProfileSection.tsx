@@ -8,7 +8,9 @@ type FeedbackNewProfileSectionProps = {
   sessionAvatar: string;
 };
 
-export default function FeedbackNewProfileSection({ sessionAvatar }: FeedbackNewProfileSectionProps) {
+export default function FeedbackNewProfileSection({
+  sessionAvatar,
+}: FeedbackNewProfileSectionProps) {
   const {
     register,
     clearErrors,
@@ -17,10 +19,9 @@ export default function FeedbackNewProfileSection({ sessionAvatar }: FeedbackNew
     formState: { errors },
   } = useFormContext<FeedbackNewFormValues>();
 
-  const avatarValue = useWatch({ control, name: "avatar" });
   const isCompanyPublic = useWatch({ control, name: "is_company_public" });
 
-  const avatarSrc = avatarValue || sessionAvatar || AVATAR_PLACEHOLDER_SRC;
+  const avatarSrc = sessionAvatar || AVATAR_PLACEHOLDER_SRC;
   const isPlaceholderAvatar = avatarSrc === AVATAR_PLACEHOLDER_SRC;
 
   return (

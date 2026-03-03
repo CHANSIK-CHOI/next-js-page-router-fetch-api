@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Button, Select, useAlert } from "@/components/ui";
-import { getApprovedFeedbacksApi, getRevisedPendingPreviewApi } from "@/lib/feedback/server";
+import { getApprovedFeedbacks, getRevisedPendingPreviewFeedbacks } from "@/lib/feedback/server";
 import { cn } from "@/lib/shared/cn";
 import { InferGetStaticPropsType } from "next";
 import { useSession } from "@/components/session";
@@ -19,8 +19,8 @@ const ADMIN_REVIEW_STATUS_QUERY = new URLSearchParams({
 
 export const getStaticProps = async () => {
   try {
-    const approvedFeedbacksData = await getApprovedFeedbacksApi();
-    const revisedPendingPreviewData = await getRevisedPendingPreviewApi();
+    const approvedFeedbacksData = await getApprovedFeedbacks();
+    const revisedPendingPreviewData = await getRevisedPendingPreviewFeedbacks();
 
     return {
       props: {

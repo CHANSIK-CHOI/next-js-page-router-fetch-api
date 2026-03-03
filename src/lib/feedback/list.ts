@@ -2,6 +2,7 @@ import type {
   AdminReviewFeedback,
   ApprovedFeedback,
   FeedbackListItem,
+  FeedbackPublicBase,
   RevisedPendingOwnerFeedback,
   RevisedPendingPreviewFeedback,
 } from "@/types";
@@ -53,4 +54,17 @@ export const mergeFeedbackList = ({
   }
 
   return Array.from(mergedById.values()).sort(compareUpdatedAtDesc);
+};
+
+export const checkUpdateData = ({
+  created_at,
+  updated_at,
+  revision_count,
+}: {
+  created_at: FeedbackPublicBase["created_at"];
+  updated_at: FeedbackPublicBase["updated_at"];
+  revision_count: FeedbackPublicBase["revision_count"];
+}) => {
+  const isUpdateData = created_at !== updated_at && revision_count > 0;
+  return isUpdateData;
 };

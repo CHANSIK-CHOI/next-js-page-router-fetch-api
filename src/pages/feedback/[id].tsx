@@ -5,10 +5,11 @@ import { Button } from "@/components/ui";
 import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/lib/feedback/presentation";
 import { checkAvatarApiSrcPrivate, checkSvgImageSrc } from "@/lib/avatar/path";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
-import { getDetailFeedbacksApi, getEmailApi } from "@/lib/feedback/server";
+import { getFeedbackDetailById, getFeedbackEmailById } from "@/lib/feedback/server";
 import type { FeedbackPublicRow } from "@/types";
 import { getAuthContextByAccessToken } from "@/lib/auth/server";
 import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
+import { checkUpdateData } from "@/lib/feedback/list";
 
 type FeedbackDetailData = FeedbackPublicRow & {
   email?: string;
@@ -21,7 +22,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
   }
 
   try {
-    const detailFeedbacksData: FeedbackPublicRow | null = await getDetailFeedbacksApi(id);
+    const detailFeedbacksData: FeedbackPublicRow | null = await getFeedbackDetailById(id);
     if (!detailFeedbacksData) throw new Error("detailFeedbacksData is blank");
 
     const accessToken = context.req.cookies["sb-access-token"];
@@ -44,7 +45,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
         return { notFound: true };
 
       if (isAuthor || isAdmin) {
-        const email = await getEmailApi(id).catch(() => null);
+        const email = await getFeedbackEmailById(id).catch(() => null);
         if (email) {
           mergedDetailData = {
             ...detailFeedbacksData,
@@ -69,6 +70,7 @@ export default function FeedbackDetailPage({
   isAdmin,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const avatarSrc = detailFeedbacksData.avatar_url || AVATAR_PLACEHOLDER_SRC;
+  const isUpdateData = checkUpdateData(detailFeedbacksData);
 
   return (
     <div className="flex flex-col gap-6">
@@ -187,10 +189,10 @@ export default function FeedbackDetailPage({
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-border/60 bg-white/70 p-4 text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              등록일
+              {isUpdateData ? "마지막 수정일" : "등록일"}
             </p>
             <p className="mt-2 text-base text-foreground">
-              {formatDateTime(detailFeedbacksData.created_at)}
+              {formatDateTime(detailFeedbacksData.updated_at)}
             </p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-white/70 p-4 text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
@@ -222,10 +224,14 @@ export default function FeedbackDetailPage({
         <div className="rounded-2xl border border-border/60 bg-background/80 p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900/70">
           <h3 className="text-lg font-semibold text-foreground">승인 정보</h3>
           <p className="mt-3 text-sm text-muted-foreground">
-            승인 담당자: <span className="text-foreground">{detailFeedbacksData.reviewed_by}</span>
+            승인 담당자 :{" "}
+            <span className="text-foreground">
+              {detailFeedbacksData.reviewed_by ? detailFeedbacksData.reviewed_by : "승인 대기 중"}
+            </span>
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            마지막 수정:{" "}
+            {isUpdateData ? "마지막 수정" : "등록"}
+            {" : "}
             <span className="text-foreground">
               {formatDateTime(detailFeedbacksData.updated_at)}
             </span>

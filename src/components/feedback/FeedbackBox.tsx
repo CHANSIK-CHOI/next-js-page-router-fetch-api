@@ -7,6 +7,7 @@ import React from "react";
 import { Button } from "@/components/ui";
 import Link from "next/link";
 import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
+import { checkUpdateData } from "@/lib/feedback/list";
 
 type FeedbackBoxProps = {
   data: FeedbackListItem;
@@ -15,6 +16,7 @@ type FeedbackBoxProps = {
 export default function FeedbackBox({ data }: FeedbackBoxProps) {
   const isPreview = data.isPreview;
   const avatarSrc = data.avatar_url || AVATAR_PLACEHOLDER_SRC;
+  const isUpdateData = checkUpdateData(data);
 
   return (
     <article className="rounded-2xl border border-border/60 bg-background/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-neutral-900/70">
@@ -26,10 +28,7 @@ export default function FeedbackBox({ data }: FeedbackBoxProps) {
             {statusLabel(data.status)}
           </span>
           <span className="text-xs text-muted-foreground">
-            {data.created_at !== data.updated_at && data.revision_count > 0
-              ? "마지막 수정"
-              : "등록"}{" "}
-            : {formatDateTime(data.updated_at)}
+            {isUpdateData ? "마지막 수정" : "등록"} : {formatDateTime(data.updated_at)}
           </span>
         </div>
         {!isPreview && (

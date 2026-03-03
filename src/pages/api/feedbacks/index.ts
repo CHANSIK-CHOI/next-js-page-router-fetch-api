@@ -1,13 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSupabaseServer } from "@/lib/supabase/server";
 import { getRequestAuthContext } from "@/lib/auth/request";
-import { APPROVED_PUBLIC_COLUMNS } from "@/constants";
-import type {
-  AdminReviewFeedback,
-  ApprovedFeedback,
-  FeedbackPrivateRow,
-  SupabaseError,
-} from "@/types";
+import { getFeedbackRowsByStatuses, getPublicApprovedFeedbacksByStatuses } from "@/lib/feedback/server";
+import type { AdminReviewFeedback } from "@/types";
 import { parseStatusQuery } from "@/lib/status/query";
 
 /*
@@ -44,30 +38,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 공개 조회 분기 (!isRequiresAdmin)
     if (!isRequiresAdmin) {
-      const supabaseServer = getSupabaseServer();
-      if (!supabaseServer) {
-        return res
-          .status(500)
-          .json({ data: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
-      }
-
-      type ApprovedPublicRow = Omit<ApprovedFeedback, "isPreview">;
-      const { data, error }: { data: ApprovedPublicRow[] | null; error: SupabaseError } =
-        await supabaseServer
-          .from("feedbacks")
-          .select(APPROVED_PUBLIC_COLUMNS)
-          .in("status", statuses)
-          .eq("is_public", true)
-          .order("updated_at", { ascending: false });
-
-      if (error || !data) {
-        return res.status(500).json({ data: null, error: error?.message ?? "Select failed" });
-      }
-
-      const publicFeedbacks: ApprovedFeedback[] = data.map((item) => ({
-        ...item,
-        isPreview: false,
-      }));
+      const approvedStatuses = statuses.filter((status): status is "approved" => status === "approved");
+      const publicFeedbacks = await getPublicApprovedFeedbacksByStatuses(approvedStatuses);
 
       return res.status(200).json({ data: publicFeedbacks, error: null });
     }
@@ -79,18 +51,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     const { context } = auth;
 
-    const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
-      await context.supabaseServer
-        .from("feedbacks")
-        .select("*")
-        .in("status", statuses)
-        .order("updated_at", { ascending: false });
+    const feedbackRows = await getFeedbackRowsByStatuses({
+      supabaseClient: context.supabaseServer,
+      statuses,
+    });
 
-    if (error || !data) {
-      return res.status(500).json({ data: null, error: error?.message ?? "Select failed" });
-    }
-
-    const adminReviewFeedbacks: AdminReviewFeedback[] = data.map((item) => {
+    const adminReviewFeedbacks: AdminReviewFeedback[] = feedbackRows.map((item) => {
       const { email, ...withoutEmail } = item;
       void email;
       return {

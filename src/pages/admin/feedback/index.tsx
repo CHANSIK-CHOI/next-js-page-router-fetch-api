@@ -4,7 +4,7 @@ import { Button, Select } from "@/components/ui";
 import { compareUpdatedAtDesc } from "@/lib/feedback/list";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getAuthContextByAccessToken } from "@/lib/auth/server";
-import { getAdminAllFeedbacksApi } from "@/lib/feedback/server";
+import { getFeedbackRowsByStatuses } from "@/lib/feedback/server";
 import AdminFeedbackBox from "@/components/admin/AdminFeedbackBox";
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
@@ -19,8 +19,10 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     const { isAdmin } = authContext;
     if (!isAdmin) return { notFound: true };
 
-    const feedbackData = await getAdminAllFeedbacksApi();
-    if (!feedbackData) throw new Error("feedbackData is blank");
+    const feedbackData = await getFeedbackRowsByStatuses({
+      supabaseClient: authContext.supabaseServer,
+      statuses: ["pending", "approved", "rejected", "revised_pending"],
+    });
 
     return {
       props: { feedbackData },

@@ -6,26 +6,40 @@ import type {
   RevisedPendingPreviewFeedback,
   SupabaseError,
 } from "@/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { APPROVED_PUBLIC_COLUMNS, PREVIEWCOLUMN } from "@/constants";
 
-export const getApprovedFeedbacksApi = async (): Promise<ApprovedFeedback[]> => {
+type FeedbackStatus = FeedbackPublicRow["status"];
+type GetFeedbackRowsByStatusesParams = {
+  supabaseClient: SupabaseClient;
+  statuses: FeedbackStatus[];
+};
+
+const getRequiredSupabaseServer = () => {
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
   }
+  return supabaseServer;
+};
+
+export const getPublicApprovedFeedbacksByStatuses = async (
+  statuses: Array<"approved">
+): Promise<ApprovedFeedback[]> => {
+  const supabaseServer = getRequiredSupabaseServer();
 
   const { data, error } = await supabaseServer
     .from("feedbacks")
     .select(APPROVED_PUBLIC_COLUMNS)
-    .eq("status", "approved")
+    .in("status", statuses)
     .eq("is_public", true)
-    .order("created_at", {
+    .order("updated_at", {
       ascending: false,
     });
 
   if (error || !data) {
-    throw new Error("Failed fetch getApprovedFeedbacksApi");
+    throw new Error("Failed fetch getPublicApprovedFeedbacksByStatuses");
   }
 
   return data.map((item) => {
@@ -36,11 +50,32 @@ export const getApprovedFeedbacksApi = async (): Promise<ApprovedFeedback[]> => 
   });
 };
 
-export const getRevisedPendingPreviewApi = async (): Promise<RevisedPendingPreviewFeedback[]> => {
-  const supabaseServer = getSupabaseServer();
-  if (!supabaseServer) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+export const getFeedbackRowsByStatuses = async ({
+  supabaseClient,
+  statuses,
+}: GetFeedbackRowsByStatusesParams): Promise<FeedbackPrivateRow[]> => {
+  const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
+    await supabaseClient
+      .from("feedbacks")
+      .select("*")
+      .in("status", statuses)
+      .order("updated_at", { ascending: false });
+
+  if (error || !data) {
+    throw new Error("Failed fetch getFeedbackRowsByStatuses");
   }
+
+  return data;
+};
+
+export const getApprovedFeedbacks = async (): Promise<ApprovedFeedback[]> => {
+  return getPublicApprovedFeedbacksByStatuses(["approved"]);
+};
+
+export const getRevisedPendingPreviewFeedbacks = async (): Promise<
+  RevisedPendingPreviewFeedback[]
+> => {
+  const supabaseServer = getRequiredSupabaseServer();
 
   const { data, error } = await supabaseServer
     .from("feedbacks")
@@ -52,7 +87,7 @@ export const getRevisedPendingPreviewApi = async (): Promise<RevisedPendingPrevi
     });
 
   if (error || !data) {
-    throw new Error("Failed fetch getRevisedPendingPreviewApi");
+    throw new Error("Failed fetch getRevisedPendingPreviewFeedbacks");
   }
 
   return data.map((item) => {
@@ -63,29 +98,23 @@ export const getRevisedPendingPreviewApi = async (): Promise<RevisedPendingPrevi
   });
 };
 
-export const getFeedbacksIdsApi = async (): Promise<FeedbackPublicBase["id"][]> => {
-  const supabaseServer = getSupabaseServer();
-  if (!supabaseServer) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  }
+export const getFeedbackIds = async (): Promise<FeedbackPublicBase["id"][]> => {
+  const supabaseServer = getRequiredSupabaseServer();
 
   const { data, error }: { data: Pick<FeedbackPublicBase, "id">[] | null; error: SupabaseError } =
     await supabaseServer.from("feedbacks").select("id");
 
   if (error || !data) {
-    throw new Error("Failed fetch getFeedbacksIdsApi");
+    throw new Error("Failed fetch getFeedbackIds");
   }
 
   return data.map((item) => item.id);
 };
 
-export const getDetailFeedbacksApi = async (
+export const getFeedbackDetailById = async (
   id: FeedbackPublicBase["id"]
 ): Promise<FeedbackPublicRow | null> => {
-  const supabaseServer = getSupabaseServer();
-  if (!supabaseServer) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  }
+  const supabaseServer = getRequiredSupabaseServer();
 
   const { data, error }: { data: FeedbackPublicRow | null; error: SupabaseError } =
     await supabaseServer
@@ -95,39 +124,30 @@ export const getDetailFeedbacksApi = async (
       .maybeSingle();
 
   if (error) {
-    throw new Error("Failed fetch getDetailFeedbacksApi");
+    throw new Error("Failed fetch getFeedbackDetailById");
   }
 
   return data;
 };
 
-export const getEmailApi = async (id: FeedbackPublicBase["id"]): Promise<string | null> => {
-  const supabaseServer = getSupabaseServer();
-  if (!supabaseServer) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  }
+export const getFeedbackEmailById = async (
+  id: FeedbackPublicBase["id"]
+): Promise<string | null> => {
+  const supabaseServer = getRequiredSupabaseServer();
 
   const { data, error }: { data: { email: string } | null; error: SupabaseError } =
     await supabaseServer.from("feedbacks").select("email").eq("id", id).maybeSingle();
   if (error) {
-    throw new Error("Failed fetch getEmailApi");
+    throw new Error("Failed fetch getFeedbackEmailById");
   }
 
   return data?.email ?? null;
 };
 
-export const getAdminAllFeedbacksApi = async (): Promise<FeedbackPrivateRow[] | null> => {
-  const supabaseServer = getSupabaseServer();
-  if (!supabaseServer) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  }
-
-  const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
-    await supabaseServer.from("feedbacks").select("*").order("updated_at", { ascending: false });
-
-  if (error) {
-    throw new Error("Failed fetch getAdminAllFeedbacksApi");
-  }
-
-  return data;
+export const getAllFeedbackRows = async (): Promise<FeedbackPrivateRow[]> => {
+  const supabaseServer = getRequiredSupabaseServer();
+  return getFeedbackRowsByStatuses({
+    supabaseClient: supabaseServer,
+    statuses: ["pending", "approved", "rejected", "revised_pending"],
+  });
 };

@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getRequestAuthContext } from "@/lib/auth/request";
+import { getFeedbackRowsByStatuses } from "@/lib/feedback/server";
 import { parseStatusQuery } from "@/lib/status/query";
-import type { AdminReviewFeedbackWithEmail, FeedbackPrivateRow, SupabaseError } from "@/types";
+import type { AdminReviewFeedbackWithEmail } from "@/types";
 
 const ALLOWED_STATUSES = ["pending", "approved", "rejected", "revised_pending"] as const;
 type FeedbackStatus = (typeof ALLOWED_STATUSES)[number];
@@ -31,18 +32,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     const { context } = auth;
 
-    const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
-      await context.supabaseServer
-        .from("feedbacks")
-        .select("*")
-        .in("status", statuses)
-        .order("updated_at", { ascending: false });
+    const feedbackRows = await getFeedbackRowsByStatuses({
+      supabaseClient: context.supabaseServer,
+      statuses,
+    });
 
-    if (error || !data) {
-      return res.status(500).json({ data: null, error: error?.message ?? "Select failed" });
-    }
-
-    const adminFeedbacks: AdminReviewFeedbackWithEmail[] = data.map((item) => ({
+    const adminFeedbacks: AdminReviewFeedbackWithEmail[] = feedbackRows.map((item) => ({
       ...item,
       isPreview: false,
     }));
