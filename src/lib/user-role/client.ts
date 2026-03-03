@@ -20,6 +20,8 @@ export async function syncUserRole(accessToken: string): Promise<SyncUserRoleRes
 
   const payload = (await response.json().catch(() => null)) as UserRoleSyncResponse | null;
 
+  console.log("/api/user-roles", payload);
+
   if (!response.ok || !payload || payload.error || !payload.role) {
     throw new Error(payload?.error ?? "Failed Post user roles");
   }

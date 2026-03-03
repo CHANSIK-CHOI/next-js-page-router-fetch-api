@@ -19,7 +19,7 @@ const WITHDRAW_CONFIRM_TEXT = "회원탈퇴";
 export default function WithdrawPage() {
   const { openAlert } = useAlert();
   const { openConfirm } = useConfirm();
-  const { session, isInitSessionComplete } = useSession();
+  const { session, supabaseClient, isInitSessionComplete } = useSession();
   const router = useRouter();
   const user = session?.user;
   const providers = getAuthProviders(user);
@@ -48,6 +48,12 @@ export default function WithdrawPage() {
 
   const onSubmit = async (values: WithdrawForm) => {
     if (isSubmitting) return;
+    if (!session?.access_token || !supabaseClient) {
+      openAlert({
+        description: "로그인 상태를 확인해주세요.",
+      });
+      return;
+    }
 
     const isConfirmed = await openConfirm({
       title: "회원 탈퇴 확인",
@@ -59,10 +65,54 @@ export default function WithdrawPage() {
 
     if (!isConfirmed) return;
 
-    void values;
+    if (isEmailProviderLinked) {
+      if (!user?.email) {
+        openAlert({
+          description: "이메일 계정 정보를 확인할 수 없습니다.",
+        });
+        return;
+      }
+
+      const password = values.password.trim();
+      const { error: reauthError } = await supabaseClient.auth.signInWithPassword({
+        email: user.email,
+        password,
+      });
+
+      if (reauthError) {
+        openAlert({
+          description: "비밀번호가 올바르지 않습니다.",
+        });
+        return;
+      }
+    }
+
+    const { data: currentSessionData } = await supabaseClient.auth.getSession();
+    const accessToken = currentSessionData.session?.access_token ?? session.access_token;
+
+    const response = await fetch("/api/auth/withdraw", {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const payload: { error: string | null } = await response.json().catch(() => ({ error: null }));
+    if (!response.ok || payload.error) {
+      openAlert({
+        description: payload.error ?? "회원 탈퇴 처리에 실패했습니다. 잠시 후 다시 시도해주세요.",
+      });
+      return;
+    }
+
+    await fetch("/api/auth/session", { method: "DELETE" });
+    await supabaseClient.auth.signOut({ scope: "local" }).catch(() => undefined);
+
     openAlert({
-      description:
-        "현재는 회원 탈퇴 UI만 준비된 상태입니다.\n다음 단계에서 서버 API 연동(auth admin delete)이 완료되면 실제 탈퇴가 동작합니다.",
+      description: "회원 탈퇴가 완료되었습니다.",
+      onOk: () => {
+        void replaceSafely(router, "/");
+      },
     });
   };
 
@@ -131,35 +181,28 @@ export default function WithdrawPage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label
-              className="text-xs font-semibold text-muted-foreground"
-              htmlFor="withdraw_password"
-            >
-              비밀번호 확인 {isEmailProviderLinked ? "(필수)" : "(선택)"}
-            </label>
-            <input
-              id="withdraw_password"
-              className={inputBaseStyle}
-              type="password"
-              placeholder={
-                isEmailProviderLinked
-                  ? "현재 비밀번호를 입력해주세요."
-                  : "GitHub 로그인은 비워둘 수 있습니다."
-              }
-              {...register("password", {
-                validate: (value) => {
-                  if (!isEmailProviderLinked) return true;
-                  return (
-                    value.trim().length > 0 || "이메일 로그인 계정은 비밀번호 입력이 필요합니다."
-                  );
-                },
-              })}
-            />
-            {errors.password && (
-              <span className="text-xs text-destructive">{errors.password.message}</span>
-            )}
-          </div>
+          {isEmailProviderLinked && (
+            <div className="flex flex-col gap-2">
+              <label
+                className="text-xs font-semibold text-muted-foreground"
+                htmlFor="withdraw_password"
+              >
+                비밀번호 확인 (필수)
+              </label>
+              <input
+                id="withdraw_password"
+                className={inputBaseStyle}
+                type="password"
+                placeholder="현재 비밀번호를 입력해주세요."
+                {...register("password", {
+                  validate: (value) => value.trim().length > 0 || "비밀번호를 입력해 주세요.",
+                })}
+              />
+              {errors.password && (
+                <span className="text-xs text-destructive">{errors.password.message}</span>
+              )}
+            </div>
+          )}
 
           <label className="flex items-start gap-2 text-sm text-muted-foreground">
             <input

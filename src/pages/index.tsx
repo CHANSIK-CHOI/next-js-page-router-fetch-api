@@ -46,9 +46,11 @@ export default function MainPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Current User
           </p>
-          <p className="mt-2 text-lg font-semibold text-foreground">{userName}</p>
+          <p className="mt-2 text-lg font-semibold text-foreground">
+            {session ? userName : "비회원"}
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {session ? "인증 완료" : "비로그인 상태"}
+            {session ? "로그인 완료" : "비로그인 상태"}
           </p>
         </article>
 
