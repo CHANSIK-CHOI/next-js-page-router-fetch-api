@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui";
-import { useSession } from "@/components/useSession";
+import { useSession } from "@/components/session";
 import { getUserName } from "@/lib/user/profile";
+import { NewFeedbackLinkBtn } from "@/components/feedback";
 
 export default function MainPage() {
   const { session, isAdminUi, isRoleLoading } = useSession();
@@ -26,9 +27,7 @@ export default function MainPage() {
           <Button asChild>
             <Link href="/feedback">피드백 보드 바로가기</Link>
           </Button>
-          <Button asChild variant="outline">
-            <Link href="/feedback/new">피드백 작성하기</Link>
-          </Button>
+          <NewFeedbackLinkBtn />
           {!session && (
             <Button asChild variant="outline">
               <Link href="/login">로그인</Link>

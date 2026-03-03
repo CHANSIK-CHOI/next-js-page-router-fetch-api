@@ -20,6 +20,12 @@ export default function SessionProvider({ children }: SessionProviderProps) {
   const [isRoleLoading, setIsRoleLoading] = useState(false);
   const syncedTokenRef = useRef<string | null>(null);
 
+  /*
+    applyRoleUiState
+    - userId & role
+    - isLoading : role 권한 부여 진행중
+    - isCacheWriteEnabled : sessionStorage에 user id & role 저장 여부
+  */
   const applyRoleUiState = useCallback(
     ({
       userId,
@@ -112,7 +118,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
       }
     }
 
-    // 로그인 수단과 관계없이 세션 생성 시 user_roles를 동기화한다.
+    // 세션 생성 시 user_roles를 동기화한다. (github 로그인시 oauth-callback 페이지에서 진행)
     const runRoleSync = async () => {
       setIsRoleLoading(true);
       const { role } = await syncUserRole(session.access_token);

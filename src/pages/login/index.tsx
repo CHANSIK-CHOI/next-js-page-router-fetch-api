@@ -1,12 +1,12 @@
 import React from "react";
 import Link from "next/link";
-import GithubLoginBtn from "@/components/GithubLoginBtn";
+import { GithubLoginBtn } from "@/components/common";
 import { useForm } from "react-hook-form";
 import { EMAIL_PATTERN, inputBaseStyle, LOGIN_EMAIL_FORM } from "@/constants";
 import { LoginForm } from "@/types";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
-import { useSession } from "@/components/useSession";
+import { useSession } from "@/components/session";
 import { replaceSafely } from "@/lib/navigation/client";
 
 const getLoginErrorMessage = (message?: string) => {

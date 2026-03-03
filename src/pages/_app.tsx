@@ -1,8 +1,8 @@
-import GlobalLayout from "@/components/GlobalLayout";
+import GlobalLayout from "@/components/layout/GlobalLayout";
 import "@/styles/tailwind.css";
 import type { AppProps } from "next/app";
 import { ThemeProvider } from "next-themes";
-import { SessionProvider } from "@/components";
+import { SessionProvider } from "@/components/session";
 import { DialogProvider } from "@/components/ui";
 import { useState } from "react";
 

@@ -1,3 +1,4 @@
+import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
 import type { User } from "@supabase/supabase-js";
 
 export const getUserName = (user: User | undefined) => {
@@ -17,4 +18,14 @@ export const getUserCompany = (user: User | undefined) => {
   const isCompanyPublic = user?.user_metadata.is_company_public;
   const sessionIsCompanyPublic = Boolean(isCompanyPublic) ? isCompanyPublic : false;
   return { sessionCompanyName, sessionIsCompanyPublic };
+};
+
+export const getAvatarUrl = (user: User | undefined) => {
+  const avatarUrl =
+    user?.user_metadata?.avatar_url ||
+    user?.user_metadata?.picture ||
+    user?.user_metadata?.avatar ||
+    AVATAR_PLACEHOLDER_SRC;
+
+  return avatarUrl;
 };

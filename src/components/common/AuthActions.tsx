@@ -3,11 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui";
-import { useSession } from "./useSession";
+import { useSession } from "@/components/session";
 import { pushSafely, replaceSafely } from "@/lib/navigation/client";
-import { getAvatarUrl } from "@/lib/avatar/profile";
 import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
-import { getUserName } from "@/lib/user/profile";
+import { getUserName, getAvatarUrl } from "@/lib/user/profile";
 
 export default function AuthActions() {
   const { session, supabaseClient } = useSession();

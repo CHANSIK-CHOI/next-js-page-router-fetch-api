@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import type { Session } from "@supabase/supabase-js";
-import { useSession } from "@/components/useSession";
+import { useSession } from "@/components/session";
 import { replaceSafely } from "@/lib/navigation/client";
 import { syncUserRole } from "@/lib/user-role/client";
 

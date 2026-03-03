@@ -1,6 +1,5 @@
 import type { NextApiRequest } from "next";
 import { getAuthContextByAccessToken } from "@/lib/auth/server";
-import { getAccessToken } from "@/lib/auth/token";
 
 type RequestAccessTokenOptions = {
   missingAccessTokenError?: string;
@@ -35,7 +34,10 @@ export const getRequestAccessToken = (
 ): RequestAccessTokenResult => {
   const { missingAccessTokenError = "Missing access token" } = options;
 
-  const accessToken = getAccessToken(req.headers.authorization);
+  const authHeader = req.headers.authorization;
+  const accessToken =
+    typeof authHeader === "string" && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
   if (!accessToken) {
     return {
       accessToken: null,
@@ -73,8 +75,11 @@ export const getRequestAuthContext = async (
   }
   const { accessToken } = tokenResult;
 
-  const { context, error: authError, status: authStatus } =
-    await getAuthContextByAccessToken(accessToken);
+  const {
+    context,
+    error: authError,
+    status: authStatus,
+  } = await getAuthContextByAccessToken(accessToken);
   if (authError || !context) {
     return {
       context: null,

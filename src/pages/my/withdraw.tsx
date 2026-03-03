@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { Button, useAlert, useConfirm } from "@/components/ui";
-import { useSession } from "@/components";
+import { useSession } from "@/components/session";
 import { replaceSafely } from "@/lib/navigation/client";
 import { useRouter } from "next/router";
 import { inputBaseStyle } from "@/constants";

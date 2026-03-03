@@ -5,7 +5,7 @@ import { compareUpdatedAtDesc } from "@/lib/feedback/list";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getAuthContextByAccessToken } from "@/lib/auth/server";
 import { getAdminAllFeedbacksApi } from "@/lib/feedback/server";
-import { AdminFeedbackBox } from "@/components";
+import AdminFeedbackBox from "@/components/admin/AdminFeedbackBox";
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   try {

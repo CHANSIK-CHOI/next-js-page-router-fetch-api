@@ -1,7 +1,7 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import AuthActions from "./AuthActions";
+import { AuthActions } from "@/components/common";
 import { Switch } from "@/components/ui";
 import { useTheme } from "next-themes";
 

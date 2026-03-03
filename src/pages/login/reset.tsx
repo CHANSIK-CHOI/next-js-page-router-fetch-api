@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button, useAlert } from "@/components/ui";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
-import { useSession } from "@/components/useSession";
+import { useSession } from "@/components/session";
 import { replaceSafely } from "@/lib/navigation/client";
 import { inputBaseStyle } from "@/constants";
 

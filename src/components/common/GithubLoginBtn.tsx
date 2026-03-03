@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Button, useAlert } from "@/components/ui";
-import { useSession } from "./useSession";
+import { useSession } from "@/components/session";
 
 export default function GithubLoginBtn() {
   const { supabaseClient } = useSession();

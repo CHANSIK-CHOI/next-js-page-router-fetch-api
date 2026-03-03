@@ -1,15 +1,16 @@
 import React, { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { useSession } from "@/components";
+import { useSession } from "@/components/session";
 import { NEW_FEEDBACK_DEFAULT_VALUES } from "@/constants";
-import { getAvatarUrl } from "@/lib/avatar/profile";
-import { getUserCompany, getUserName } from "@/lib/user/profile";
+import { getUserCompany, getUserName, getAvatarUrl } from "@/lib/user/profile";
 import type { FeedbackNewFormValues } from "@/types";
-import FeedbackNewHeaderSection from "@/components/feedback/new/FeedbackNewHeaderSection";
-import FeedbackNewProfileSection from "@/components/feedback/new/FeedbackNewProfileSection";
-import FeedbackNewRatingSection from "@/components/feedback/new/FeedbackNewRatingSection";
-import FeedbackNewDetailSection from "@/components/feedback/new/FeedbackNewDetailSection";
-import FeedbackNewTagsSection from "@/components/feedback/new/FeedbackNewTagsSection";
+import {
+  FeedbackNewHeaderSection,
+  FeedbackNewProfileSection,
+  FeedbackNewRatingSection,
+  FeedbackNewDetailSection,
+  FeedbackNewTagsSection,
+} from "@/components/feedback";
 
 export default function FeedbackNewPage() {
   const { session } = useSession();

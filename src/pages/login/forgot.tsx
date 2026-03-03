@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Button, useAlert } from "@/components/ui";
 import { useForm } from "react-hook-form";
 import { EMAIL_PATTERN, inputBaseStyle } from "@/constants";
-import { useSession } from "@/components/useSession";
+import { useSession } from "@/components/session";
 
 type ForgotEmail = {
   forgot_email: string;
