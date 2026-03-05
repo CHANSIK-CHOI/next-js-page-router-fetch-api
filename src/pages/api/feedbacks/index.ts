@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getRequestAuthContext } from "@/lib/auth/request";
-import { getFeedbackRowsByStatuses, getPublicApprovedFeedbacksByStatuses } from "@/lib/feedback/server";
-import type { AdminReviewFeedback } from "@/types";
+import { getApprovedFeedbacks, getFeedbackRowsByStatuses } from "@/lib/feedback/server";
+import type { AdminReviewFeedback } from "@/types/feedback";
 import { parseStatusQuery } from "@/lib/status/query";
 
 /*
@@ -38,8 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 공개 조회 분기 (!isRequiresAdmin)
     if (!isRequiresAdmin) {
-      const approvedStatuses = statuses.filter((status): status is "approved" => status === "approved");
-      const publicFeedbacks = await getPublicApprovedFeedbacksByStatuses(approvedStatuses);
+      const publicFeedbacks = await getApprovedFeedbacks();
 
       return res.status(200).json({ data: publicFeedbacks, error: null });
     }

@@ -2,12 +2,23 @@ import React from "react";
 import Link from "next/link";
 import { GithubLoginBtn } from "@/components/common";
 import { useForm } from "react-hook-form";
-import { SignUpForm } from "@/types";
-import { EMAIL_PATTERN, inputBaseStyle, SIGNUP_EMAIL_FORM } from "@/constants";
+import { EMAIL_PATTERN, inputBaseStyle } from "@/constants";
 import { useRouter } from "next/router";
 import { Button, useAlert } from "@/components/ui";
 import { useSession } from "@/components/session";
 import { replaceSafely } from "@/lib/navigation/client";
+
+type SignUpForm = {
+  signup_name?: string;
+  signup_email: string;
+  signup_password: string;
+};
+
+const SIGNUP_EMAIL_FORM: SignUpForm = {
+  signup_name: "",
+  signup_email: "",
+  signup_password: "",
+};
 
 const getSignupErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();

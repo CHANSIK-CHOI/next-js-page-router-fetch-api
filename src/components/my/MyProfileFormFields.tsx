@@ -1,8 +1,7 @@
 import { useFormContext, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui";
-import { PHONE_PATTERN, inputBaseStyle } from "@/constants";
-import { formatPhoneNumber } from "@/lib/shared/format";
-import type { MyProfileForm } from "@/types";
+import { inputBaseStyle } from "@/constants";
+import type { MyProfileForm } from "@/types/forms";
 
 type MyProfileFormFieldsProps = {
   userEmail: string;
@@ -48,9 +47,10 @@ export default function MyProfileFormFields({
           이메일
         </label>
         <input id="my_email" type="email" className={inputBaseStyle} value={userEmail} readOnly />
+        <p className="text-xs text-muted-foreground">이메일은 관리자와 작성자에게만 표시됩니다.</p>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* <div className="flex flex-col gap-2">
         <label className="text-xs font-semibold text-muted-foreground" htmlFor="my_phone">
           휴대폰 번호 (선택)
         </label>
@@ -72,10 +72,13 @@ export default function MyProfileFormFields({
           })}
         />
         {errors.phone && <span className="text-xs text-destructive">{errors.phone.message}</span>}
-      </div>
+      </div> */}
 
       <div className="flex flex-col gap-2">
-        <label className="flex items-center gap-2 text-sm text-muted-foreground" htmlFor="my_company_name">
+        <label
+          className="flex items-center gap-2 text-sm text-muted-foreground"
+          htmlFor="my_company_name"
+        >
           회사명 (선택)
         </label>
         <input

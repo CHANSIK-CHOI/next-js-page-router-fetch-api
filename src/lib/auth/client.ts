@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-type GetFreshAccessTokenParams = {
+type FreshAccessTokenParams = {
   supabaseClient: SupabaseClient | null;
   fallbackAccessToken: string | null;
 };
@@ -8,7 +8,7 @@ type GetFreshAccessTokenParams = {
 export async function getFreshAccessToken({
   supabaseClient,
   fallbackAccessToken,
-}: GetFreshAccessTokenParams): Promise<string | null> {
+}: FreshAccessTokenParams): Promise<string | null> {
   if (!supabaseClient) {
     return fallbackAccessToken;
   }

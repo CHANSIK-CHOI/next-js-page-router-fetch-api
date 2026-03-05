@@ -14,9 +14,9 @@ export const getUserName = (user: User | undefined) => {
 
 export const getUserCompany = (user: User | undefined) => {
   const companyName = user?.user_metadata.company_name;
-  const sessionCompanyName = companyName ? companyName : "";
+  const sessionCompanyName = typeof companyName === "string" ? companyName : "";
   const isCompanyPublic = user?.user_metadata.is_company_public;
-  const sessionIsCompanyPublic = Boolean(isCompanyPublic) ? isCompanyPublic : false;
+  const sessionIsCompanyPublic = isCompanyPublic === true;
   return { sessionCompanyName, sessionIsCompanyPublic };
 };
 

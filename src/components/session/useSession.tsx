@@ -1,6 +1,6 @@
 import { useContext, createContext } from "react";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
-import type { UserRole } from "@/types";
+import type { UserRole } from "@/types/user-role";
 
 type ApplyRoleUiStateParams = {
   userId: string;

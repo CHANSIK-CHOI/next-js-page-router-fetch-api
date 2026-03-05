@@ -1,6 +1,6 @@
 import type React from "react";
 import { useFormContext } from "react-hook-form";
-import type { MyProfileForm } from "@/types";
+import type { MyProfileForm } from "@/types/forms";
 import MyProfileAvatarPanel from "./MyProfileAvatarPanel";
 import MyProfileFormFields from "./MyProfileFormFields";
 

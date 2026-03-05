@@ -5,7 +5,7 @@ import { Button } from "@/components/ui";
 import { AVATAR_PLACEHOLDER_SRC, AVATAR_UPLOAD_ACCEPT } from "@/constants";
 import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
 import { getAuthProviderLabel } from "@/lib/auth/provider";
-import type { MyProfileForm } from "@/types";
+import type { MyProfileForm } from "@/types/forms";
 
 type MyProfileAvatarPanelProps = {
   sessionAvatar: string;

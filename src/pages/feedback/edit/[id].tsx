@@ -10,12 +10,12 @@ import { getAuthContextByAccessToken } from "@/lib/auth/server";
 import { getFreshAccessToken } from "@/lib/auth/client";
 import {
   AVATAR_PLACEHOLDER_SRC,
+  FEEDBACK_FORM_ERROR_MESSAGES,
   FEEDBACK_EDIT_FALLBACK_ERROR_MESSAGE,
   FEEDBACK_FORBIDDEN_MESSAGE,
   FEEDBACK_NOT_FOUND_MESSAGE,
-  NEW_FEEDBACK_ERROR_MESSAGES,
 } from "@/constants";
-import type { FeedbackFormValues } from "@/types";
+import type { FeedbackFormValues } from "@/types/forms";
 import {
   FeedbackFormDetailSection,
   FeedbackFormProfileSection,
@@ -23,14 +23,10 @@ import {
   FeedbackFormTagsSection,
   FeedbackEditHeaderSection,
 } from "@/components/feedback";
-
-type UpdateFeedbackResponse = {
-  data: { id: string } | null;
-  error: string | null;
-};
+import { UpdateFeedbackResponse } from "@/types/feedback";
 
 const feedbackEditErrorMessages = new Set<string>([
-  ...Object.values(NEW_FEEDBACK_ERROR_MESSAGES),
+  ...Object.values(FEEDBACK_FORM_ERROR_MESSAGES),
   FEEDBACK_NOT_FOUND_MESSAGE,
   FEEDBACK_FORBIDDEN_MESSAGE,
 ]);

@@ -1,7 +1,7 @@
 import { useFormContext, useWatch } from "react-hook-form";
 import { TAG_OPTIONS, chipButtonBaseStyle } from "@/constants";
 import { cn } from "@/lib/shared/cn";
-import type { FeedbackFormValues } from "@/types";
+import type { FeedbackFormValues } from "@/types/forms";
 
 export default function FeedbackFormTagsSection() {
   const {

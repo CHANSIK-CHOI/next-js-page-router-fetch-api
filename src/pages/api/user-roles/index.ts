@@ -1,34 +1,41 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import type { SupabaseError, UserRole } from "@/types";
+import type { ApiResponse, SupabaseError } from "@/types/common";
+import type { UserRole } from "@/types/user-role";
 import { getRequestAccessToken } from "@/lib/auth/request";
 
+type UserRoleSyncData = {
+  role: UserRole["role"];
+  isNewUser: boolean;
+};
+type UserRoleSyncResponse = ApiResponse<UserRoleSyncData>;
+
 // POST: role 없으면 reviewer로 생성(201), 있으면 기존 role 반환(200)
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<UserRoleSyncResponse>) {
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ role: null, error: "Method Not Allowed" });
+    return res.status(405).json({ data: null, error: "Method Not Allowed" });
   }
 
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
     return res
       .status(500)
-      .json({ role: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
+      .json({ data: null, error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" });
   }
 
   const tokenResult = getRequestAccessToken(req);
   if (tokenResult.error || !tokenResult.accessToken) {
-    return res.status(tokenResult.status).json({ role: null, error: tokenResult.error });
+    return res.status(tokenResult.status).json({ data: null, error: tokenResult.error });
   }
   const { accessToken } = tokenResult;
 
   try {
     const { data: authData, error: authError } = await supabaseServer.auth.getUser(accessToken);
     if (authError || !authData.user) {
-      return res.status(401).json({ role: null, error: authError?.message ?? "Unauthorized" });
+      return res.status(401).json({ data: null, error: authError?.message ?? "Unauthorized" });
     }
 
     // insert() 우선 시도: 성공 시 신규(201), unique 충돌 시 기존 사용자(200)로 처리
@@ -44,12 +51,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select();
 
     if (!insertError && insertedRows && insertedRows[0]?.role) {
-      return res.status(201).json({ role: insertedRows[0].role, error: null });
+      return res.status(201).json({
+        data: {
+          role: insertedRows[0].role,
+          isNewUser: true,
+        },
+        error: null,
+      });
     }
 
     // 동시 요청 등으로 unique 충돌이 나면 기존 role 조회
     if (insertError?.code !== "23505") {
-      return res.status(500).json({ role: null, error: insertError?.message ?? "Insert failed" });
+      return res.status(500).json({ data: null, error: insertError?.message ?? "Insert failed" });
     }
 
     const {
@@ -66,16 +79,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (existingError) {
       return res
         .status(500)
-        .json({ role: null, error: existingError?.message ?? "Select failed Existing Role" });
+        .json({ data: null, error: existingError?.message ?? "Select failed Existing Role" });
     }
 
     if (!existingRole?.role) {
-      return res.status(500).json({ role: null, error: "Role sync failed" });
+      return res.status(500).json({ data: null, error: "Role sync failed" });
     }
 
-    return res.status(200).json({ role: existingRole.role, error: null });
+    return res.status(200).json({
+      data: {
+        role: existingRole.role,
+        isNewUser: false,
+      },
+      error: null,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
-    return res.status(500).json({ role: null, error: message });
+    return res.status(500).json({ data: null, error: message });
   }
 }

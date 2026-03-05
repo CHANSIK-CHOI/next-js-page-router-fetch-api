@@ -58,9 +58,6 @@ type AdminReviewBase = FeedbackPrivateRow & {
   isPreview: false;
 };
 
-// 관리자 화면에서 이메일을 실제로 써야 할 때 내부적으로 사용할 타입
-export type AdminReviewFeedbackWithEmail = AdminReviewBase;
-
 // 기본 정책: 클라이언트 전달 시 이메일 제외
 export type AdminReviewFeedback = Omit<AdminReviewBase, "email">;
 
@@ -69,3 +66,9 @@ export type FeedbackListItem =
   | RevisedPendingPreviewFeedback
   | RevisedPendingOwnerFeedback
   | AdminReviewFeedback;
+
+// api router response
+export type UpdateFeedbackResponse = {
+  data: { id: string } | null;
+  error: string | null;
+};

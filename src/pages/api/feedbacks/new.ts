@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getRequestAuthContext } from "@/lib/auth/request";
-import type { FeedbackFormValues } from "@/types";
-import { NEW_FEEDBACK_ERROR_MESSAGES, NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE } from "@/constants";
+import type { FeedbackFormValues } from "@/types/forms";
+import { FEEDBACK_FORM_ERROR_MESSAGES, NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE } from "@/constants";
 import { toNullableTrimmedString, toStrictBoolean, toTrimmedString } from "@/lib/shared/normalize";
 
 type CreateFeedbackResponse = {
@@ -52,28 +52,28 @@ export default async function handler(
       : [];
 
     if (!display_name || !summary) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.nameSummary });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.nameSummary });
     }
 
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.rating });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.rating });
     }
 
     if (tags.length === 0) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.tag });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.tag });
     }
 
     if (is_company_public === null) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.companyPublic });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.companyPublic });
     }
 
     if (is_company_public && !company_name) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.company });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.company });
     }
 
     const email = auth.context.authData.user?.email;
     if (!email) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.email });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.email });
     }
 
     const { data, error } = await auth.context.supabaseServer

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/shared/cn";
-import { FeedbackListItem } from "@/types";
+import type { FeedbackListItem } from "@/types/feedback";
 import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/lib/feedback/presentation";
 import { checkAvatarApiSrcPrivate, checkSvgImageSrc } from "@/lib/avatar/path";
 import Image from "next/image";

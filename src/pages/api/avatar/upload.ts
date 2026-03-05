@@ -5,9 +5,16 @@ import { AVATAR_MAX_FILE_SIZE } from "@/constants";
 import { getNormalizedAvatarMimeType } from "@/lib/avatar/mime";
 import { getDetectedAvatarMimeTypeFromBuffer } from "@/lib/avatar/signature";
 import { replaceUserAvatar } from "@/lib/avatar/storage.server";
-import type { AvatarUploadResponse } from "@/types/avatar";
 import { getRequestAuthContext } from "@/lib/auth/request";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import type { ApiResponse } from "@/types/common";
+
+type AvatarUploadData = {
+  avatarUrl: string;
+  bucket: string;
+  path: string;
+};
+type AvatarUploadResponse = ApiResponse<AvatarUploadData>;
 
 const AVATAR_BUCKET = process.env.SUPABASE_AVATAR_BUCKET;
 
@@ -149,7 +156,7 @@ export default async function handler(
 
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: "Method Not Allowed" });
+    return res.status(405).json({ data: null, error: "Method Not Allowed" });
   }
 
   const auth = await getRequestAuthContext(req, {
@@ -157,17 +164,21 @@ export default async function handler(
     unauthorizedError: "로그인 상태를 확인해주세요.",
   });
   if (auth.error || !auth.context) {
-    return res.status(auth.status).json({ error: auth.error ?? "로그인 상태를 확인해주세요." });
+    return res
+      .status(auth.status)
+      .json({ data: null, error: auth.error ?? "로그인 상태를 확인해주세요." });
   }
   const { context } = auth;
 
   if (!AVATAR_BUCKET) {
-    return res.status(500).json({ error: "SUPABASE_AVATAR_BUCKET 환경변수가 필요합니다." });
+    return res.status(500).json({ data: null, error: "SUPABASE_AVATAR_BUCKET 환경변수가 필요합니다." });
   }
 
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
-    return res.status(500).json({ error: "서버 Supabase 클라이언트를 초기화하지 못했습니다." });
+    return res
+      .status(500)
+      .json({ data: null, error: "서버 Supabase 클라이언트를 초기화하지 못했습니다." });
   }
 
   let avatarFile: FormidableFile;
@@ -205,14 +216,20 @@ export default async function handler(
       typeof error.httpCode === "number" &&
       error.httpCode === 413 // 그 숫자가 정확히 413인지 확인 (Payload Too Large)
     ) {
-      return res.status(413).json({ error: "프로필 이미지는 2MB 이하만 업로드할 수 있습니다." });
+      return res
+        .status(413)
+        .json({ data: null, error: "프로필 이미지는 2MB 이하만 업로드할 수 있습니다." });
     }
 
-    return res.status(400).json({ error: "이미지 파일 업로드 형식이 올바르지 않습니다." });
+    return res
+      .status(400)
+      .json({ data: null, error: "이미지 파일 업로드 형식이 올바르지 않습니다." });
   }
 
   if (avatarFile.size > AVATAR_MAX_FILE_SIZE) {
-    return res.status(413).json({ error: "프로필 이미지는 2MB 이하만 업로드할 수 있습니다." });
+    return res
+      .status(413)
+      .json({ data: null, error: "프로필 이미지는 2MB 이하만 업로드할 수 있습니다." });
   }
 
   try {
@@ -220,7 +237,7 @@ export default async function handler(
     if (!normalizedMimeType) {
       return res
         .status(400)
-        .json({ error: "프로필 이미지는 JPG/PNG 파일만 업로드할 수 있습니다. (SVG 불가)" });
+        .json({ data: null, error: "프로필 이미지는 JPG/PNG 파일만 업로드할 수 있습니다. (SVG 불가)" });
     }
 
     const fileBuffer = await fs.readFile(avatarFile.filepath);
@@ -231,7 +248,7 @@ export default async function handler(
     if (!detectedMimeType || detectedMimeType !== normalizedMimeType) {
       return res
         .status(400)
-        .json({ error: "파일 형식이 올바르지 않습니다. JPG/PNG만 업로드할 수 있습니다." });
+        .json({ data: null, error: "파일 형식이 올바르지 않습니다. JPG/PNG만 업로드할 수 있습니다." });
     }
 
     const replacedAvatar = await replaceUserAvatar({
@@ -242,11 +259,11 @@ export default async function handler(
       contentType: detectedMimeType,
     });
 
-    return res.status(200).json(replacedAvatar);
+    return res.status(200).json({ data: replacedAvatar, error: null });
   } catch (error) {
     console.error("Avatar upload API failed", error);
     const message = error instanceof Error ? error.message : "아바타 업로드에 실패했습니다.";
-    return res.status(500).json({ error: message });
+    return res.status(500).json({ data: null, error: message });
   } finally {
     await fs.unlink(avatarFile.filepath).catch(() => undefined);
   }

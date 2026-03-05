@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { inputBaseStyle } from "@/constants";
-import type { FeedbackFormValues } from "@/types";
+import type { FeedbackFormValues } from "@/types/forms";
 
 export default function FeedbackFormDetailSection() {
   const {

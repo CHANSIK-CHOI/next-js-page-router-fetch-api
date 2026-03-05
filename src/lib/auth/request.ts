@@ -5,24 +5,7 @@ type RequestAccessTokenOptions = {
   missingAccessTokenError?: string;
 };
 
-type RequestAuthOptions = {
-  missingAccessTokenError?: string;
-  unauthorizedError?: string;
-  requireAdmin?: boolean;
-  forbiddenError?: string;
-};
-
-type ServerAuthResult = Awaited<ReturnType<typeof getAuthContextByAccessToken>>;
-type RequestAuthContext = NonNullable<ServerAuthResult["context"]>;
-
 type RequestAccessTokenResult = {
-  accessToken: string | null;
-  error: string | null;
-  status: number;
-};
-
-type RequestAuthResult = {
-  context: RequestAuthContext | null;
   accessToken: string | null;
   error: string | null;
   status: number;
@@ -51,6 +34,23 @@ export const getRequestAccessToken = (
     error: null,
     status: 200,
   };
+};
+
+type RequestAuthOptions = {
+  missingAccessTokenError?: string;
+  unauthorizedError?: string;
+  requireAdmin?: boolean;
+  forbiddenError?: string;
+};
+
+type ServerAuthResult = Awaited<ReturnType<typeof getAuthContextByAccessToken>>;
+type RequestAuthContext = NonNullable<ServerAuthResult["context"]>;
+
+type RequestAuthResult = {
+  context: RequestAuthContext | null;
+  accessToken: string | null;
+  error: string | null;
+  status: number;
 };
 
 export const getRequestAuthContext = async (

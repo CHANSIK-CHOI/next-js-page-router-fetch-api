@@ -1,11 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
+import { AVATAR_PLACEHOLDER_SRC, USER_ID_PATTERN } from "@/constants";
 import { getNormalizedAvatarMimeType } from "@/lib/avatar/mime";
 import { buildAvatarPath } from "@/lib/avatar/path";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import type { ApiResponse } from "@/types/common";
 
 const AVATAR_BUCKET = process.env.SUPABASE_AVATAR_BUCKET;
-const USER_ID_PATTERN = /^[a-zA-Z0-9-]+$/;
+type AvatarProxyErrorResponse = ApiResponse<null> | Buffer<ArrayBuffer>;
+
 /*
   USER_ID_PATTERN
   허용 : 영문 대/소문자, 숫자, -, 최소 1글자 이상
@@ -35,24 +37,35 @@ const respondWithPlaceholder = (res: NextApiResponse) => {
   */
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+const respondWithError = (
+  res: NextApiResponse<AvatarProxyErrorResponse>,
+  status: number,
+  message: string
+) => {
+  return res.status(status).json({ data: null, error: message });
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<AvatarProxyErrorResponse>
+) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).json({ error: "Method Not Allowed" });
+    return respondWithError(res, 405, "Method Not Allowed");
   }
 
   const userId = typeof req.query.userId === "string" ? req.query.userId : "";
   if (!userId || !USER_ID_PATTERN.test(userId)) {
-    return res.status(400).json({ error: "Invalid user id" });
+    return respondWithError(res, 400, "Invalid user id");
   }
 
   if (!AVATAR_BUCKET) {
-    return res.status(500).json({ error: "SUPABASE_AVATAR_BUCKET 환경변수가 필요합니다." });
+    return respondWithError(res, 500, "SUPABASE_AVATAR_BUCKET 환경변수가 필요합니다.");
   }
 
   const supabaseServer = getSupabaseServer();
   if (!supabaseServer) {
-    return res.status(500).json({ error: "서버 Supabase 클라이언트를 초기화하지 못했습니다." });
+    return respondWithError(res, 500, "서버 Supabase 클라이언트를 초기화하지 못했습니다.");
   }
 
   const { data, error } = await supabaseServer.storage

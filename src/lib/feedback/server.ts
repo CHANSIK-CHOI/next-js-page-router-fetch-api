@@ -4,17 +4,11 @@ import type {
   FeedbackPublicBase,
   FeedbackPublicRow,
   RevisedPendingPreviewFeedback,
-  SupabaseError,
-} from "@/types";
+} from "@/types/feedback";
+import type { SupabaseError } from "@/types/common";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { APPROVED_PUBLIC_COLUMNS, PREVIEWCOLUMN } from "@/constants";
-
-type FeedbackStatus = FeedbackPublicRow["status"];
-type GetFeedbackRowsByStatusesParams = {
-  supabaseClient: SupabaseClient;
-  statuses: FeedbackStatus[];
-};
 
 const getRequiredSupabaseServer = () => {
   const supabaseServer = getSupabaseServer();
@@ -24,22 +18,20 @@ const getRequiredSupabaseServer = () => {
   return supabaseServer;
 };
 
-export const getPublicApprovedFeedbacksByStatuses = async (
-  statuses: Array<"approved">
-): Promise<ApprovedFeedback[]> => {
+export const getApprovedFeedbacks = async (): Promise<ApprovedFeedback[]> => {
   const supabaseServer = getRequiredSupabaseServer();
 
   const { data, error } = await supabaseServer
     .from("feedbacks")
     .select(APPROVED_PUBLIC_COLUMNS)
-    .in("status", statuses)
+    .eq("status", "approved")
     .eq("is_public", true)
     .order("updated_at", {
       ascending: false,
     });
 
   if (error || !data) {
-    throw new Error("Failed fetch getPublicApprovedFeedbacksByStatuses");
+    throw new Error("Failed fetch getApprovedFeedbacks");
   }
 
   return data.map((item) => {
@@ -50,10 +42,16 @@ export const getPublicApprovedFeedbacksByStatuses = async (
   });
 };
 
+type FeedbackStatus = FeedbackPublicRow["status"];
+type FeedbackRowsByStatusesParams = {
+  supabaseClient: SupabaseClient;
+  statuses: FeedbackStatus[];
+};
+
 export const getFeedbackRowsByStatuses = async ({
   supabaseClient,
   statuses,
-}: GetFeedbackRowsByStatusesParams): Promise<FeedbackPrivateRow[]> => {
+}: FeedbackRowsByStatusesParams): Promise<FeedbackPrivateRow[]> => {
   const { data, error }: { data: FeedbackPrivateRow[] | null; error: SupabaseError } =
     await supabaseClient
       .from("feedbacks")
@@ -66,10 +64,6 @@ export const getFeedbackRowsByStatuses = async ({
   }
 
   return data;
-};
-
-export const getApprovedFeedbacks = async (): Promise<ApprovedFeedback[]> => {
-  return getPublicApprovedFeedbacksByStatuses(["approved"]);
 };
 
 export const getRevisedPendingPreviewFeedbacks = async (): Promise<
@@ -96,19 +90,6 @@ export const getRevisedPendingPreviewFeedbacks = async (): Promise<
       isPreview: true,
     };
   });
-};
-
-export const getFeedbackIds = async (): Promise<FeedbackPublicBase["id"][]> => {
-  const supabaseServer = getRequiredSupabaseServer();
-
-  const { data, error }: { data: Pick<FeedbackPublicBase, "id">[] | null; error: SupabaseError } =
-    await supabaseServer.from("feedbacks").select("id");
-
-  if (error || !data) {
-    throw new Error("Failed fetch getFeedbackIds");
-  }
-
-  return data.map((item) => item.id);
 };
 
 export const getFeedbackDetailById = async (
@@ -142,12 +123,4 @@ export const getFeedbackEmailById = async (
   }
 
   return data?.email ?? null;
-};
-
-export const getAllFeedbackRows = async (): Promise<FeedbackPrivateRow[]> => {
-  const supabaseServer = getRequiredSupabaseServer();
-  return getFeedbackRowsByStatuses({
-    supabaseClient: supabaseServer,
-    statuses: ["pending", "approved", "rejected", "revised_pending"],
-  });
 };

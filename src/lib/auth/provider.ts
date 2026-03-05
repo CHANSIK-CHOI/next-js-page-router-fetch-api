@@ -1,6 +1,8 @@
 import type { User } from "@supabase/supabase-js";
 
-export const getAuthProviders = (user: User | null | undefined) => {
+type AuthProvidersParams = User | null | undefined;
+
+export const getAuthProviders = (user: AuthProvidersParams) => {
   const identityProviders = (user?.identities ?? [])
     .map((identity) => identity.provider)
     .filter((provider): provider is string => typeof provider === "string");

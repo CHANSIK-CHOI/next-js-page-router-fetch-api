@@ -1,17 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getRequestAuthContext } from "@/lib/auth/request";
-import type { FeedbackFormValues, FeedbackPrivateRow, SupabaseError } from "@/types";
+import type { SupabaseError } from "@/types/common";
+import type { FeedbackPrivateRow, UpdateFeedbackResponse } from "@/types/feedback";
+import type { FeedbackFormValues } from "@/types/forms";
 import {
+  FEEDBACK_FORM_ERROR_MESSAGES,
   FEEDBACK_FORBIDDEN_MESSAGE,
   FEEDBACK_NOT_FOUND_MESSAGE,
-  NEW_FEEDBACK_ERROR_MESSAGES,
   NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE,
 } from "@/constants";
 import { toNullableTrimmedString, toStrictBoolean, toTrimmedString } from "@/lib/shared/normalize";
 
-type UpdateFeedbackResponse = {
-  data: { id: string } | null;
-  error: string | null;
+type UpdataCompleteReturnData = {
+  id: FeedbackPrivateRow["id"];
+  author_id: FeedbackPrivateRow["author_id"];
+  status: FeedbackPrivateRow["status"];
+  revision_count: FeedbackPrivateRow["revision_count"];
 };
 
 export default async function handler(
@@ -62,30 +66,30 @@ export default async function handler(
       : [];
 
     if (!display_name || !summary) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.nameSummary });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.nameSummary });
     }
 
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.rating });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.rating });
     }
 
     if (tags.length === 0) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.tag });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.tag });
     }
 
     if (is_company_public === null) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.companyPublic });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.companyPublic });
     }
 
     if (is_company_public && !company_name) {
-      return res.status(400).json({ data: null, error: NEW_FEEDBACK_ERROR_MESSAGES.company });
+      return res.status(400).json({ data: null, error: FEEDBACK_FORM_ERROR_MESSAGES.company });
     }
 
     const {
       data: feedbackRow,
       error: feedbackRowError,
     }: {
-      data: Pick<FeedbackPrivateRow, "id" | "author_id" | "status" | "revision_count"> | null;
+      data: UpdataCompleteReturnData | null;
       error: SupabaseError;
     } = await auth.context.supabaseServer
       .from("feedbacks")

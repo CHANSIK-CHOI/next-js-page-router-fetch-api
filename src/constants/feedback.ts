@@ -42,7 +42,7 @@ export const TAG_OPTIONS = [
   "성장 가능성",
 ];
 
-export const NEW_FEEDBACK_ERROR_MESSAGES = {
+export const FEEDBACK_FORM_ERROR_MESSAGES = {
   nameSummary: "이름과 한줄평은 필수 입력 항목입니다.",
   rating: "평점은 1점부터 5점 사이로 선택해주세요.",
   tag: "키워드를 1개 이상 선택해주세요.",

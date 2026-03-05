@@ -3,7 +3,7 @@ import { SessionContext } from "./useSession";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { syncUserRole } from "@/lib/user-role/client";
-import type { UserRole } from "@/types";
+import type { UserRole } from "@/types/user-role";
 
 type SessionProviderProps = {
   children: ReactNode;
@@ -155,7 +155,7 @@ export default function SessionProvider({ children }: SessionProviderProps) {
         },
       });
 
-      const payload: { error?: string | null } = await response.json().catch(() => ({}));
+      const payload: { data?: null; error?: string | null } = await response.json().catch(() => ({}));
       if (!response.ok || payload.error) {
         throw new Error(payload.error ?? "Failed to sync session cookie");
       }

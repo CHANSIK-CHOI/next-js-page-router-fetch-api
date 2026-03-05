@@ -5,7 +5,7 @@ import type {
   FeedbackPublicBase,
   RevisedPendingOwnerFeedback,
   RevisedPendingPreviewFeedback,
-} from "@/types";
+} from "@/types/feedback";
 
 type WithUpdatedAt = { updated_at?: string | null };
 

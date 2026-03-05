@@ -8,7 +8,7 @@ import { useSession } from "@/components/session";
 import { compareUpdatedAtDesc, mergeFeedbackList } from "@/lib/feedback/list";
 import { FeedbackBox, NewFeedbackLinkBtn } from "@/components/feedback";
 import { getFreshAccessToken } from "@/lib/auth/client";
-import { AdminReviewFeedback, RevisedPendingOwnerFeedback } from "@/types";
+import { AdminReviewFeedback, RevisedPendingOwnerFeedback } from "@/types/feedback";
 
 const MINE_STATUS_QUERY = new URLSearchParams({
   status: "pending,revised_pending",
@@ -105,7 +105,7 @@ export default function FeedbackBoardPage({
           signal: controller.signal,
         });
 
-        const result: { count: number | null; error: string | null } = await response
+        const result: { data: { count: number } | null; error: string | null } = await response
           .json()
           .catch(() => ({}));
 
@@ -113,12 +113,12 @@ export default function FeedbackBoardPage({
           throw new Error(result.error ?? "Failed to fetch pending count");
         }
 
-        if (typeof result.count !== "number") {
+        if (typeof result.data?.count !== "number") {
           throw new Error("Invalid pending count response");
         }
 
         if (controller.signal.aborted) return;
-        setPendingCount(result.count);
+        setPendingCount(result.data.count);
       } catch (error) {
         if (controller.signal.aborted) return;
         console.error(error);

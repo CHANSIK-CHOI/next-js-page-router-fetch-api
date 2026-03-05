@@ -1,10 +1,20 @@
 import { buildAvatarPath, buildAvatarProxyUrl } from "@/lib/avatar/path";
-import type {
-  AvatarRemoveResult,
-  RemoveUserAvatarParams,
-  ReplaceUserAvatarParams,
-  ReplaceUserAvatarResult,
-} from "@/types/avatar";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AvatarMimeType } from "@/types/avatar";
+
+type ReplaceUserAvatarParams = {
+  supabaseServer: SupabaseClient;
+  bucket: string;
+  userId: string;
+  fileBuffer: Buffer;
+  contentType: AvatarMimeType;
+};
+
+type ReplaceUserAvatarResult = {
+  avatarUrl: string;
+  bucket: string;
+  path: string;
+};
 
 export async function replaceUserAvatar({
   supabaseServer,
@@ -53,6 +63,12 @@ export async function replaceUserAvatar({
     -> fetch로 직접 부르는 게 아니라, <Image src={avatarSrc}> 렌더링 시 브라우저가 GET 요청함.
   */
 }
+
+type RemoveUserAvatarParams = {
+  supabaseServer: SupabaseClient;
+  bucket: string;
+  paths: string[];
+};
 
 export async function removeUserAvatar({
   supabaseServer,

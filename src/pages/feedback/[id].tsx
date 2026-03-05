@@ -6,12 +6,11 @@ import { formatDateTime, ratingStars, statusBadge, statusLabel } from "@/lib/fee
 import { checkAvatarApiSrcPrivate, checkSvgImageSrc } from "@/lib/avatar/path";
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from "next";
 import { getFeedbackDetailById, getFeedbackEmailById } from "@/lib/feedback/server";
-import type { FeedbackPublicRow } from "@/types";
 import { getAuthContextByAccessToken } from "@/lib/auth/server";
 import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
 import { checkUpdateData } from "@/lib/feedback/list";
 
-type FeedbackDetailData = FeedbackPublicRow & {
+type FeedbackDetailData = NonNullable<Awaited<ReturnType<typeof getFeedbackDetailById>>> & {
   email?: string;
 };
 
@@ -22,7 +21,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
   }
 
   try {
-    const detailFeedbacksData: FeedbackPublicRow | null = await getFeedbackDetailById(id);
+    const detailFeedbacksData = await getFeedbackDetailById(id);
     if (!detailFeedbacksData) throw new Error("detailFeedbacksData is blank");
 
     const accessToken = context.req.cookies["sb-access-token"];
@@ -84,18 +83,6 @@ export default function FeedbackDetailPage({
               {detailFeedbacksData.summary}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              {(isAuthor || isAdmin) && detailFeedbacksData.email && (
-                <p className="text-sm text-muted-foreground">
-                  Email:{" "}
-                  <a
-                    href={`mailto:${detailFeedbacksData.email}`}
-                    className="font-medium text-primary underline underline-offset-4"
-                  >
-                    {detailFeedbacksData.email}
-                  </a>
-                </p>
-              )}
-
               {isAuthor && (
                 <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-xs font-semibold text-blue-700 dark:text-blue-300">
                   작성자
@@ -168,15 +155,18 @@ export default function FeedbackDetailPage({
             )}
           </div>
           {(isAuthor || isAdmin) && detailFeedbacksData.email && (
-            <p className="text-sm text-muted-foreground">
-              작성자 이메일:{" "}
-              <a
-                href={`mailto:${detailFeedbacksData.email}`}
-                className="font-medium text-primary underline underline-offset-4"
-              >
-                {detailFeedbacksData.email}
-              </a>
-            </p>
+            <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+              <p>
+                작성자 이메일:{" "}
+                <a
+                  href={`mailto:${detailFeedbacksData.email}`}
+                  className="font-medium text-primary underline underline-offset-4"
+                >
+                  {detailFeedbacksData.email}
+                </a>
+              </p>
+              <p className="text-xs">이메일은 관리자와 작성자에게만 표시됩니다.</p>
+            </div>
           )}
           <div className="flex flex-wrap gap-2">
             {detailFeedbacksData.tags.map((tag) => (

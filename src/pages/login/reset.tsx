@@ -11,6 +11,10 @@ type ResetPassword = {
   reset_password: string;
 };
 
+const RESET_PASSWORD_FORM: ResetPassword = {
+  reset_password: "",
+};
+
 export default function PasswordResetPage() {
   const { openAlert } = useAlert();
   const { supabaseClient } = useSession();
@@ -46,7 +50,7 @@ export default function PasswordResetPage() {
     formState: { errors, isSubmitting },
   } = useForm<ResetPassword>({
     mode: "onSubmit",
-    defaultValues: { reset_password: "" },
+    defaultValues: RESET_PASSWORD_FORM,
   });
 
   const onSubmit = async (values: ResetPassword) => {

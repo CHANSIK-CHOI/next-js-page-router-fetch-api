@@ -9,6 +9,10 @@ type ForgotEmail = {
   forgot_email: string;
 };
 
+const FORGOT_EMAIL_FORM: ForgotEmail = {
+  forgot_email: "",
+};
+
 const getResetPasswordErrorMessage = (message?: string) => {
   const normalized = (message ?? "").toLowerCase();
   if (normalized.includes("email rate limit exceeded")) {
@@ -26,7 +30,7 @@ export default function Page() {
     formState: { errors, isSubmitting },
   } = useForm<ForgotEmail>({
     mode: "onSubmit",
-    defaultValues: { forgot_email: "" },
+    defaultValues: FORGOT_EMAIL_FORM,
   });
 
   const onSubmit = async (values: ForgotEmail) => {

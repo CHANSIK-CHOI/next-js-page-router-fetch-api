@@ -1,7 +1,5 @@
 import type { NextRouter } from "next/router";
 
-type NavigationMethod = "push" | "replace";
-
 /*
   checkNavigationCancelledError
   - 에러가 “실패”가 아니라 “라우팅 취소”인지 판별하는 필터
@@ -34,6 +32,8 @@ const checkNavigationCancelledError = (error: unknown) => {
 
   return false;
 };
+
+type NavigationMethod = "push" | "replace";
 
 const navigateSafely = async (router: NextRouter, method: NavigationMethod, href: string) => {
   if (router.asPath === href) return true;

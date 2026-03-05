@@ -9,7 +9,7 @@ import { uploadAvatarToSupabase, validateAvatarFile } from "@/lib/avatar/client"
 import { AVATAR_PLACEHOLDER_SRC } from "@/constants";
 import { getAuthProviders } from "@/lib/auth/provider";
 import { getUserCompany, getUserName, getAvatarUrl } from "@/lib/user/profile";
-import type { MyProfileForm } from "@/types";
+import type { MyProfileForm } from "@/types/forms";
 
 export const useMyProfileController = () => {
   const { openAlert } = useAlert();
@@ -21,8 +21,8 @@ export const useMyProfileController = () => {
 
   const user = session?.user;
   const sessionUserName = getUserName(user);
-  const sessionPhone =
-    typeof user?.user_metadata?.phone === "string" ? user.user_metadata.phone : "";
+  // const sessionPhone =
+  //   typeof user?.user_metadata?.phone === "string" ? user.user_metadata.phone : "";
   const sessionAvatar = getAvatarUrl(user);
   const { sessionCompanyName, sessionIsCompanyPublic } = getUserCompany(user);
   const providers = getAuthProviders(user);
@@ -33,7 +33,7 @@ export const useMyProfileController = () => {
       company_name: sessionCompanyName,
       is_company_public: sessionIsCompanyPublic,
       name: sessionUserName,
-      phone: sessionPhone,
+      // phone: sessionPhone,
       avatar: sessionAvatar,
     },
   });
@@ -52,7 +52,7 @@ export const useMyProfileController = () => {
   useEffect(() => {
     reset({
       name: sessionUserName,
-      phone: sessionPhone,
+      // phone: sessionPhone,
       avatar: sessionAvatar,
       company_name: sessionCompanyName,
       is_company_public: sessionIsCompanyPublic,
@@ -60,7 +60,7 @@ export const useMyProfileController = () => {
   }, [
     reset,
     sessionAvatar,
-    sessionPhone,
+    // sessionPhone,
     sessionUserName,
     sessionCompanyName,
     sessionIsCompanyPublic,
@@ -130,7 +130,7 @@ export const useMyProfileController = () => {
     if (!supabaseClient || !session?.user || !session.access_token) return;
 
     const nextName = values.name.trim();
-    const nextPhone = values.phone.trim();
+    // const nextPhone = values.phone.trim();
     let nextAvatar = values.avatar || AVATAR_PLACEHOLDER_SRC;
     const nextCompanyName = values.company_name.trim();
     const nextIsCompanyPublic = values.is_company_public;
@@ -157,7 +157,7 @@ export const useMyProfileController = () => {
       data: {
         ...session.user.user_metadata,
         name: nextName,
-        phone: nextPhone,
+        // phone: nextPhone,
         avatar_url: nextAvatar,
         company_name: nextCompanyName,
         is_company_public: nextIsCompanyPublic,

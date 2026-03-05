@@ -1,15 +1,3 @@
-export type LoginForm = {
-  login_email: string;
-  login_password: string;
-};
-
-export type SignUpForm = {
-  signup_name?: string;
-  signup_phone?: string;
-  signup_email: string;
-  signup_password: string;
-};
-
 export type MyProfileForm = {
   company_name: string;
   is_company_public: boolean;

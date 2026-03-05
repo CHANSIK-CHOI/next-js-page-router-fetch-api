@@ -1,9 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSupabaseServerByAccessToken } from "@/lib/supabase/server";
 import { getRequestAccessToken } from "@/lib/auth/request";
+import type { ApiResponse } from "@/types/common";
 
 // 옵션: HttpOnly, SameSite=Lax, (prod에서 Secure), Path=/, Max-Age=3600
 const ACCESS_TOKEN_COOKIE = "sb-access-token";
+type SessionCookieSyncResponse = ApiResponse<null>;
 
 const buildCookie = (value: string, maxAge: number) =>
   [
@@ -17,36 +19,38 @@ const buildCookie = (value: string, maxAge: number) =>
     .filter(Boolean) // 빈 문자열 제거
     .join("; "); // 쿠키 표준 포맷으로 합침
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<SessionCookieSyncResponse>) {
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method === "DELETE") {
     res.setHeader("Set-Cookie", buildCookie("", 0));
-    return res.status(200).json({ error: null });
+    return res.status(200).json({ data: null, error: null });
   }
 
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST", "DELETE"]);
-    return res.status(405).json({ error: "Method Not Allowed" });
+    return res.status(405).json({ data: null, error: "Method Not Allowed" });
   }
 
   const tokenResult = getRequestAccessToken(req);
   if (tokenResult.error || !tokenResult.accessToken) {
-    return res.status(tokenResult.status).json({ error: tokenResult.error ?? "Missing access token" });
+    return res
+      .status(tokenResult.status)
+      .json({ data: null, error: tokenResult.error ?? "Missing access token" });
   }
   const { accessToken } = tokenResult;
 
   const supabaseServer = getSupabaseServerByAccessToken(accessToken);
   if (!supabaseServer) {
-    return res.status(500).json({ error: "Missing SUPABASE_URL or SUPABASE_ANON_KEY" });
+    return res.status(500).json({ data: null, error: "Missing SUPABASE_URL or SUPABASE_ANON_KEY" });
   }
 
   const { data, error } = await supabaseServer.auth.getUser();
   if (error || !data.user) {
-    return res.status(401).json({ error: error?.message ?? "Unauthorized" });
+    return res.status(401).json({ data: null, error: error?.message ?? "Unauthorized" });
   }
 
   // 1시간짜리 access token을 기준으로 짧게 유지하고, 갱신 시마다 다시 덮어쓴다.
   res.setHeader("Set-Cookie", buildCookie(accessToken, 60 * 60));
-  return res.status(200).json({ error: null });
+  return res.status(200).json({ data: null, error: null });
 }

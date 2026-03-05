@@ -1,18 +1,23 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getRequestAuthContext } from "@/lib/auth/request";
+import type { ApiResponse } from "@/types/common";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+type PendingCountResponse = ApiResponse<{
+  count: number;
+}>;
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse<PendingCountResponse>) {
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).json({ count: null, error: "Method Not Allowed" });
+    return res.status(405).json({ data: null, error: "Method Not Allowed" });
   }
 
   try {
     const auth = await getRequestAuthContext(req, { requireAdmin: true });
     if (auth.error || !auth.context) {
-      return res.status(auth.status).json({ count: null, error: auth.error ?? "Unauthorized" });
+      return res.status(auth.status).json({ data: null, error: auth.error ?? "Unauthorized" });
     }
     const { context } = auth;
 
@@ -29,12 +34,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (countError || count === null) {
       return res
         .status(500)
-        .json({ count: null, error: countError?.message ?? "Select failed Pending Data Count" });
+        .json({ data: null, error: countError?.message ?? "Select failed Pending Data Count" });
     }
 
-    return res.status(200).json({ count, error: null });
+    return res.status(200).json({ data: { count }, error: null });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
-    return res.status(500).json({ count: null, error: message });
+    return res.status(500).json({ data: null, error: message });
   }
 }

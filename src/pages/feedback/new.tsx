@@ -2,12 +2,12 @@ import React, { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useSession } from "@/components/session";
 import {
+  FEEDBACK_FORM_ERROR_MESSAGES,
   NEW_FEEDBACK_DEFAULT_VALUES,
-  NEW_FEEDBACK_ERROR_MESSAGES,
   NEW_FEEDBACK_FALLBACK_ERROR_MESSAGE,
 } from "@/constants";
 import { getUserCompany, getUserName, getAvatarUrl } from "@/lib/user/profile";
-import type { FeedbackFormValues } from "@/types";
+import type { FeedbackFormValues } from "@/types/forms";
 import {
   FeedbackFormDetailSection,
   FeedbackFormProfileSection,
@@ -19,7 +19,7 @@ import { useAlert } from "@/components/ui";
 import { replaceSafely } from "@/lib/navigation/client";
 import { useRouter } from "next/router";
 
-const newFeedbackErrorMessages = new Set<string>(Object.values(NEW_FEEDBACK_ERROR_MESSAGES));
+const newFeedbackErrorMessages = new Set<string>(Object.values(FEEDBACK_FORM_ERROR_MESSAGES));
 
 export default function FeedbackNewPage() {
   const { session } = useSession();

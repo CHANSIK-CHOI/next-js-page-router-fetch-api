@@ -2,7 +2,7 @@ import Image from "next/image";
 import { useFormContext, useWatch } from "react-hook-form";
 import { AVATAR_PLACEHOLDER_SRC, inputBaseStyle } from "@/constants";
 import { checkAvatarApiSrcPrivate } from "@/lib/avatar/path";
-import type { FeedbackFormValues } from "@/types";
+import type { FeedbackFormValues } from "@/types/forms";
 
 type FeedbackFormProfileSectionProps = {
   sessionAvatar: string;
